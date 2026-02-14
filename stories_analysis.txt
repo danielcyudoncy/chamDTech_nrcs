@@ -1,0 +1,29 @@
+﻿Analyzing stories...                                            
+
+warning - Unused import: 'package:uuid/uuid.dart' - lib\features\stories\controllers\story_controller.dart:7:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stories\controllers\story_controller.dart:156:65 - deprecated_member_use
+   info - Missing type annotation - lib\features\stories\controllers\story_editor_controller.dart:36:7 - strict_top_level_inference
+warning - The value of the field '_rtdb' isn't used - lib\features\stories\services\story_service.dart:16:27 - unused_field
+warning - The operand can't be 'null', so the condition is always 'true' - lib\features\stories\services\story_service.dart:314:18 - unnecessary_null_comparison
+  error - The method 'StoryModel' isn't defined for the type 'StoryEditorScreen' - lib\features\stories\views\story_editor_screen.dart:106:102 - undefined_method
+  error - Undefined name 'controller' - lib\features\stories\views\story_editor_screen.dart:207:53 - undefined_identifier
+  error - Undefined name 'controller' - lib\features\stories\views\story_editor_screen.dart:223:52 - undefined_identifier
+  error - Undefined name 'controller' - lib\features\stories\views\story_editor_screen.dart:223:76 - undefined_identifier
+  error - The method 'StoryModel' isn't defined for the type 'StoryEditorScreen' - lib\features\stories\views\story_editor_screen.dart:223:104 - undefined_method
+  error - Undefined name 'controller' - lib\features\stories\views\story_editor_screen.dart:228:27 - undefined_identifier
+  error - Expected a method, getter, setter or operator declaration - lib\features\stories\views\story_editor_screen.dart:368:1 - expected_executable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\stories\views\story_list_screen.dart:173:48 - deprecated_member_use
+
+flutter : 13 issues found. (ran in 1.7s)
+At line:1 char:1
++ flutter analyze --no-pub 
+lib/features/stories 2>&1 | Out-File 
+-FilePa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~
+    + CategoryInfo          : NotSpecified 
+   : (13 issues found. (ran in 1.7s):Stri  
+  ng) [], RemoteException
+    + FullyQualifiedErrorId : NativeComman 
+   dError
+ 

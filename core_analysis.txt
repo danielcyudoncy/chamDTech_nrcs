@@ -1,0 +1,23 @@
+﻿Analyzing core...                                               
+
+warning - Unused import: 'package:chamDTech_nrcs/features/auth/models/user_model.dart' - lib\core\services\rbac_service.dart:3:8 - unused_import
+   info - The type of the right operand ('ConnectivityResult') isn't a subtype or a supertype of the left operand ('List<ConnectivityResult>') - lib\core\utils\network_helpers.dart:11:21 - unrelated_type_equality_checks
+   info - The type of the right operand ('ConnectivityResult') isn't a subtype or a supertype of the left operand ('List<ConnectivityResult>') - lib\core\utils\network_helpers.dart:20:21 - unrelated_type_equality_checks
+warning - The matched value type 'List<ConnectivityResult>' can never be equal to this constant of type 'ConnectivityResult' - lib\core\utils\network_helpers.dart:78:14 - constant_pattern_never_matches_value_type
+warning - The matched value type 'List<ConnectivityResult>' can never be equal to this constant of type 'ConnectivityResult' - lib\core\utils\network_helpers.dart:80:14 - constant_pattern_never_matches_value_type
+warning - The matched value type 'List<ConnectivityResult>' can never be equal to this constant of type 'ConnectivityResult' - lib\core\utils\network_helpers.dart:82:14 - constant_pattern_never_matches_value_type
+warning - The matched value type 'List<ConnectivityResult>' can never be equal to this constant of type 'ConnectivityResult' - lib\core\utils\network_helpers.dart:84:14 - constant_pattern_never_matches_value_type
+warning - The matched value type 'List<ConnectivityResult>' can never be equal to this constant of type 'ConnectivityResult' - lib\core\utils\network_helpers.dart:86:14 - constant_pattern_never_matches_value_type
+   info - The type of the right operand ('ConnectivityResult') isn't a subtype or a supertype of the left operand ('List<ConnectivityResult>') - lib\core\utils\network_helpers.dart:100:21 - unrelated_type_equality_checks
+
+flutter : 9 issues found. (ran in 1.6s)
+At line:1 char:1
++ flutter analyze --no-pub lib/core 2>&1 | 
+Out-File -FilePath core_anal ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified 
+   : (9 issues found. (ran in 1.6s):Strin  
+  g) [], RemoteException
+    + FullyQualifiedErrorId : NativeComman 
+   dError
+ 
