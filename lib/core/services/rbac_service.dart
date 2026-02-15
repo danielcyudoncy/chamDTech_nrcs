@@ -4,14 +4,15 @@ import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
 class RbacService extends GetxService {
   final AuthService _authService = Get.find<AuthService>();
 
-  bool hasPermission(String permission) {
+  bool hasPermission(String category, [String? permission]) {
     final user = _authService.currentUser.value;
     if (user == null) return false;
     
     // Super admin shortcut
     if (user.role == 'admin') return true;
     
-    return user.permissions[permission] ?? false;
+    final fullPermission = permission != null ? '$category->$permission' : category;
+    return user.permissions[fullPermission] ?? false;
   }
 
   bool canEditStory(String storyAuthorId) {

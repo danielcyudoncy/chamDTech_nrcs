@@ -4,9 +4,12 @@ import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 import 'package:chamDTech_nrcs/app/config/theme_config.dart';
 import 'package:chamDTech_nrcs/core/services/firebase_service.dart';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart'; // For FlutterQuillLocalizations
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+import 'package:chamDTech_nrcs/core/utils/context_menu_suppressor.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,7 +22,10 @@ void main() async {
   
   // Initialize Auth Service
   Get.put(AuthService());
-  
+
+  // Disable browser context menu to allow custom app menus to take precedence
+  disableBrowserContextMenu();
+
   runApp(const MyApp());
 }
 

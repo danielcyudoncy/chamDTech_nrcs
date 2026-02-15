@@ -13,6 +13,10 @@ class StoryController extends GetxController {
   final stories = <StoryModel>[].obs;
   final isLoading = false.obs;
   final currentFilter = 'all'.obs;
+  final selectedStoryId = ''.obs;
+
+  StoryModel? get selectedStory => 
+      stories.firstWhereOrNull((s) => s.id == selectedStoryId.value);
   
   @override
   void onInit() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class MasterManagementScreen extends StatelessWidget {
   final String title;
@@ -10,18 +11,7 @@ class MasterManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              // Add generic item
-            },
-          ),
-        ],
-      ),
+    return NRCSAppShell(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

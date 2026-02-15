@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/settings/controllers/settings_controller.dart';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -14,10 +15,7 @@ class SettingsScreen extends StatelessWidget {
     final user = authService.currentUser.value;
     final isAdmin = user?.role == 'admin';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+    return NRCSAppShell(
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

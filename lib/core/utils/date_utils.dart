@@ -83,6 +83,21 @@ class DateUtils {
     return DateFormat('HH:mm:ss').format(date);
   }
 
+  // Format time for NRCS display: "14:44:22"
+  static String formatTime(DateTime date) {
+    return DateFormat('HH:mm:ss').format(date);
+  }
+
+  // Format date for NRCS display: "05/04/19"
+  static String formatDate(DateTime date) {
+    return DateFormat('MM/dd/yy').format(date);
+  }
+
+  // Format date and time for NRCS display: "14:44:22 05/04/19"
+  static String formatDateTime(DateTime date) {
+    return '${formatTime(date)} ${formatDate(date)}';
+  }
+
   // Format full date and time
   static String formatFullDateTime(DateTime date) {
     return DateFormat('MMM dd, yyyy HH:mm').format(date);
