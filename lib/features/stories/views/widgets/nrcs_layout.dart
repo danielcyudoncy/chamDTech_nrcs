@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/top_stories_ticker.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
 
 class NRCSColors {
   static const Color topNavBlue = Color(0xFF0046AD);
@@ -393,6 +395,8 @@ class NRCSSubNav extends StatelessWidget {
                   'BREAKING NEWS',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
+                SizedBox(width: 16),
+                BreakingNewsTicker(),
               ],
             ),
           ),
@@ -409,6 +413,8 @@ class NRCSSubNav extends StatelessWidget {
                   'TRENDING STORIES',
                   style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
+                SizedBox(width: 16),
+                TopStoriesTicker(),
               ],
             ),
           ),
