@@ -12,6 +12,7 @@ class MasterManagementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NRCSAppShell(
+      title: title,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

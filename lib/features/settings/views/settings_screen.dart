@@ -16,6 +16,7 @@ class SettingsScreen extends StatelessWidget {
     final isAdmin = user?.role == 'admin';
 
     return NRCSAppShell(
+      title: 'Settings',
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

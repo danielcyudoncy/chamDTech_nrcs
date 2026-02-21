@@ -7,6 +7,7 @@ class RundownListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const NRCSAppShell(
+      title: 'Rundowns',
       body: Center(
         child: Text('Rundown List - Coming Soon'),
       ),

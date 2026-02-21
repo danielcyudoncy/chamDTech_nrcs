@@ -294,4 +294,16 @@ class AuthService extends GetxService {
         return 'An error occurred. Please try again.';
     }
   }
+
+  // Get stream of all users
+  Stream<List<UserModel>> getUsersStream() {
+    return _firestore
+        .collection(AppConstants.usersCollection)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => UserModel.fromJson(doc.data()))
+          .toList();
+    });
+  }
 }

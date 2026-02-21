@@ -16,6 +16,7 @@ class StoryListScreen extends StatelessWidget {
     final StoryController controller = Get.put(StoryController());
 
     return NRCSAppShell(
+      title: 'Workspace',
       toolbar: const NRCSToolbar(),
       sidebar: Obx(() {
         if (controller.isLoading.value) {

@@ -19,12 +19,14 @@ class NRCSAppShell extends StatelessWidget {
   final Widget? sidebar;
   final Widget? body;
   final Widget? toolbar;
+  final String? title;
 
   const NRCSAppShell({
     super.key,
     this.sidebar,
     this.body,
     this.toolbar,
+    this.title,
   });
 
   @override
@@ -35,16 +37,54 @@ class NRCSAppShell extends StatelessWidget {
         children: [
           const NRCSTopNav(),
           const NRCSSubNav(),
+          // Sub-header with back button and title
+          Container(
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 20, color: NRCSColors.topNavBlue),
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Get.back();
+                    } else {
+                      Get.offAllNamed('/stories'); // Fallback to Workspace
+                    }
+                  },
+                  tooltip: 'Back to Workspace',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                if (title != null) ...[
+                  const SizedBox(width: 16),
+                  Text(
+                    title!.toUpperCase(),
+                    style: const TextStyle(
+                      color: NRCSColors.textDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
           if (toolbar != null) toolbar!,
           Expanded(
             child: Row(
               children: [
                 if (sidebar != null)
                   Container(
-                    width: 300,
+                    width: 361,
                     decoration: const BoxDecoration(
                       border: Border(
-                        right: BorderSide(color: NRCSColors.borderGray, width: 1),
+                        right: BorderSide(color: NRCSColors.borderGray, width: 8),
                       ),
                     ),
                     child: sidebar!,

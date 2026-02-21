@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamDTech_nrcs/features/profile/controllers/profile_controller.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -14,16 +15,8 @@ class ProfileScreen extends StatelessWidget {
     final AuthService authService = Get.find<AuthService>();
     final user = authService.currentUser.value;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: controller.saveProfile,
-          ),
-        ],
-      ),
+    return NRCSAppShell(
+      title: 'Profile',
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(

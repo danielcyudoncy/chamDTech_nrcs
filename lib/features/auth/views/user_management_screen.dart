@@ -6,6 +6,7 @@ import 'package:chamDTech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 import 'package:intl/intl.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class UserManagementScreen extends StatelessWidget {
   const UserManagementScreen({super.key});
@@ -15,43 +16,60 @@ class UserManagementScreen extends StatelessWidget {
     // This would normally be in a controller
     final AuthService authService = Get.find<AuthService>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('User & Access Control'),
-        backgroundColor: const Color(0xFF263238),
-      ),
-      body: Row(
-        children: [
-          // Roles/Groups sidebar
-          _buildSidebar(),
-          // User List
-          Expanded(
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: StreamBuilder<List<UserModel>>(
-                    stream: _getUsersStream(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                      final users = snapshot.data!;
-                      return ListView.separated(
-                        itemCount: users.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
-                        itemBuilder: (context, index) => _buildUserTile(context, users[index]),
-                      );
-                    },
-                  ),
+    return NRCSAppShell(
+      title: 'User & Access Control',
+      body: StreamBuilder<List<UserModel>>(
+        stream: authService.getUsersStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final users = snapshot.data ?? [];
+
+          return Row(
+            children: [
+              // Roles/Groups sidebar
+              _buildSidebar(users),
+              // User List
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    Expanded(
+                      child: users.isEmpty
+                          ? const Center(child: Text('No users found.'))
+                          : ListView.separated(
+                              itemCount: users.length,
+                              separatorBuilder: (context, index) => const Divider(height: 1),
+                              itemBuilder: (context, index) => _buildUserTile(context, users[index]),
+                            ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSidebar() {
+  Widget _buildSidebar(List<UserModel> users) {
+    final counts = {
+      'admin': users.where((u) => u.role == 'admin').length,
+      'producer': users.where((u) => u.role == 'producer').length,
+      'reporter': users.where((u) => u.role == 'reporter').length,
+      'editor': users.where((u) => u.role == 'editor').length,
+      'anchor': users.where((u) => u.role == 'anchor').length,
+      'assignment_desk': users.where((u) => u.role == 'assignment_desk').length,
+      'guest': users.where((u) => u.role == 'guest').length,
+    };
+
     return Container(
       width: 250,
       color: const Color(0xFFECEFF1),
@@ -61,11 +79,13 @@ class UserManagementScreen extends StatelessWidget {
             padding: EdgeInsets.all(16.0),
             child: Text('Privilege Masters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
-          _SidebarItem(label: 'Administrators', count: 2, isSelected: true),
-          _SidebarItem(label: 'Producers', count: 12),
-          _SidebarItem(label: 'Reporters', count: 45),
-          _SidebarItem(label: 'Assignmet Desk', count: 8),
-          _SidebarItem(label: 'Guest Users', count: 0),
+          _SidebarItem(label: 'Administrators', count: counts['admin']!, isSelected: true),
+          _SidebarItem(label: 'Producers', count: counts['producer']!),
+          _SidebarItem(label: 'Reporters', count: counts['reporter']!),
+          _SidebarItem(label: 'Anchors', count: counts['anchor']!),
+          _SidebarItem(label: 'Editors', count: counts['editor']!),
+          _SidebarItem(label: 'Assignment Desk', count: counts['assignment_desk']!),
+          _SidebarItem(label: 'Guest Users', count: counts['guest']!),
           const Spacer(),
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -117,7 +137,7 @@ class UserManagementScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: Colors.blue[100],
-            child: Text(user.displayName[0].toUpperCase()),
+            child: Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U'),
           ),
           Positioned(
             right: 0,
@@ -193,6 +213,8 @@ class UserManagementScreen extends StatelessWidget {
                     DropdownMenuItem(value: 'producer', child: Text('Producer')),
                     DropdownMenuItem(value: 'editor', child: Text('Editor')),
                     DropdownMenuItem(value: 'reporter', child: Text('Reporter')),
+                    DropdownMenuItem(value: 'anchor', child: Text('Anchor')),
+                    DropdownMenuItem(value: 'assignment_desk', child: Text('Assignment Desk')),
                   ],
                   onChanged: (v) => selectedRole.value = v!,
                 )),
@@ -232,39 +254,6 @@ class UserManagementScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // Mock stream for demonstration
-  Stream<List<UserModel>> _getUsersStream() {
-    return Stream.value([
-      UserModel(
-        id: '1',
-        email: 'admin@chamdtech.com',
-        displayName: 'John Executive',
-        role: 'admin',
-        isOnline: true,
-        lastSeen: DateTime.now(),
-        createdAt: DateTime.now(),
-      ),
-      UserModel(
-        id: '2',
-        email: 'reporter1@chamdtech.com',
-        displayName: 'Alice Reporter',
-        role: 'reporter',
-        isOnline: false,
-        lastSeen: DateTime.now().subtract(const Duration(hours: 2)),
-        createdAt: DateTime.now(),
-      ),
-      UserModel(
-        id: '3',
-        email: 'producer1@chamdtech.com',
-        displayName: 'Bob Newsroom',
-        role: 'editor',
-        isOnline: true,
-        lastSeen: DateTime.now(),
-        createdAt: DateTime.now(),
-      ),
-    ]);
   }
 }
 

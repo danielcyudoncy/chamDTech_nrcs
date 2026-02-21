@@ -98,7 +98,10 @@ class UserModel {
   int get hierarchyIndex {
     switch (role) {
       case 'admin': return 10;
+      case 'producer': return 8;
+      case 'anchor': return 7;
       case 'editor': return 6;
+      case 'assignment_desk': return 5;
       case 'reporter': return 2;
       default: return 0;
     }

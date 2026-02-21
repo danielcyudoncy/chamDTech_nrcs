@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/admin/controllers/admin_controller.dart';
 import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -10,10 +11,8 @@ class AdminDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     Get.put(AdminController());
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Operations'),
-      ),
+    return NRCSAppShell(
+      title: 'Admin Operations',
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

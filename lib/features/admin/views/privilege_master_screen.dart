@@ -12,6 +12,7 @@ class PrivilegeMasterScreen extends StatelessWidget {
     final controller = Get.put(PrivilegeMasterController());
 
     return NRCSAppShell(
+      title: 'Privilege Master',
       body: Row(
         children: [
           // Sidebar

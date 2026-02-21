@@ -8,6 +8,8 @@ import 'package:chamDTech_nrcs/core/utils/permission_helpers.dart';
 import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
 import 'package:intl/intl.dart';
 
+import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+
 class StoryEditorScreen extends StatelessWidget {
   const StoryEditorScreen({super.key});
 
@@ -15,9 +17,8 @@ class StoryEditorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(StoryEditorController());
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
-      appBar: _buildAppBar(context, controller),
+    return Obx(() => NRCSAppShell(
+      title: controller.storyTitle.value.isNotEmpty ? controller.storyTitle.value : 'New Story',
       body: Column(
         children: [
           _buildActionToolbar(context, controller),
@@ -28,7 +29,7 @@ class StoryEditorScreen extends StatelessWidget {
                 // Notes Editor (Left)
                 Expanded(
                   flex: 2,
-                    child: _buildSplittedEditor(
+                  child: _buildSplittedEditor(
                     context,
                     controller,
                     title: 'Notes',
@@ -57,7 +58,7 @@ class StoryEditorScreen extends StatelessWidget {
           _buildStatusFooter(context, controller),
         ],
       ),
-    );
+    ));
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context, StoryEditorController controller) {
