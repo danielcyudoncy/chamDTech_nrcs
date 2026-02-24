@@ -57,48 +57,46 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
 
     if (stories.isEmpty) return const SizedBox();
 
-    return Expanded(
-      child: Row(
-        children: [
-          SizedBox(
-            width: 30,
+    return Row(
+      children: [
+        SizedBox(
+          width: 30,
+          height: 30,
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                isLoading = true;
+              });
+              loadStories();
+            },
+            icon: const Icon(Icons.refresh, size: 14, color: Colors.black54),
+            padding: EdgeInsets.zero,
+            tooltip: 'Refresh Stories',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
             height: 30,
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  isLoading = true;
-                });
-                loadStories();
-              },
-              icon: const Icon(Icons.refresh, size: 14, color: Colors.black54),
-              padding: EdgeInsets.zero,
-              tooltip: 'Refresh Stories',
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 30,
-              alignment: Alignment.centerLeft,
-              child: Marquee(
-                text: stories.join("   🔴   "),
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-                velocity: 40,
-                blankSpace: 100,
-                pauseAfterRound: const Duration(seconds: 1),
-                accelerationDuration: const Duration(seconds: 1),
-                accelerationCurve: Curves.linear,
-                decelerationDuration: const Duration(milliseconds: 500),
-                decelerationCurve: Curves.easeOut,
+            alignment: Alignment.centerLeft,
+            child: Marquee(
+              text: stories.join("   🔴   "),
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
+              velocity: 40,
+              blankSpace: 100,
+              pauseAfterRound: const Duration(seconds: 1),
+              accelerationDuration: const Duration(seconds: 1),
+              accelerationCurve: Curves.linear,
+              decelerationDuration: const Duration(milliseconds: 500),
+              decelerationCurve: Curves.easeOut,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

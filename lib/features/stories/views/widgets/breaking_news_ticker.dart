@@ -89,48 +89,46 @@ class _BreakingNewsTickerState extends State<BreakingNewsTicker> {
       );
     }
 
-    return Expanded(
-      child: Row(
-        children: [
-          SizedBox(
-            width: 30,
+    return Row(
+      children: [
+        SizedBox(
+          width: 30,
+          height: 30,
+          child: IconButton(
+            onPressed: () {
+              setState(() {
+                isLoading = true;
+              });
+              loadBreakingNews();
+            },
+            icon: const Icon(Icons.refresh, size: 14, color: Colors.white70),
+            padding: EdgeInsets.zero,
+            tooltip: 'Refresh Breaking News',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
             height: 30,
-            child: IconButton(
-              onPressed: () {
-                setState(() {
-                  isLoading = true;
-                });
-                loadBreakingNews();
-              },
-              icon: const Icon(Icons.refresh, size: 14, color: Colors.white70),
-              padding: EdgeInsets.zero,
-              tooltip: 'Refresh Breaking News',
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 30,
-              alignment: Alignment.centerLeft,
-              child: Marquee(
-                text: breakingStories.join("   🚨   "),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-                velocity: 50,
-                blankSpace: 100,
-                pauseAfterRound: const Duration(seconds: 1),
-                accelerationDuration: const Duration(seconds: 1),
-                accelerationCurve: Curves.linear,
-                decelerationDuration: const Duration(milliseconds: 500),
-                decelerationCurve: Curves.easeOut,
+            alignment: Alignment.centerLeft,
+            child: Marquee(
+              text: breakingStories.join("   🚨   "),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
+              velocity: 50,
+              blankSpace: 100,
+              pauseAfterRound: const Duration(seconds: 1),
+              accelerationDuration: const Duration(seconds: 1),
+              accelerationCurve: Curves.linear,
+              decelerationDuration: const Duration(milliseconds: 500),
+              decelerationCurve: Curves.easeOut,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

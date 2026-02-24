@@ -62,13 +62,17 @@ class NRCSAppShell extends StatelessWidget {
                 ),
                 if (title != null) ...[
                   const SizedBox(width: 16),
-                  Text(
-                    title!.toUpperCase(),
-                    style: const TextStyle(
-                      color: NRCSColors.textDark,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      letterSpacing: 1.1,
+                  Expanded(
+                    child: Text(
+                      title!.toUpperCase(),
+                      style: const TextStyle(
+                        color: NRCSColors.textDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 1.1,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                 ],
@@ -151,47 +155,44 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       color: NRCSColors.topNavBlue,
       child: Row(
         children: [
-          ...tabs.map((tab) {
-            final route = routeMapping[tab];
-            bool isActive = false;
-            
-            if (route != null) {
-              isActive = currentRoute == route;
-            } else if (tab == 'Workspace' && currentRoute == '/') {
-              isActive = true; // Splash/Initial
-            }
-
-            return _NavButton(
-              label: tab, 
-              isActive: isActive,
-              onTap: () {
-                if (route != null) {
-                  if (currentRoute != route) {
-                    Get.offAllNamed(route);
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: tabs.map((tab) {
+                  final route = routeMapping[tab];
+                  bool isActive = false;
+                  
+                  if (route != null) {
+                    isActive = currentRoute == route;
+                  } else if (tab == 'Workspace' && currentRoute == '/') {
+                    isActive = true; // Splash/Initial
                   }
-                } else {
-                  Get.snackbar(
-                    'Coming Soon', 
-                    '$tab module is currently under development.',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.white,
-                    colorText: NRCSColors.topNavBlue,
+
+                  return _NavButton(
+                    label: tab, 
+                    isActive: isActive,
+                    onTap: () {
+                      if (route != null) {
+                        if (currentRoute != route) {
+                          Get.offAllNamed(route);
+                        }
+                      } else {
+                        Get.snackbar(
+                          'Coming Soon', 
+                          '$tab module is currently under development.',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.white,
+                          colorText: NRCSColors.topNavBlue,
+                        );
+                      }
+                    },
                   );
-                }
-              },
-            );
-          }),
-          const Spacer(),
-          Text(
-            _currentTime,
-            style: const TextStyle(
-              color: Color(0xFFC8E6C9), // Light green like in the image
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
+                }).toList(),
+              ),
             ),
           ),
-          const SizedBox(width: 16),
-          _UserSection(),
+          _UserSection(currentTime: _currentTime),
         ],
       ),
     );
@@ -331,6 +332,9 @@ class _NavButton extends StatelessWidget {
 }
 
 class _UserSection extends StatelessWidget {
+  final String currentTime;
+  const _UserSection({required this.currentTime});
+
   @override
   Widget build(BuildContext context) {
     final authService = Get.find<AuthService>();
@@ -340,71 +344,103 @@ class _UserSection extends StatelessWidget {
       final displayName = user?.displayName ?? 'Admin';
       final photoUrl = user?.photoUrl;
 
-      return Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            color: const Color(0xFF0D47A1),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'chamDTech',
-                  style: TextStyle(color: Colors.white, fontSize: 10),
+      return Container(
+        height: 50,
+        decoration: const BoxDecoration(
+          color: Color(0xFF0D47A1),
+          border: Border(left: BorderSide(color: Colors.white24, width: 1)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Time
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                currentTime,
+                style: const TextStyle(
+                  color: Color(0xFFC8E6C9),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-                Text(
-                  'NRCS',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-              ],
+              ),
             ),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Icon(Icons.notifications_none, color: Colors.white, size: 20),
-          ),
-          Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            color: const Color(0xFF0D47A1),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.white24,
-                  backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                  child: photoUrl == null 
-                      ? const Icon(Icons.person, size: 18, color: Colors.white)
-                      : null,
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const Text(
-                      'Online',
-                      style: TextStyle(color: Colors.greenAccent, fontSize: 10),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
-                  tooltip: 'Logout',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => authService.signOut(),
-                ),
-              ],
+            // Divider
+            Container(width: 1, height: 30, color: Colors.white24),
+            // chamDTech NRCS
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'chamDTech',
+                    style: TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                  Text(
+                    'NRCS',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            // Divider
+            Container(width: 1, height: 30, color: Colors.white24),
+            // Notification Bell
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.0),
+              child: Icon(Icons.notifications_none, color: Colors.white, size: 20),
+            ),
+            // Divider
+            Container(width: 1, height: 30, color: Colors.white24),
+            // User details and logout
+            Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.white24,
+                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null 
+                        ? const Icon(Icons.person, size: 18, color: Colors.white)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 150),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          displayName,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const Text(
+                          'Online',
+                          style: TextStyle(color: Colors.greenAccent, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+                    tooltip: 'Logout',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => authService.signOut(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       );
     });
   }
@@ -436,7 +472,7 @@ class NRCSSubNav extends StatelessWidget {
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
                 SizedBox(width: 16),
-                BreakingNewsTicker(),
+                Expanded(child: BreakingNewsTicker()),
               ],
             ),
           ),
@@ -454,7 +490,7 @@ class NRCSSubNav extends StatelessWidget {
                   style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
                 SizedBox(width: 16),
-                TopStoriesTicker(),
+                Expanded(child: TopStoriesTicker()),
               ],
             ),
           ),
@@ -473,24 +509,26 @@ class NRCSToolbar extends StatelessWidget {
     return Container(
       height: 45,
       color: NRCSColors.subNavGray,
-      child: Row(
-        children: [
-          _ToolbarIcon(icon: Icons.refresh),
-          _ToolbarButton(icon: Icons.folder_open, label: 'news'),
-          _ToolbarButton(icon: Icons.folder_open, label: 'Politics'),
-          _ToolbarSearch(),
-          _ToolbarActionButton(label: 'New'),
-          _ToolbarActionButton(label: 'Edit'),
-          _ToolbarActionButton(label: 'Delete'),
-          _ToolbarActionButton(label: 'Copy'),
-          _ToolbarActionButton(label: 'Move'),
-          _ToolbarActionButton(label: 'Link'),
-          _ToolbarActionButton(label: 'Assign'),
-          _ToolbarActionButton(label: 'Story Log'),
-          _ToolbarActionButton(label: 'Print'),
-          _ToolbarActionButton(label: 'Powerview', isBordered: true, borderColor: Colors.red),
-          const Expanded(child: SizedBox()),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _ToolbarIcon(icon: Icons.refresh),
+            _ToolbarButton(icon: Icons.folder_open, label: 'news'),
+            _ToolbarButton(icon: Icons.folder_open, label: 'Politics'),
+            _ToolbarSearch(),
+            _ToolbarActionButton(label: 'New'),
+            _ToolbarActionButton(label: 'Edit'),
+            _ToolbarActionButton(label: 'Delete'),
+            _ToolbarActionButton(label: 'Copy'),
+            _ToolbarActionButton(label: 'Move'),
+            _ToolbarActionButton(label: 'Link'),
+            _ToolbarActionButton(label: 'Assign'),
+            _ToolbarActionButton(label: 'Story Log'),
+            _ToolbarActionButton(label: 'Print'),
+            _ToolbarActionButton(label: 'Powerview', isBordered: true, borderColor: Colors.red),
+          ],
+        ),
       ),
     );
   }
