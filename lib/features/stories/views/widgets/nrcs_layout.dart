@@ -34,6 +34,7 @@ class NRCSAppShell extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const NRCSTopNav(),
           const NRCSSubNav(),
@@ -316,7 +317,7 @@ class _NavButton extends StatelessWidget {
               right: BorderSide(color: Colors.white24, width: 1),
             ),
           ),
-          alignment: Alignment.center,
+          alignment: Alignment.centerLeft,
           child: Text(
             label,
             style: TextStyle(
@@ -366,10 +367,14 @@ class _UserSection extends StatelessWidget {
               ),
             ),
             // Divider
-            Container(width: 1, height: 30, color: Colors.white24),
+            Container(width: 2, height: 30, color: Colors.white24),
             // chamDTech NRCS
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(2),
+              ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -386,14 +391,14 @@ class _UserSection extends StatelessWidget {
               ),
             ),
             // Divider
-            Container(width: 1, height: 30, color: Colors.white24),
+            Container(width: 2, height: 30, color: Colors.white24),
             // Notification Bell
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 12.0),
               child: Icon(Icons.notifications_none, color: Colors.white, size: 20),
             ),
             // Divider
-            Container(width: 1, height: 30, color: Colors.white24),
+            Container(width: 2, height: 30, color: Colors.white24),
             // User details and logout
             Container(
               height: 50,
@@ -421,10 +426,14 @@ class _UserSection extends StatelessWidget {
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Text(
-                          'Online',
-                          style: TextStyle(color: Colors.greenAccent, fontSize: 10),
-                        ),
+                        if (user != null)
+                          Text(
+                            user.isOnline ? 'Online' : 'Offline',
+                            style: TextStyle(
+                              color: user.isOnline ? Colors.greenAccent : Colors.grey,
+                              fontSize: 10,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -512,6 +521,8 @@ class NRCSToolbar extends StatelessWidget {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _ToolbarIcon(icon: Icons.refresh),
             _ToolbarButton(icon: Icons.folder_open, label: 'news'),
@@ -565,6 +576,7 @@ class _ToolbarButton extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(color: NRCSColors.borderGray),
       ),
+      alignment: Alignment.centerLeft,
       child: Row(
         children: [
           Icon(icon, size: 18),
@@ -580,15 +592,16 @@ class _ToolbarSearch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 150,
+      width: 147,
       height: 45,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
         border: Border.all(color: NRCSColors.borderGray),
       ),
+      alignment: Alignment.centerLeft,
       child: const Row(
         children: [
-          Icon(Icons.search, size: 18),
+          Icon(Icons.search, size: 16),
           const SizedBox(width: 4),
           Text('search', style: TextStyle(fontWeight: FontWeight.bold)),
         ],
@@ -618,7 +631,7 @@ class _ToolbarActionButton extends StatelessWidget {
             ? Border.all(color: borderColor!, width: 2)
             : Border.all(color: NRCSColors.borderGray),
       ),
-      alignment: Alignment.center,
+      alignment: Alignment.centerLeft,
       child: Text(
         label,
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1976D2)),
