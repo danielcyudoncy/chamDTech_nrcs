@@ -9,6 +9,7 @@ import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
 import 'package:chamDTech_nrcs/features/admin/services/privilege_service.dart';
+import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
@@ -36,13 +37,14 @@ class AuthService extends GetxService {
     if (user == null) {
       // Use microtask to avoid immediate navigation errors during build
       Future.delayed(Duration.zero, () {
-        Get.offAllNamed('/login');
+        Get.offAllNamed(AppRoutes.login);
       });
     } else {
       await _loadUserData(user.uid);
       await _setUserOnlineStatus(true);
       Future.delayed(Duration.zero, () {
-        Get.offAllNamed('/stories');
+        final roleRoute = AppRoutes.getRouteForRole(currentUser.value?.role ?? '');
+        Get.offAllNamed(roleRoute);
       });
     }
   }
@@ -220,7 +222,7 @@ class AuthService extends GetxService {
       await _setUserOnlineStatus(false);
       await _auth.signOut();
       currentUser.value = null;
-      Get.offAllNamed('/login');
+      Get.offAllNamed(AppRoutes.login);
     } catch (e) {
       Get.log('Error signing out: $e');
     }

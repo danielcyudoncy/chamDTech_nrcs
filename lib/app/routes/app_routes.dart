@@ -11,6 +11,12 @@ import 'package:chamDTech_nrcs/features/profile/views/profile_screen.dart';
 import 'package:chamDTech_nrcs/features/admin/views/admin_dashboard_screen.dart';
 import 'package:chamDTech_nrcs/features/admin/views/master_management_screen.dart';
 import 'package:chamDTech_nrcs/features/admin/views/privilege_master_screen.dart';
+import 'package:chamDTech_nrcs/features/dashboard/views/shells/reporter_app_shell.dart';
+import 'package:chamDTech_nrcs/features/dashboard/views/shells/editor_app_shell.dart';
+import 'package:chamDTech_nrcs/features/dashboard/views/shells/producer_app_shell.dart';
+import 'package:chamDTech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
+import 'package:chamDTech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
+import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -39,6 +45,29 @@ class AppRoutes {
   static const String adminConfigurations = '/admin/configurations';
   static const String adminAuditTrail = '/admin/audit-trail';
   
+  static const String reporterDashboard = '/reporter-dashboard';
+  static const String editorDashboard = '/editor-dashboard';
+  static const String producerDashboard = '/producer-dashboard';
+  static const String anchorDashboard = '/anchor-dashboard';
+  
+  static String getRouteForRole(String role) {
+    switch (role) {
+      case AppConstants.roleAdmin:
+        return adminDashboard;
+      case AppConstants.roleReporter:
+        return reporterDashboard;
+      case AppConstants.roleEditor:
+        return editorDashboard;
+      case AppConstants.roleProducer:
+        return producerDashboard;
+      case AppConstants.roleAnchor:
+        return anchorDashboard;
+      default:
+        // Fallback for unknown roles (use stories as generic workspace for now)
+        return storyList;
+    }
+  }
+
   static List<GetPage> routes = [
     GetPage(
       name: splash,
@@ -74,7 +103,23 @@ class AppRoutes {
     ),
     GetPage(
       name: adminDashboard,
-      page: () => const AdminDashboardScreen(),
+      page: () => const AdminAppShell(), // Updated to new shell
+    ),
+    GetPage(
+      name: reporterDashboard,
+      page: () => const ReporterAppShell(),
+    ),
+    GetPage(
+      name: editorDashboard,
+      page: () => const EditorAppShell(),
+    ),
+    GetPage(
+      name: producerDashboard,
+      page: () => const ProducerAppShell(),
+    ),
+    GetPage(
+      name: anchorDashboard,
+      page: () => const AnchorDashboardScreen(),
     ),
     GetPage(
       name: adminPrivileges,

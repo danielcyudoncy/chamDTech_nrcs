@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/top_stories_ticker.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
 
@@ -136,18 +138,45 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Get.find<AuthService>().currentUser.value;
+    final role = user?.role ?? AppConstants.roleReporter;
+
+    // Define base route mapping based on our existing logic
     final Map<String, String> routeMapping = {
-      'Workspace': '/stories',
-      'wire': '/admin/wire',
-      'Desks': '/admin/desks',
+      'Workspace': '/stories', // Default reporter/general workspace
+      'Reporter Dashboard': AppRoutes.reporterDashboard,
+      'Editor Dashboard': AppRoutes.editorDashboard,
+      'Producer Dashboard': AppRoutes.producerDashboard,
+      'Anchor Dashboard': AppRoutes.anchorDashboard,
+      'Admin Dashboard': AppRoutes.adminDashboard,
+      'My Stories': '/stories', // Could filter stories logically by current user later
+      'Create Story': AppRoutes.storyEditor,
+      'Review Queue': '/stories', // Could filter logically later
       'Rundowns': '/rundowns',
+      'Desks': '/admin/desks',
+      'Users': '/users',
+      'Privileges': AppRoutes.adminPrivileges,
+      'Story States': AppRoutes.adminStoryState,
+      'Audit Logs': AppRoutes.adminAuditTrail,
+      'Configurations': AppRoutes.adminConfigurations,
       'Settings': '/settings',
     };
 
-    final tabs = [
-      'Workspace', 'wire', 'Desks', 'Rundowns', 'Media', 
-      'Social', 'Reports', 'Anc Live', 'Settings'
-    ];
+    // Calculate dynamic tabs based on active role permissions
+    List<String> tabs = [];
+    if (role == AppConstants.roleReporter) {
+      tabs = ['Reporter Dashboard', 'My Stories', 'Create Story', 'Notifications'];
+    } else if (role == AppConstants.roleEditor) {
+      tabs = ['Editor Dashboard', 'Review Queue', 'Desks', 'Notifications'];
+    } else if (role == AppConstants.roleProducer) {
+      tabs = ['Producer Dashboard', 'Rundowns', 'Story Pool', 'Reports'];
+    } else if (role == AppConstants.roleAdmin) {
+      tabs = ['Admin Dashboard', 'Users', 'Privileges', 'Desks', 'Story States', 'Audit Logs', 'Configurations'];
+    } else if (role == AppConstants.roleAnchor) {
+       tabs = ['Anchor Dashboard', 'Rundowns', 'Notifications'];
+    } else {
+       tabs = ['Workspace', 'Settings'];
+    }
 
     final currentRoute = Get.currentRoute;
 

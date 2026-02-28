@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -26,7 +27,7 @@ class AuthController extends GetxController {
         passwordController.text,
       );
       if (user != null) {
-        Get.offAllNamed('/stories');
+        Get.offAllNamed(AppRoutes.getRouteForRole(user.role));
       }
     } finally {
       isLoading.value = false;
@@ -50,7 +51,7 @@ class AuthController extends GetxController {
       
       if (user != null) {
         Get.back(); // Close dialog
-        Get.offAllNamed('/stories');
+        Get.offAllNamed(AppRoutes.getRouteForRole(user.role));
       }
     } finally {
       isLoading.value = false;
