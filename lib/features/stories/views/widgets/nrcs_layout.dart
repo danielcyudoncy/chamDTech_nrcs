@@ -53,13 +53,18 @@ class NRCSAppShell extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.arrow_back, size: 20, color: NRCSColors.topNavBlue),
                   onPressed: () {
-                    if (Navigator.canPop(context)) {
+                    // Use GetX history: if there's a real previous route, go back.
+                    // Otherwise navigate to the user's role-based home dashboard.
+                    if (Get.previousRoute.isNotEmpty) {
                       Get.back();
                     } else {
-                      Get.offAllNamed('/stories'); // Fallback to Workspace
+                      final authService = Get.find<AuthService>();
+                      final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
+                      final homeRoute = _getRoleDashboard(role);
+                      Get.offAllNamed(homeRoute);
                     }
                   },
-                  tooltip: 'Back to Workspace',
+                  tooltip: 'Go Back',
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -103,6 +108,22 @@ class NRCSAppShell extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _getRoleDashboard(String role) {
+    switch (role) {
+      case AppConstants.roleAdmin:
+        return AppRoutes.adminDashboard;
+      case AppConstants.roleProducer:
+        return AppRoutes.producerDashboard;
+      case AppConstants.roleEditor:
+        return AppRoutes.editorDashboard;
+      case AppConstants.roleAnchor:
+        return AppRoutes.anchorDashboard;
+      case AppConstants.roleReporter:
+      default:
+        return AppRoutes.reporterDashboard;
+    }
   }
 }
 

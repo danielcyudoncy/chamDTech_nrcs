@@ -1,0 +1,233 @@
+import 'package:get/get.dart';
+import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:flutter/material.dart';
+
+class EditorDashboardController extends GetxController {
+  final StoryService _storyService = Get.put(StoryService());
+  
+  final pendingStories = <StoryModel>[].obs;
+  final copyEditStories = <StoryModel>[].obs;
+  final isLoading = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadEditorQueues();
+  }
+
+  void loadEditorQueues() {
+    isLoading.value = true;
+    _storyService.getStories().listen((stories) {
+      // Pending review: submitted by reporter, wait for editor action
+      // We will consider pending and draft statuses for now, but specifically target those not verified/copy edited
+      // Depending on the exact workflow, let's assume 'pending' status indicates read for review.
+      // If reporter just leaves it draft, the editor might see it if they search, but 'pending' is key.
+      // Let's also include stage == AppConstants.stageNew
+      
+      pendingStories.value = stories.where((s) {
+        return s.status == AppConstants.statusPending || 
+               (s.stage == AppConstants.stageNew && s.status != AppConstants.statusApproved);
+      }).toList();
+
+      copyEditStories.value = stories.where((s) {
+        return s.stage == AppConstants.stageCopyEdited && s.status != AppConstants.statusApproved;
+      }).toList();
+
+      isLoading.value = false;
+    });
+  }
+
+  Future<void> startCopyEdit(StoryModel story) async {
+    // Change stage to copy_edited and navigate to editor
+    try {
+      final updatedStory = story.copyWith(
+        stage: AppConstants.stageCopyEdited,
+        updatedAt: DateTime.now(),
+      );
+      await _storyService.updateStory(updatedStory);
+      Get.toNamed('/story/editor', arguments: updatedStory);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to start copy edit: $e');
+    }
+  }
+
+  Future<void> changeStoryState(StoryModel story, String newStatus, String newStage) async {
+    try {
+      final updatedStory = story.copyWith(
+        status: newStatus,
+        stage: newStage,
+        updatedAt: DateTime.now(),
+      );
+      await _storyService.updateStory(updatedStory);
+      Get.snackbar('Success', 'Story state updated successfully', snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to update story state: $e');
+    }
+  }
+
+  Future<void> sendBackToReporter(StoryModel story) async {
+    try {
+      final updatedStory = story.copyWith(
+        status: AppConstants.statusDraft, // Puts it back in reporter's lap
+        stage: AppConstants.stageNew,
+        updatedAt: DateTime.now(),
+      );
+      await _storyService.updateStory(updatedStory);
+      Get.snackbar('Sent Back', 'Story has been sent back to the reporter', snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to send back story: $e');
+    }
+  }
+
+  Future<void> approveForProducer(StoryModel story) async {
+    try {
+      await _storyService.approveStory(story.id);
+      // approveStory handles logging and setting status to approved and stage to verified
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to approve story: $e');
+    }
+  }
+
+  void showChangeStateDialog(BuildContext context, StoryModel story) {
+    String selectedStatus = story.status;
+    String selectedStage = story.stage;
+    
+    final statuses = [
+      AppConstants.statusDraft,
+      AppConstants.statusPending,
+      AppConstants.statusApproved,
+      AppConstants.statusRejected,
+      AppConstants.statusArchived,
+    ];
+
+    final stages = [
+      AppConstants.stageNew,
+      AppConstants.stageCopyEdited,
+      AppConstants.stageVerified,
+      AppConstants.stageReadyToAir,
+      AppConstants.stageAired,
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Change Story State'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: const InputDecoration(labelText: 'Status'),
+                    items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => selectedStatus = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedStage,
+                    decoration: const InputDecoration(labelText: 'Stage'),
+                    items: stages.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => selectedStage = val);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    changeStoryState(story, selectedStatus, selectedStage);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showStoryMenu(BuildContext context, StoryModel story, Offset position) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    
+    showMenu(
+      context: context,
+      position: RelativeRect.fromRect(
+        position & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        const PopupMenuItem(
+          value: 'copy_edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit_document, size: 18, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Copy Edit'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'approve',
+          child: Row(
+            children: [
+              Icon(Icons.check_circle_outline, size: 18, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Approve for Producer'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'send_back',
+          child: Row(
+            children: [
+              Icon(Icons.reply, size: 18, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Send Back to Reporter'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'change_state',
+          child: Row(
+            children: [
+              Icon(Icons.swap_horiz, size: 18, color: Colors.grey),
+              SizedBox(width: 8),
+              Text('Change State (Manual)'),
+            ],
+          ),
+        ),
+      ],
+      elevation: 8.0,
+    ).then((value) {
+      if (value == null) return;
+      
+      switch (value) {
+        case 'copy_edit':
+          startCopyEdit(story);
+          break;
+        case 'approve':
+          approveForProducer(story);
+          break;
+        case 'send_back':
+          sendBackToReporter(story);
+          break;
+        case 'change_state':
+          showChangeStateDialog(context, story);
+          break;
+      }
+    });
+  }
+}

@@ -15,6 +15,7 @@ import 'package:chamDTech_nrcs/features/dashboard/views/shells/reporter_app_shel
 import 'package:chamDTech_nrcs/features/dashboard/views/shells/editor_app_shell.dart';
 import 'package:chamDTech_nrcs/features/dashboard/views/shells/producer_app_shell.dart';
 import 'package:chamDTech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
+import 'package:chamDTech_nrcs/features/rundowns/views/rundown_builder_screen.dart';
 import 'package:chamDTech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 
@@ -43,7 +44,7 @@ class AppRoutes {
   static const String adminStrings = '/admin/strings';
   static const String adminMosDevices = '/admin/mos-devices';
   static const String adminConfigurations = '/admin/configurations';
-  static const String adminAuditTrail = '/admin/audit-trail';
+  static const String adminAuditTrail = '/admin/audit-trail'; // Admin Audit Trail
   
   static const String reporterDashboard = '/reporter-dashboard';
   static const String editorDashboard = '/editor-dashboard';
@@ -116,10 +117,6 @@ class AppRoutes {
     GetPage(
       name: producerDashboard,
       page: () => const ProducerAppShell(),
-    ),
-    GetPage(
-      name: anchorDashboard,
-      page: () => const AnchorDashboardScreen(),
     ),
     GetPage(
       name: adminPrivileges,

@@ -144,11 +144,14 @@ class StoryService extends GetxService {
     return _firestore
         .collection(AppConstants.storiesCollection)
         .where('deskId', isEqualTo: deskId)
-        .orderBy('updatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => StoryModel.fromJson(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final docs = snapshot.docs
+              .map((doc) => StoryModel.fromJson(doc.data()))
+              .toList();
+          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          return docs;
+        });
   }
   
   // Get my stories
@@ -159,11 +162,14 @@ class StoryService extends GetxService {
     return _firestore
         .collection(AppConstants.storiesCollection)
         .where('authorId', isEqualTo: userId)
-        .orderBy('updatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => StoryModel.fromJson(doc.data()))
-            .toList());
+        .map((snapshot) {
+          final docs = snapshot.docs
+              .map((doc) => StoryModel.fromJson(doc.data()))
+              .toList();
+          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          return docs;
+        });
   }
   
   // Get story by ID

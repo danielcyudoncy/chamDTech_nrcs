@@ -168,6 +168,26 @@ class StoryEditorController extends GetxController {
     saveStory(isAutoSave: true);
   }
 
+  Future<void> approveStory() async {
+    if (existingStory == null) {
+      Get.snackbar('Error', 'Cannot approve a new story. Please save first.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    
+    isLoading.value = true;
+    try {
+      await saveStory(isAutoSave: true);
+      final success = await _storyService.approveStory(existingStory!.id);
+      if (success) {
+        Get.back();
+      }
+    } catch (e) {
+      // Error handled by service
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   @override
   void onClose() {
     _autoSaveTimer?.cancel();

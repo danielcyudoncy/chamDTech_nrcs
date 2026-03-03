@@ -1,83 +1,77 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 import 'package:chamDTech_nrcs/core/services/firebase_service.dart';
 import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/template_model.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
 
 class RundownService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
-  final AuthService _authService = Get.find<AuthService>();
+  static const String collectionName = 'rundowns';
 
-  Stream<List<RundownModel>> getRundowns() {
+  // Get active rundowns (today or future)
+  Stream<List<RundownModel>> getActiveRundowns() {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+
     return _firestore
-        .collection(AppConstants.rundownsCollection)
-        .orderBy('airDate', descending: true)
+        .collection(collectionName)
+        // Need composite index likely, or we filter client side to avoid index errors quickly
+        .where('scheduledTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .orderBy('scheduledTime', descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => RundownModel.fromJson(doc.data()))
             .toList());
   }
 
-  Future<RundownModel?> createRundownFromTemplate(TemplateModel template, DateTime airDate) async {
-    final user = _authService.currentUser.value;
-    if (user == null) return null;
+  // Get single rundown
+  Stream<RundownModel?> streamRundown(String id) {
+    return _firestore
+        .collection(collectionName)
+        .doc(id)
+        .snapshots()
+        .map((doc) {
+      if (doc.exists && doc.data() != null) {
+        return RundownModel.fromJson(doc.data()!);
+      }
+      return null;
+    });
+  }
 
-    final rundown = RundownModel(
-      id: '', // Will be updated
-      title: '${template.name} - ${airDate.toLocal().toString().split(' ')[0]}',
-      showName: template.name,
-      airDate: airDate,
-      status: AppConstants.rundownScheduled,
-      producerId: user.id,
-      producerName: user.displayName,
-      items: template.skeleton,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
+  // Create
+  Future<String?> createRundown(RundownModel rundown) async {
     try {
-      final docRef = await _firestore
-          .collection(AppConstants.rundownsCollection)
-          .add(rundown.toJson());
-      
+      final docRef = await _firestore.collection(collectionName).add(rundown.toJson());
       await docRef.update({'id': docRef.id});
-      return rundown.copyWith(id: docRef.id);
+      return docRef.id;
     } catch (e) {
       Get.log('Error creating rundown: $e');
       return null;
     }
   }
 
-  Future<void> updateRundownStatus(String rundownId, String status) async {
-    await _firestore
-        .collection(AppConstants.rundownsCollection)
-        .doc(rundownId)
-        .update({
-          'status': status,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+  // Update
+  Future<bool> updateRundown(RundownModel rundown) async {
+    if (rundown.id.isEmpty) return false;
+    try {
+      await _firestore
+          .collection(collectionName)
+          .doc(rundown.id)
+          .update(rundown.toJson());
+      return true;
+    } catch (e) {
+      Get.log('Error updating rundown: $e');
+      return false;
+    }
   }
 
-  Future<void> toggleOnAir(String rundownId, bool isOnAir) async {
-    await _firestore
-        .collection(AppConstants.rundownsCollection)
-        .doc(rundownId)
-        .update({
-          'status': isOnAir ? AppConstants.rundownOnAir : AppConstants.rundownActive,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-  }
-
-  Future<void> updateItems(String rundownId, List<RundownItem> items) async {
-    await _firestore
-        .collection(AppConstants.rundownsCollection)
-        .doc(rundownId)
-        .update({
-          'items': items.map((i) => i.toJson()).toList(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'totalDuration': items.fold<int>(0, (prev, element) => prev + element.duration),
-        });
+  // Delete
+  Future<bool> deleteRundown(String id) async {
+    try {
+      await _firestore.collection(collectionName).doc(id).delete();
+      return true;
+    } catch (e) {
+      Get.log('Error deleting rundown: $e');
+      return false;
+    }
   }
 }

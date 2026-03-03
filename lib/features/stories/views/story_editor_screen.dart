@@ -101,7 +101,7 @@ class StoryEditorScreen extends StatelessWidget {
             // Approve button (only for authorized users)
             if (PermissionHelpers.canApproveStory(controller.currentUser))
               _ToolbarButton(icon: Icons.check_circle_outline, label: 'Approve', onTap: () {
-                // TODO: Implement approve logic
+                controller.approveStory();
               }),
 
             _ToolbarButton(icon: Icons.copy_outlined, label: 'Copy', onTap: () {}),
@@ -214,7 +214,7 @@ class StoryEditorScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 8.0),
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      // Approve logic
+                      controller.approveStory();
                     },
                     icon: const Icon(Icons.check, size: 16),
                     label: const Text('Approve'),
