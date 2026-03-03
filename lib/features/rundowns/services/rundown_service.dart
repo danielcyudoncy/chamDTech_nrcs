@@ -74,4 +74,34 @@ class RundownService extends GetxService {
       return false;
     }
   }
+
+  /// Returns locked/on-air rundowns that contain [storyId].
+  /// Used to determine whether a reporter can edit an approved story.
+  Future<List<RundownModel>> getLockedRundownsForStory(String storyId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(collectionName)
+          .where('storyIds', arrayContains: storyId)
+          .where('status', whereIn: ['locked', 'on-air'])
+          .get();
+      return snapshot.docs
+          .map((doc) => RundownModel.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      Get.log('Error checking rundown lock for story $storyId: $e');
+      return [];
+    }
+  }
+
+  /// Live stream of all non-draft rundowns (locked, on-air, completed).
+  /// Used by the reporter controller to reactively maintain a set of locked story IDs.
+  Stream<List<RundownModel>> streamNonDraftRundowns() {
+    return _firestore
+        .collection(collectionName)
+        .where('status', whereIn: ['locked', 'on-air'])
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => RundownModel.fromJson(doc.data()))
+            .toList());
+  }
 }

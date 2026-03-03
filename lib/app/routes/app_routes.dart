@@ -119,6 +119,10 @@ class AppRoutes {
       page: () => const ProducerAppShell(),
     ),
     GetPage(
+      name: anchorDashboard,
+      page: () => const AnchorDashboardScreen(),
+    ),
+    GetPage(
       name: adminPrivileges,
       page: () => const PrivilegeMasterScreen(),
     ),

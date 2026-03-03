@@ -410,7 +410,7 @@ class _MetadataField extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
         const SizedBox(width: 4),
-        Icon(icon, size: 14, color: Colors.grey[700]),
+        Icon(icon, size: 14, color: NRCSColors.topNavBlue),
         const SizedBox(width: 2),
         Text(value, style: const TextStyle(fontSize: 12, color: Colors.black)),
       ],

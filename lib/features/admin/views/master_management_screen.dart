@@ -17,7 +17,7 @@ class MasterManagementScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.construction, size: 64, color: Colors.grey[400]),
+            Icon(Icons.construction, size: 64, color: Colors.grey[600]),
             const SizedBox(height: 16),
             Text(
               '$title Management coming soon',

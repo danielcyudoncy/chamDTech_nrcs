@@ -47,7 +47,7 @@ class StoryListScreen extends StatelessWidget {
           return const Center(
             child: Text(
               'Select a story to view details',
-              style: TextStyle(color: Colors.grey, fontSize: 18),
+              style: TextStyle(color: const Color(0xFF757575), fontSize: 18),
             ),
           );
         }
@@ -195,7 +195,7 @@ class _MetaItem extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12, 
-            color: Colors.grey[600], 
+            color: NRCSColors.topNavBlue, 
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -542,11 +542,11 @@ class NRCSSubNav extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: const Row(
               children: [
-                Icon(Icons.trending_up, color: Colors.black54, size: 16),
+                Icon(Icons.trending_up, color: NRCSColors.topNavBlue, size: 16),
                 SizedBox(width: 8),
                 Text(
                   'TRENDING STORIES',
-                  style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(color: NRCSColors.topNavBlue, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
                 SizedBox(width: 16),
                 Expanded(child: TopStoriesTicker()),
@@ -746,23 +746,23 @@ class NRCSStoryListItem extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.person, size: 12, color: isSelected ? Colors.white70 : Colors.grey[600]),
+                Icon(Icons.person, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
                 const SizedBox(width: 4),
                 Text(
                   author, 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : Colors.grey[600]
+                    color: isSelected ? Colors.white70 : NRCSColors.textDark
                   )
                 ),
                 const Spacer(),
-                Icon(Icons.access_time, size: 12, color: isSelected ? Colors.white70 : Colors.grey[600]),
+                Icon(Icons.access_time, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
                 const SizedBox(width: 4),
                 Text(
                   duration, 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : Colors.grey[600]
+                    color: isSelected ? Colors.white70 : NRCSColors.textDark
                   )
                 ),
               ],
@@ -770,13 +770,13 @@ class NRCSStoryListItem extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 12, color: isSelected ? Colors.white70 : Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
                 const SizedBox(width: 4),
                 Text(
                   '$time $date', 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : Colors.grey[600]
+                    color: isSelected ? Colors.white70 : NRCSColors.textDark
                   )
                 ),
                 const Spacer(),

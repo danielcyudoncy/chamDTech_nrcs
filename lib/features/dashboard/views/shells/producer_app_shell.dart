@@ -250,15 +250,15 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                       ),
                       subtitle: Row(
                         children: [
-                          Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                          Icon(Icons.schedule, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text(DateFormat('hh:mm a').format(rundown.scheduledTime)),
                           const SizedBox(width: 16),
-                          Icon(Icons.article, size: 14, color: Colors.grey[600]),
+                          Icon(Icons.article, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text('${rundown.storyIds.length} Stories'),
                           const SizedBox(width: 16),
-                          Icon(Icons.timer, size: 14, color: Colors.grey[600]),
+                          Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text('Target: ${controller.formatDuration(rundown.targetDuration)}'),
                         ],
@@ -389,7 +389,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.timer, size: 14, color: Colors.grey[600]),
+                              Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
                               const SizedBox(width: 4),
                               Text('${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}'),
                               const Spacer(),

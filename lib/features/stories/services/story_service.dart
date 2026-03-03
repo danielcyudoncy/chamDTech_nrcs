@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
@@ -229,17 +230,34 @@ class StoryService extends GetxService {
     }
   }
   
-  // Update story
+  // Update story — with backend rundown-lock guard
   Future<bool> updateStory(StoryModel story) async {
     try {
+      // ── Backend guard: block edits if story is in a locked rundown ──────
+      if (story.linkedRundownId != null && story.linkedRundownId!.isNotEmpty) {
+        final rundownDoc = await _firestore
+            .collection(AppConstants.rundownsCollection)
+            .doc(story.linkedRundownId)
+            .get();
+        if (rundownDoc.exists) {
+          final status = rundownDoc.data()?['status'] ?? 'draft';
+          if (status == 'locked' || status == 'on-air') {
+            Get.snackbar(
+              'Editing Blocked',
+              'This story is part of a locked rundown and cannot be edited.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red.shade50,
+              colorText: Colors.red.shade900,
+            );
+            return false;
+          }
+        }
+      }
+      // ── Proceed with save ─────────────────────────────────────────────────
       await _firestore
           .collection(AppConstants.storiesCollection)
           .doc(story.id)
           .update(story.toJson());
-      
-      // Log update (optional: could filter for significant updates only)
-      // For now, we'll skip logging every save to avoid noise
-      
       return true;
     } catch (e) {
       Get.snackbar(

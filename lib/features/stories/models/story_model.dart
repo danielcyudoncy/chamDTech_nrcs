@@ -24,6 +24,7 @@ class StoryModel {
   final List<String>? mediaUrls;
   final String? lockedBy; // User ID who currently has the story open
   final DateTime? lockedAt;
+  final String? linkedRundownId; // Rundown this story is assigned to (if any)
   
   StoryModel({
     required this.id,
@@ -48,6 +49,7 @@ class StoryModel {
     this.mediaUrls,
     this.lockedBy,
     this.lockedAt,
+    this.linkedRundownId,
   });
   
   Map<String, dynamic> toJson() {
@@ -74,6 +76,7 @@ class StoryModel {
       'mediaUrls': mediaUrls,
       'lockedBy': lockedBy,
       'lockedAt': lockedAt?.toIso8601String(),
+      'linkedRundownId': linkedRundownId,
     };
   }
   
@@ -117,6 +120,7 @@ class StoryModel {
       lockedAt: json['lockedAt'] != null 
           ? parseDate(json['lockedAt']) 
           : null,
+      linkedRundownId: json['linkedRundownId'],
     );
   }
   
@@ -143,6 +147,7 @@ class StoryModel {
     List<String>? mediaUrls,
     String? lockedBy,
     DateTime? lockedAt,
+    String? linkedRundownId,
   }) {
     return StoryModel(
       id: id ?? this.id,
@@ -167,6 +172,7 @@ class StoryModel {
       mediaUrls: mediaUrls ?? this.mediaUrls,
       lockedBy: lockedBy ?? this.lockedBy,
       lockedAt: lockedAt ?? this.lockedAt,
+      linkedRundownId: linkedRundownId ?? this.linkedRundownId,
     );
   }
 }

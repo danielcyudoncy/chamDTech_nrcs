@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 import '../../services/channel_news_service.dart';
+import 'nrcs_layout.dart';
 
 class TopStoriesTicker extends StatefulWidget {
   const TopStoriesTicker({super.key});
@@ -48,7 +49,7 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
             height: 15,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
+              valueColor: AlwaysStoppedAnimation<Color>(NRCSColors.topNavBlue),
             ),
           ),
         ),
@@ -69,7 +70,7 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
               });
               loadStories();
             },
-            icon: const Icon(Icons.refresh, size: 14, color: Colors.black54),
+            icon: const Icon(Icons.refresh, size: 14, color: NRCSColors.topNavBlue),
             padding: EdgeInsets.zero,
             tooltip: 'Refresh Stories',
           ),
@@ -81,8 +82,8 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
             alignment: Alignment.centerLeft,
             child: Marquee(
               text: stories.join("   🔴   "),
-              style: const TextStyle(
-                color: Colors.black87,
+              style:  TextStyle(
+                color: NRCSColors.topNavBlue,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
