@@ -40,12 +40,27 @@ class AuthService extends GetxService {
         Get.offAllNamed(AppRoutes.login);
       });
     } else {
-      await _loadUserData(user.uid);
-      await _setUserOnlineStatus(true);
-      Future.delayed(Duration.zero, () {
-        final roleRoute = AppRoutes.getRouteForRole(currentUser.value?.role ?? '');
-        Get.offAllNamed(roleRoute);
-      });
+      try {
+        await _loadUserData(user.uid);
+        await _setUserOnlineStatus(true);
+        Future.delayed(Duration.zero, () {
+          final roleRoute = AppRoutes.getRouteForRole(currentUser.value?.role ?? '');
+          Get.offAllNamed(roleRoute);
+        });
+      } catch (e) {
+        Get.log('Error in _setInitialScreen: $e');
+        await _auth.signOut();
+        Future.delayed(Duration.zero, () {
+          Get.offAllNamed(AppRoutes.login);
+          Get.snackbar(
+            'Session Error',
+            'Failed to load user profile. Please log in again.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+            colorText: Get.theme.colorScheme.error,
+          );
+        });
+      }
     }
   }
   
@@ -68,6 +83,17 @@ class AuthService extends GetxService {
         'Login Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return null;
+    } catch (e) {
+      Get.snackbar(
+        'Login Error',
+        e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
       );
       return null;
     }
@@ -113,6 +139,17 @@ class AuthService extends GetxService {
         'Sign Up Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return null;
+    } catch (e) {
+      Get.snackbar(
+        'Sign Up Error',
+        e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        colorText: Get.theme.colorScheme.error,
       );
       return null;
     }
@@ -150,9 +187,12 @@ class AuthService extends GetxService {
         }
         
         currentUser.value = user;
+      } else {
+        throw Exception('User profile not found in database.');
       }
     } catch (e) {
       Get.log('Error loading user data: $e');
+      rethrow;
     }
   }
 

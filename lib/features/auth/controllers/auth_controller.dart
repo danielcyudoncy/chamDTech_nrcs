@@ -29,6 +29,14 @@ class AuthController extends GetxController {
       if (user != null) {
         Get.offAllNamed(AppRoutes.getRouteForRole(user.role));
       }
+    } catch (e) {
+      Get.snackbar(
+        'Login Error',
+        'An unexpected error occurred.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       isLoading.value = false;
     }
@@ -53,6 +61,14 @@ class AuthController extends GetxController {
         Get.back(); // Close dialog
         Get.offAllNamed(AppRoutes.getRouteForRole(user.role));
       }
+    } catch (e) {
+      Get.snackbar(
+        'Sign Up Error',
+        'An unexpected error occurred.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     } finally {
       isLoading.value = false;
     }

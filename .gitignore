@@ -48,4 +48,9 @@ app.*.map.json
 # Firebase
 google-services.json
 google_service.json
+firebase.json
+firestore.rules
+firestore.indexes.json
+.firebaserc
+
 
