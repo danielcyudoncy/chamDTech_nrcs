@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart'; // For FlutterQuillLocalizations
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_quill/translations.dart';
 
 import 'package:chamDTech_nrcs/core/utils/context_menu_suppressor.dart';
 
@@ -43,7 +44,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Respect system setting or use Get.changeThemeMode
       initialRoute: AppRoutes.splash,
       getPages: AppRoutes.routes,
-      localizationsDelegates: const [
+      localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

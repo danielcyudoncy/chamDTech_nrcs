@@ -90,6 +90,7 @@ class NRCSAppShell extends StatelessWidget {
           if (toolbar != null) toolbar!,
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (sidebar != null)
                   Container(
@@ -561,7 +562,32 @@ class NRCSSubNav extends StatelessWidget {
 
 
 class NRCSToolbar extends StatelessWidget {
-  const NRCSToolbar({super.key});
+  final VoidCallback? onRefresh;
+  final VoidCallback? onNew;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final VoidCallback? onCopy;
+  final VoidCallback? onMove;
+  final VoidCallback? onLink;
+  final VoidCallback? onAssign;
+  final VoidCallback? onStoryLog;
+  final VoidCallback? onPrint;
+  final VoidCallback? onPowerview;
+
+  const NRCSToolbar({
+    super.key,
+    this.onRefresh,
+    this.onNew,
+    this.onEdit,
+    this.onDelete,
+    this.onCopy,
+    this.onMove,
+    this.onLink,
+    this.onAssign,
+    this.onStoryLog,
+    this.onPrint,
+    this.onPowerview,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -574,20 +600,25 @@ class NRCSToolbar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _ToolbarIcon(icon: Icons.refresh),
-            _ToolbarButton(icon: Icons.folder_open, label: 'news'),
-            _ToolbarButton(icon: Icons.folder_open, label: 'Politics'),
+            _ToolbarIcon(icon: Icons.refresh, onTap: onRefresh),
+            const _ToolbarButton(icon: Icons.folder_open, label: 'news'),
+            const _ToolbarButton(icon: Icons.folder_open, label: 'Politics'),
             _ToolbarSearch(),
-            _ToolbarActionButton(label: 'New'),
-            _ToolbarActionButton(label: 'Edit'),
-            _ToolbarActionButton(label: 'Delete'),
-            _ToolbarActionButton(label: 'Copy'),
-            _ToolbarActionButton(label: 'Move'),
-            _ToolbarActionButton(label: 'Link'),
-            _ToolbarActionButton(label: 'Assign'),
-            _ToolbarActionButton(label: 'Story Log'),
-            _ToolbarActionButton(label: 'Print'),
-            _ToolbarActionButton(label: 'Powerview', isBordered: true, borderColor: Colors.red),
+            _ToolbarActionButton(label: 'New', onTap: onNew),
+            _ToolbarActionButton(label: 'Edit', onTap: onEdit),
+            _ToolbarActionButton(label: 'Delete', onTap: onDelete),
+            _ToolbarActionButton(label: 'Copy', onTap: onCopy),
+            _ToolbarActionButton(label: 'Move', onTap: onMove),
+            _ToolbarActionButton(label: 'Link', onTap: onLink),
+            _ToolbarActionButton(label: 'Assign', onTap: onAssign),
+            _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog),
+            _ToolbarActionButton(label: 'Print', onTap: onPrint),
+            _ToolbarActionButton(
+              label: 'Powerview', 
+              isBordered: true, 
+              borderColor: Colors.red,
+              onTap: onPowerview,
+            ),
           ],
         ),
       ),
@@ -597,17 +628,21 @@ class NRCSToolbar extends StatelessWidget {
 
 class _ToolbarIcon extends StatelessWidget {
   final IconData icon;
-  const _ToolbarIcon({required this.icon});
+  final VoidCallback? onTap;
+  const _ToolbarIcon({required this.icon, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 45,
-      height: 45,
-      decoration: BoxDecoration(
-        border: Border.all(color: NRCSColors.borderGray),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 45,
+        height: 45,
+        decoration: BoxDecoration(
+          border: Border.all(color: NRCSColors.borderGray),
+        ),
+        child: Icon(icon, size: 24),
       ),
-      child: Icon(icon, size: 24),
     );
   }
 }
@@ -664,27 +699,32 @@ class _ToolbarActionButton extends StatelessWidget {
   final String label;
   final bool isBordered;
   final Color? borderColor;
+  final VoidCallback? onTap;
 
   const _ToolbarActionButton({
     required this.label, 
     this.isBordered = false,
     this.borderColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 45,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        border: isBordered && borderColor != null
-            ? Border.all(color: borderColor!, width: 2)
-            : Border.all(color: NRCSColors.borderGray),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1976D2)),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        height: 45,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          border: isBordered && borderColor != null
+              ? Border.all(color: borderColor!, width: 2)
+              : Border.all(color: NRCSColors.borderGray),
+        ),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1976D2)),
+        ),
       ),
     );
   }

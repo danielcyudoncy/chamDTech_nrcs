@@ -162,7 +162,7 @@ class _MyStoriesTabState extends State<MyStoriesTab>
                         decoration: BoxDecoration(
                           color: hasAlert
                               ? Colors.red.shade700
-                              : g.color.withOpacity(0.15),
+                              : g.color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -256,7 +256,7 @@ class _StoryGroupList extends StatelessWidget {
       return ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: list.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           return _StoryCard(
             story: list[index],
@@ -301,30 +301,38 @@ class _StoryCard extends StatelessWidget {
       // Reactively check rundown lock status for approved stories
       final isRundownLocked =
           _isApproved && controller.isStoryEditLocked(story.id);
+      
+      final isSelected = controller.selectedStory.value?.id == story.id;
 
-      return Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: _showRevisionBanner
-                ? Colors.red.shade200
-                : isRundownLocked
-                    ? Colors.orange.shade300
-                    : NRCSColors.borderGray,
-            width: (_showRevisionBanner || isRundownLocked) ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+      return InkWell(
+        onTap: () => controller.selectStory(story),
+        onSecondaryTapDown: (details) => 
+            controller.showStoryMenu(context, story, details.globalPosition),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.05) : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected 
+                  ? NRCSColors.topNavBlue 
+                  : _showRevisionBanner
+                      ? Colors.red.shade200
+                      : isRundownLocked
+                          ? Colors.orange.shade300
+                          : NRCSColors.borderGray,
+              width: (isSelected || _showRevisionBanner || isRundownLocked) ? 1.5 : 1,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isSelected ? 0.08 : 0.04),
+                blurRadius: isSelected ? 8 : 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // ── Revision alert banner ────────────────────────────────────────
             if (_showRevisionBanner)
               Container(
@@ -556,6 +564,7 @@ class _StoryCard extends StatelessWidget {
             ),
           ],
         ),
+        ),
       );
     });
   }
@@ -583,9 +592,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         status.toUpperCase(),
@@ -640,24 +649,20 @@ class _ActionButton extends StatelessWidget {
         icon: Icon(icon, size: 15, color: color),
         label: Text(label, style: TextStyle(color: color, fontSize: 13)),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: color.withOpacity(0.5)),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6)),
+          side: BorderSide(color: color.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       );
     }
     return ElevatedButton.icon(
       onPressed: onTap,
       icon: Icon(icon, size: 15, color: Colors.white),
-      label: Text(label,
-          style: const TextStyle(color: Colors.white, fontSize: 13)),
+      label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         elevation: 0,
       ),
     );

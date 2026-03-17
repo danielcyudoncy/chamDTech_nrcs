@@ -72,6 +72,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
           const NRCSToolbar(),
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Hardcoded Producer Sidebar
                 Container(
@@ -160,7 +161,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
           const SizedBox(height: 24),
           Expanded(
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   flex: 2,

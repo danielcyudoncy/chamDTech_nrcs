@@ -16,6 +16,9 @@ class ReporterDashboardController extends GetxController {
   final rejectedStories = <StoryModel>[].obs;    // rejected (needs revision)
   final approvedStories = <StoryModel>[].obs;    // approved / verified / ready_to_air
   final archivedStories = <StoryModel>[].obs;    // archived / aired
+ 
+  /// The story currently selected in the UI for toolbar actions.
+  final selectedStory = Rxn<StoryModel>();
 
   /// Set of story IDs currently locked inside a locked/on-air rundown.
   /// Reactive — updates live as producers lock/unlock rundowns.
@@ -37,7 +40,7 @@ class ReporterDashboardController extends GetxController {
       for (final r in rundowns) {
         ids.addAll(r.storyIds);
       }
-      lockedStoryIds.value = ids;
+      lockedStoryIds.assignAll(ids);
     });
   }
 
@@ -80,8 +83,25 @@ class ReporterDashboardController extends GetxController {
     Get.toNamed(AppRoutes.storyEditor);
   }
 
+  void selectStory(StoryModel? story) {
+    if (selectedStory.value?.id == story?.id) {
+      selectedStory.value = null;
+    } else {
+      selectedStory.value = story;
+    }
+  }
+
   void editStory(StoryModel story) {
     Get.toNamed(AppRoutes.storyEditor, arguments: story);
+  }
+
+  void editSelectedStory() {
+    if (selectedStory.value != null) {
+      editStory(selectedStory.value!);
+    } else {
+      Get.snackbar('Selection Required', 'Please select a story to edit.',
+          snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   /// For approved stories: checks rundown lock before opening editor.
@@ -180,8 +200,61 @@ class ReporterDashboardController extends GetxController {
     );
 
     if (confirm == true) {
-      await _storyService.deleteStory(story.id);
+      try {
+        await _storyService.deleteStory(story.id);
+        if (selectedStory.value?.id == story.id) {
+          selectedStory.value = null;
+        }
+      } catch (e) {
+        Get.snackbar('Error', 'Failed to delete story.',
+            snackPosition: SnackPosition.BOTTOM);
+      }
     }
+  }
+
+  void deleteSelectedStory(BuildContext context) {
+    if (selectedStory.value != null) {
+      deleteStory(context, selectedStory.value!);
+    } else {
+      Get.snackbar('Selection Required', 'Please select a story to delete.',
+          snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> copySelectedStory() async {
+    if (selectedStory.value == null) {
+      Get.snackbar('Selection Required', 'Please select a story to copy.',
+          snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    try {
+      final source = selectedStory.value!;
+      final newStory = source.copyWith(
+        id: '', // Service will generate new ID
+        title: '${source.title} (Copy)',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        status: AppConstants.statusDraft,
+      );
+      await _storyService.createStory(newStory);
+      Get.snackbar('Copied', 'Story duplicated successfully.',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to copy story.',
+          snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  void performAction(String action) {
+    if (selectedStory.value == null && action != 'New') {
+       Get.snackbar('Selection Required', 'Please select a story first.',
+          snackPosition: SnackPosition.BOTTOM);
+       return;
+    }
+    
+    Get.snackbar(action, '$action feature is coming soon.',
+        snackPosition: SnackPosition.BOTTOM);
   }
 
   void showStoryMenu(BuildContext context, StoryModel story, Offset position) {
@@ -245,7 +318,7 @@ class ReporterDashboardController extends GetxController {
           }
           break;
         case 'delete':
-          deleteStory(context, story);
+          if (context.mounted) deleteStory(context, story);
           break;
       }
     });

@@ -61,6 +61,7 @@ class _EditorAppShellState extends State<EditorAppShell> {
           const NRCSToolbar(),
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Hardcoded Editor Sidebar
                 Container(

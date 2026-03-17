@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 import 'package:chamDTech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
 import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamDTech_nrcs/features/dashboard/views/widgets/my_stories_tab.dart';
@@ -59,9 +57,22 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               ],
             ),
           ),
-          const NRCSToolbar(),
+          NRCSToolbar(
+            onRefresh: () => controller.loadReporterStories(),
+            onNew: () => controller.createNewStory(),
+            onEdit: () => controller.editSelectedStory(),
+            onDelete: () => controller.deleteSelectedStory(context),
+            onCopy: () => controller.copySelectedStory(),
+            onMove: () => controller.performAction('Move'),
+            onLink: () => controller.performAction('Link'),
+            onAssign: () => controller.performAction('Assign'),
+            onStoryLog: () => controller.performAction('Story Log'),
+            onPrint: () => controller.performAction('Print'),
+            onPowerview: () => controller.performAction('Powerview'),
+          ),
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Hardcoded Reporter Sidebar
                 Container(
@@ -156,7 +167,7 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                 children: [
                   Expanded(
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: _buildSection(
@@ -185,7 +196,7 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                   const SizedBox(height: 16),
                   Expanded(
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: _buildSection(
@@ -296,16 +307,17 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                         onLongPressStart: (details) {
                           controller.showStoryMenu(context, story, details.globalPosition);
                         },
-                        child: NRCSStoryListItem(
+                        child: Obx(() => NRCSStoryListItem(
                           title: story.title.isEmpty ? 'Untitled' : story.title,
                           author: story.authorName,
                           time: timeFormat.format(story.updatedAt),
                           date: dateFormat.format(story.updatedAt),
                           duration: '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}',
+                          isSelected: controller.selectedStory.value?.id == story.id,
                           onTap: () {
-                            controller.editStory(story);
+                            controller.selectStory(story);
                           },
-                        ),
+                        )),
                       );
                     },
                   ),

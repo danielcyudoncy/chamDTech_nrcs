@@ -255,8 +255,8 @@ class StoryEditorScreen extends StatelessWidget {
           ),
         ),
         quill.QuillSimpleToolbar(
-          controller: quillController,
-          config: const quill.QuillSimpleToolbarConfig(
+          configurations: quill.QuillSimpleToolbarConfigurations(
+            controller: quillController,
             showAlignmentButtons: false,
             showSmallButton: true,
             multiRowsDisplay: false,
@@ -267,8 +267,8 @@ class StoryEditorScreen extends StatelessWidget {
             color: const Color(0xFFECEFF1),
             padding: const EdgeInsets.all(12),
             child: quill.QuillEditor.basic(
-              controller: quillController,
-              config: quill.QuillEditorConfig(
+              configurations: quill.QuillEditorConfigurations(
+                controller: quillController,
                 placeholder: placeholder,
                 padding: EdgeInsets.zero,
               ),

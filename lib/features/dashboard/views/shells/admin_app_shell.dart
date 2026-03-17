@@ -58,6 +58,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
           const NRCSToolbar(),
           Expanded(
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Hardcoded Admin Sidebar
                 Container(
