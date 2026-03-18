@@ -451,54 +451,58 @@ class _UserSection extends StatelessWidget {
             // Divider
             Container(width: 2, height: 30, color: Colors.white24),
             // User details and logout
-            Container(
-              height: 50,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.white24,
-                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null 
-                        ? const Icon(Icons.person, size: 18, color: Colors.white)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 150),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          displayName,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (user != null)
-                          Text(
-                            user.isOnline ? 'Online' : 'Offline',
-                            style: TextStyle(
-                              color: user.isOnline ? Colors.greenAccent : Colors.grey,
-                              fontSize: 10,
-                            ),
-                          ),
-                      ],
+            InkWell(
+              onTap: () => Get.toNamed(AppRoutes.profile),
+              child: Container(
+                height: 50,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 14,
+                      backgroundColor: Colors.white24,
+                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                      child: photoUrl == null 
+                          ? const Icon(Icons.person, size: 18, color: Colors.white)
+                          : null,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
-                    tooltip: 'Logout',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => authService.signOut(),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 150),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (user != null)
+                            Text(
+                              user.isOnline ? 'Online' : 'Offline',
+                              style: TextStyle(
+                                color: user.isOnline ? Colors.greenAccent : Colors.grey,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white70, size: 20),
+              tooltip: 'Logout',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              onPressed: () => authService.signOut(),
+            ),
+            const SizedBox(width: 8),
           ],
         ),
       );
