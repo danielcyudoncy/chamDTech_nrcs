@@ -211,21 +211,25 @@ class AuthService extends GetxService {
   // Set user online/offline status in Realtime Database
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     if (currentUser.value == null) return;
-    
+
+    // Update in-memory state immediately so the UI reacts right away,
+    // regardless of whether Firebase calls succeed or fail.
+    currentUser.value = currentUser.value?.copyWith(isOnline: isOnline);
+
+    // Update Realtime Database
     try {
       final userStatusRef = _database.ref(
         '${AppConstants.onlineUsersPath}/${currentUser.value!.id}'
       );
-      
+
       if (isOnline) {
-        // Set online
         await userStatusRef.set({
           'isOnline': true,
           'lastSeen': ServerValue.timestamp,
           'displayName': currentUser.value!.displayName,
           'role': currentUser.value!.role,
         });
-        
+
         // Set offline on disconnect
         await userStatusRef.onDisconnect().set({
           'isOnline': false,
@@ -234,7 +238,6 @@ class AuthService extends GetxService {
           'role': currentUser.value!.role,
         });
       } else {
-        // Set offline
         await userStatusRef.set({
           'isOnline': false,
           'lastSeen': ServerValue.timestamp,
@@ -242,8 +245,13 @@ class AuthService extends GetxService {
           'role': currentUser.value!.role,
         });
       }
-      
-      // Also update Firestore
+    } catch (e) {
+      Get.log('Error setting Realtime DB status: $e');
+    }
+
+    // Update Firestore (separate try/catch so a permission error here
+    // does not undo the in-memory or Realtime DB update)
+    try {
       await _firestore
           .collection(AppConstants.usersCollection)
           .doc(currentUser.value!.id)
@@ -252,7 +260,7 @@ class AuthService extends GetxService {
         'lastSeen': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      Get.log('Error setting user status: $e');
+      Get.log('Error updating Firestore status: $e');
     }
   }
   
