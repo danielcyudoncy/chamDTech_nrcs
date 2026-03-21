@@ -97,6 +97,13 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if request.auth != null;
     }
+    
+    // Notifications: users can read and update their own notifications
+    match /notifications/{notificationId} {
+      allow read, update, delete: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || resource.data.userId == 'editor_group');
+      allow create: if request.auth != null;
+    }
   }
 }
 ```
@@ -236,6 +243,15 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && 
         (resource.data.producerId == request.auth.uid || 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+    }
+    
+    // Notifications: users can read and update their own notifications
+    match /notifications/{notificationId} {
+      allow read, update, delete: if request.auth != null && 
+        (resource.data.userId == request.auth.uid || 
+         (resource.data.userId == 'editor_group' && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['editor', 'admin', 'producer']));
+      allow create: if request.auth != null;
     }
   }
 }

@@ -53,6 +53,22 @@ class AppConstants {
   static const String formatPackage = 'PKG';
   static const String formatLive = 'LIVE';
   static const String formatGraphic = 'GFX';
+
+  // Story Categories
+  static const String categoryNews = 'NEWS';
+  static const String categoryPolitics = 'POLITICS';
+  static const String categorySports = 'SPORTS';
+  static const String categoryForeign = 'FOREIGN';
+  static const String categoryBusiness = 'BUSINESS';
+
+  static const List<String> storyCategories = [
+    categoryNews,
+    categoryPolitics,
+    categorySports,
+    categoryForeign,
+    categoryBusiness,
+  ];
+
   
   // Rundown Status
   static const String rundownActive = 'active';

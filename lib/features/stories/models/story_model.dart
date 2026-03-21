@@ -25,6 +25,9 @@ class StoryModel {
   final String? lockedBy; // User ID who currently has the story open
   final DateTime? lockedAt;
   final String? linkedRundownId; // Rundown this story is assigned to (if any)
+  final String category; // Story category (NEWS, POLITICS, SPORTS, FOREIGN, BUSINESS)
+  final String? assignedToId;
+  final String? assignedToName;
   
   StoryModel({
     required this.id,
@@ -50,6 +53,9 @@ class StoryModel {
     this.lockedBy,
     this.lockedAt,
     this.linkedRundownId,
+    this.category = '',
+    this.assignedToId,
+    this.assignedToName,
   });
   
   Map<String, dynamic> toJson() {
@@ -77,6 +83,9 @@ class StoryModel {
       'lockedBy': lockedBy,
       'lockedAt': lockedAt?.toIso8601String(),
       'linkedRundownId': linkedRundownId,
+      'category': category,
+      'assignedToId': assignedToId,
+      'assignedToName': assignedToName,
     };
   }
   
@@ -121,6 +130,9 @@ class StoryModel {
           ? parseDate(json['lockedAt']) 
           : null,
       linkedRundownId: json['linkedRundownId'],
+      category: json['category'] ?? '',
+      assignedToId: json['assignedToId'],
+      assignedToName: json['assignedToName'],
     );
   }
   
@@ -148,6 +160,9 @@ class StoryModel {
     String? lockedBy,
     DateTime? lockedAt,
     String? linkedRundownId,
+    String? category,
+    String? assignedToId,
+    String? assignedToName,
   }) {
     return StoryModel(
       id: id ?? this.id,
@@ -173,6 +188,9 @@ class StoryModel {
       lockedBy: lockedBy ?? this.lockedBy,
       lockedAt: lockedAt ?? this.lockedAt,
       linkedRundownId: linkedRundownId ?? this.linkedRundownId,
+      category: category ?? this.category,
+      assignedToId: assignedToId ?? this.assignedToId,
+      assignedToName: assignedToName ?? this.assignedToName,
     );
   }
 }

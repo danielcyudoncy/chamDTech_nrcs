@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamDTech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
 
 class ReporterDashboardScreen extends StatelessWidget {
   const ReporterDashboardScreen({super.key});
@@ -27,7 +28,13 @@ class ReporterDashboardScreen extends StatelessWidget {
                       ),
                 ),
                 ElevatedButton.icon(
-                  onPressed: () => Get.toNamed('/story/editor'),
+                  onPressed: () {
+                    try {
+                      Get.find<ReporterDashboardController>().createNewStory();
+                    } catch (e) {
+                      Get.put(ReporterDashboardController()).createNewStory();
+                    }
+                  },
                   icon: const Icon(Icons.add),
                   label: const Text('Create New Story'),
                   style: ElevatedButton.styleFrom(

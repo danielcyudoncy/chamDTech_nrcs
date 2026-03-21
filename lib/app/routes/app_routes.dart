@@ -17,6 +17,7 @@ import 'package:chamDTech_nrcs/features/dashboard/views/shells/producer_app_shel
 import 'package:chamDTech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
 import 'package:chamDTech_nrcs/features/rundowns/views/rundown_builder_screen.dart';
 import 'package:chamDTech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
+import 'package:chamDTech_nrcs/features/notifications/views/notification_screen.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 
 class AppRoutes {
@@ -50,6 +51,7 @@ class AppRoutes {
   static const String editorDashboard = '/editor-dashboard';
   static const String producerDashboard = '/producer-dashboard';
   static const String anchorDashboard = '/anchor-dashboard';
+  static const String notifications = '/notifications';
   
   static String getRouteForRole(String role) {
     switch (role) {
@@ -181,6 +183,10 @@ class AppRoutes {
     GetPage(
       name: settings,
       page: () => const SettingsScreen(),
+    ),
+    GetPage(
+      name: notifications,
+      page: () => const NotificationScreen(),
     ),
   ];
 }

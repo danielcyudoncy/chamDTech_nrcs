@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class NotificationModel {
   final String id;
   final String userId;
@@ -36,6 +38,14 @@ class NotificationModel {
   }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic date) {
+      if (date == null) return DateTime.now();
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+      return DateTime.now();
+    }
+
     return NotificationModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -44,9 +54,7 @@ class NotificationModel {
       message: json['message'] ?? '',
       data: json['data'],
       isRead: json['isRead'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
+      createdAt: parseDate(json['createdAt']),
       actionUrl: json['actionUrl'],
     );
   }

@@ -7,12 +7,18 @@ import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamDTech_nrcs/core/models/attachment_model.dart';
 import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamDTech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamDTech_nrcs/core/models/notification_model.dart';
+import 'package:chamDTech_nrcs/core/services/notification_service.dart';
+import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 
 class StoryEditorController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();
   final AuthService _authService = Get.find<AuthService>();
+  final NotificationService _notificationService = Get.find<NotificationService>();
 
   final titleController = TextEditingController();
   final slugController = TextEditingController();
@@ -28,7 +34,12 @@ class StoryEditorController extends GetxController {
   final storyTitle = ''.obs;
   final durationText = '0'.obs;
   final attachments = <AttachmentModel>[].obs; // Reactive attachments list
-  
+  final selectedCategory = ''.obs; // Selected story category
+  final versionText = 'First Version'.obs;
+  final anchorWordCount = 0.obs;
+  final notesWordCount = 0.obs;
+  final formattedDuration = '00:00:00'.obs;
+
   StoryModel? existingStory;
   Timer? _autoSaveTimer;
 
@@ -46,6 +57,11 @@ class StoryEditorController extends GetxController {
       slugController.text = existingStory!.slug;
       durationController.text = existingStory!.duration.toString();
       durationText.value = existingStory!.duration.toString();
+      selectedCategory.value = existingStory!.category;
+      
+      if (existingStory!.version > 1) {
+        versionText.value = 'Version ${existingStory!.version}';
+      }
       
       // Load attachments
       attachments.assignAll(existingStory!.attachments);
@@ -55,6 +71,11 @@ class StoryEditorController extends GetxController {
     } else {
       anchorQuillController = quill.QuillController.basic();
       notesQuillController = quill.QuillController.basic();
+      
+      // Pre-fill category if passed from the New Story popup
+      if (Get.arguments != null && Get.arguments is Map && Get.arguments['category'] != null) {
+        selectedCategory.value = Get.arguments['category'];
+      }
     }
 
     // Start auto-save
@@ -69,6 +90,51 @@ class StoryEditorController extends GetxController {
     durationController.addListener(() {
       durationText.value = durationController.text;
     });
+
+    // Add text listeners for word count and duration
+    anchorQuillController.document.changes.listen((_) => _updateMetrics());
+    notesQuillController.document.changes.listen((_) => _updateMetrics());
+    
+    // Initial calculation
+    _updateMetrics();
+  }
+
+  void _updateMetrics() {
+    final anchorText = anchorQuillController.document.toPlainText().trim();
+    final notesText = notesQuillController.document.toPlainText().trim();
+    
+    // Anchor Words
+    int ancWords = 0;
+    if (anchorText.isNotEmpty) {
+      ancWords = anchorText.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
+    }
+    anchorWordCount.value = ancWords;
+    
+    // Notes Words
+    int ntsWords = 0;
+    if (notesText.isNotEmpty) {
+      ntsWords = notesText.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
+    }
+    notesWordCount.value = ntsWords;
+    
+    // Calculate duration strictly from Anchor text (3 words per second)
+    if (ancWords == 0) {
+      formattedDuration.value = '00:00:00';
+      durationText.value = '0';
+      if (durationController.text != '0') durationController.text = '0';
+    } else {
+      final seconds = (ancWords / 3).ceil();
+      final d = Duration(seconds: seconds);
+      final h = d.inHours.toString().padLeft(2, '0');
+      final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+      final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+      formattedDuration.value = '$h:$m:$s';
+      
+      durationText.value = seconds.toString();
+      if (durationController.text != seconds.toString()) {
+        durationController.text = seconds.toString();
+      }
+    }
   }
 
   void _loadContent(String contentJson) {
@@ -115,6 +181,19 @@ class StoryEditorController extends GetxController {
   Future<void> saveStory({bool isAutoSave = false, String? nextStage}) async {
     if (titleController.text.isEmpty) return;
 
+    // Validate category is selected (skip during auto-save to avoid spamming)
+    if (!isAutoSave && selectedCategory.value.isEmpty) {
+      Get.snackbar(
+        'Category Required',
+        'Please select a category before saving.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+        duration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
     if (!isAutoSave) isLoading.value = true;
     isSaving.value = true;
 
@@ -122,6 +201,13 @@ class StoryEditorController extends GetxController {
     if (user == null) return;
 
     final now = DateTime.now();
+
+    // Increment version on manual saves for existing stories
+    int newVersion = existingStory?.version ?? 1;
+    if (!isAutoSave && existingStory != null) {
+      newVersion++;
+    }
+
     final story = (existingStory ?? StoryModel(
       id: const Uuid().v4(),
       title: titleController.text,
@@ -139,7 +225,11 @@ class StoryEditorController extends GetxController {
       duration: int.tryParse(durationController.text) ?? 0,
       updatedAt: now,
       stage: nextStage ?? existingStory?.stage,
+      version: newVersion,
       attachments: attachments.toList(),
+      category: selectedCategory.value,
+      assignedToId: existingStory?.assignedToId,
+      assignedToName: existingStory?.assignedToName,
     );
 
     final success = existingStory != null 
@@ -149,13 +239,201 @@ class StoryEditorController extends GetxController {
     if (success) {
       existingStory = story;
       lastSaved.value = now;
+      
+      if (existingStory!.version > 1) {
+        versionText.value = 'Version ${existingStory!.version}';
+      } else {
+        versionText.value = 'First Version';
+      }
+
+      if (!isAutoSave) {
+        Get.snackbar(
+          'Saved', 
+          'Story saved successfully.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green.withOpacity(0.1),
+          colorText: Colors.green.shade800,
+        );
+      }
+    } else if (!isAutoSave) {
+      Get.snackbar(
+        'Error', 
+        'Failed to save story.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withOpacity(0.1),
+        colorText: Colors.red,
+      );
     }
 
     isSaving.value = false;
     if (!isAutoSave) {
       isLoading.value = false;
-      Get.back();
+      // Removed Get.back() so the user can continue editing after a manual save
     }
+  }
+
+  void handleNew() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Create New Story?'),
+        content: const Text('If you have unsaved changes in this story, they will be auto-saved.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Get.back(); // close dialog
+              autoSave(); // auto save current
+              Get.back(); // exit current editor
+              Get.find<StoryController>().createNewStory();
+            }, 
+            child: const Text('Proceed', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      )
+    );
+  }
+
+  Future<void> handleCopy() async {
+    if (existingStory == null) {
+      Get.snackbar('Cannot Copy', 'Please save the story first before copying.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    isLoading.value = true;
+    try {
+      final copy = existingStory!.copyWith(
+        id: const Uuid().v4(),
+        title: '${existingStory!.title} (Copy)',
+        status: AppConstants.statusDraft,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      await _storyService.createStory(copy);
+      Get.snackbar('Copied', 'Story copied successfully.', snackPosition: SnackPosition.BOTTOM);
+      // Close current editor, open the copy
+      Get.back();
+      Get.toNamed('/story/editor', arguments: copy);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to copy story.', snackPosition: SnackPosition.BOTTOM);
+    }
+    isLoading.value = false;
+  }
+
+  Future<void> handleDelete() async {
+    if (existingStory == null) {
+      Get.back(); // It's a new, unsaved story. Just close the editor.
+      return;
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Delete Story', style: TextStyle(color: Colors.red)),
+        content: const Text('Are you sure you want to delete this story? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Get.back(); // hide dialog
+              isLoading.value = true;
+              try {
+                await _storyService.deleteStory(existingStory!.id);
+                isLoading.value = false;
+                Get.back(); // exit editor
+                Get.snackbar('Deleted', 'Story has been deleted.', snackPosition: SnackPosition.BOTTOM);
+              } catch (e) {
+                isLoading.value = false;
+                Get.snackbar('Error', 'Failed to delete story.', snackPosition: SnackPosition.BOTTOM);
+              }
+            }, 
+            child: const Text('Delete'),
+          ),
+        ],
+      )
+    );
+  }
+
+  Future<void> showAssignDialog() async {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Assign Story'),
+        content: SizedBox(
+          width: 300,
+          child: StreamBuilder<List<UserModel>>(
+            stream: _authService.getUsersStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final users = snapshot.data ?? [];
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  final user = users[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      child: Text(user.displayName[0]),
+                    ),
+                    title: Text(user.displayName),
+                    subtitle: Text(user.role.toUpperCase()),
+                    onTap: () {
+                      Get.back();
+                      assignStory(user);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> assignStory(UserModel user) async {
+    if (existingStory == null) {
+      Get.snackbar('Error', 'Save the story before assigning.');
+      return;
+    }
+
+    try {
+      final updatedStory = existingStory!.copyWith(
+        assignedToId: user.id,
+        assignedToName: user.displayName,
+        updatedAt: DateTime.now(),
+      );
+      
+      await _storyService.updateStory(updatedStory);
+      existingStory = updatedStory;
+
+      // Send notification
+      final currentUser = _authService.currentUser.value;
+      await _notificationService.sendNotification(NotificationModel(
+        id: const Uuid().v4(),
+        userId: user.id,
+        type: 'story_update',
+        title: 'Story Assigned',
+        message: '${currentUser?.displayName ?? "Someone"} assigned you the story: "${updatedStory.title}"',
+        createdAt: DateTime.now(),
+        actionUrl: AppRoutes.storyEditor + '?id=${updatedStory.id}',
+        data: {'storyId': updatedStory.id},
+      ));
+
+      Get.snackbar('Assigned', 'Story assigned to ${user.displayName}');
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to assign story: $e');
+    }
+  }
+
+  void showComingSoon(String feature) {
+    Get.snackbar(
+      '$feature Pending', 
+      'The $feature module is currently under active development and will be available soon.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue.withOpacity(0.1),
+      colorText: Colors.blue.shade900,
+      duration: const Duration(seconds: 3),
+    );
   }
 
   void addAttachment(AttachmentModel attachment) {

@@ -2,10 +2,17 @@ import 'package:get/get.dart';
 import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamDTech_nrcs/core/models/notification_model.dart';
+import 'package:chamDTech_nrcs/core/services/notification_service.dart';
+import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 
 class EditorDashboardController extends GetxController {
-  final StoryService _storyService = Get.put(StoryService());
+  final StoryService _storyService = Get.find<StoryService>();
+  final NotificationService _notificationService = Get.find<NotificationService>();
+  final AuthService _authService = Get.find<AuthService>();
   
   final pendingStories = <StoryModel>[].obs;
   final copyEditStories = <StoryModel>[].obs;
@@ -70,11 +77,25 @@ class EditorDashboardController extends GetxController {
   Future<void> sendBackToReporter(StoryModel story) async {
     try {
       final updatedStory = story.copyWith(
-        status: AppConstants.statusDraft, // Puts it back in reporter's lap
+        status: AppConstants.statusRejected, // Puts it back in reporter's lap for revision
         stage: AppConstants.stageNew,
         updatedAt: DateTime.now(),
       );
       await _storyService.updateStory(updatedStory);
+      
+      // Send notification to reporter
+      final user = _authService.currentUser.value;
+      await _notificationService.sendNotification(NotificationModel(
+        id: const Uuid().v4(),
+        userId: story.authorId,
+        type: 'story_update',
+        title: 'Story Rejected',
+        message: '${user?.displayName ?? "An editor"} sent back "${story.title}" for revision.',
+        createdAt: DateTime.now(),
+        actionUrl: AppRoutes.storyEditor + '?id=${story.id}',
+        data: {'storyId': story.id},
+      ));
+
       Get.snackbar('Sent Back', 'Story has been sent back to the reporter', snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar('Error', 'Failed to send back story: $e');

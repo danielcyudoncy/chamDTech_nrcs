@@ -3,10 +3,13 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamDTech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
 import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/top_stories_ticker.dart';
 import 'package:chamDTech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
+import 'package:chamDTech_nrcs/core/models/notification_model.dart';
+import 'package:chamDTech_nrcs/core/services/notification_service.dart';
 
 class NRCSColors {
   static const Color topNavBlue = Color(0xFF0046AD);
@@ -182,6 +185,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Audit Logs': AppRoutes.adminAuditTrail,
       'Configurations': AppRoutes.adminConfigurations,
       'Settings': '/settings',
+      'Notifications': AppRoutes.notifications,
     };
 
     // Calculate dynamic tabs based on active role permissions
@@ -225,6 +229,15 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                     label: tab, 
                     isActive: isActive,
                     onTap: () {
+                      if (tab == 'Create Story') {
+                        try {
+                          Get.find<StoryController>().createNewStory();
+                        } catch (e) {
+                          Get.put(StoryController()).createNewStory();
+                        }
+                        return;
+                      }
+
                       if (route != null) {
                         if (currentRoute != route) {
                           Get.offAllNamed(route);
@@ -390,6 +403,7 @@ class _UserSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authService = Get.find<AuthService>();
+    final notificationService = Get.find<NotificationService>();
     
     return Obx(() {
       final user = authService.currentUser.value;
@@ -443,10 +457,51 @@ class _UserSection extends StatelessWidget {
             ),
             // Divider
             Container(width: 2, height: 30, color: Colors.white24),
-            // Notification Bell
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.0),
-              child: Icon(Icons.notifications_none, color: Colors.white, size: 20),
+            // Notification Bell with Badge
+            StreamBuilder<List<NotificationModel>>(
+              stream: notificationService.getNotifications(),
+              builder: (context, snapshot) {
+                final List<NotificationModel> notifications = snapshot.data ?? [];
+                final unreadCount = notifications.where((n) => !n.isRead).length;
+                
+                return InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.notifications),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.notifications_none, color: Colors.white, size: 20),
+                        if (unreadCount > 0)
+                          Positioned(
+                            right: 0,
+                            top: 10,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 12,
+                                minHeight: 12,
+                              ),
+                              child: Text(
+                                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
             // Divider
             Container(width: 2, height: 30, color: Colors.white24),
@@ -740,6 +795,7 @@ class NRCSStoryListItem extends StatelessWidget {
   final String time;
   final String date;
   final String duration;
+  final String? category;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -750,6 +806,7 @@ class NRCSStoryListItem extends StatelessWidget {
     required this.time,
     required this.date,
     required this.duration,
+    this.category,
     required this.onTap,
     this.isSelected = false,
   });
@@ -771,13 +828,44 @@ class NRCSStoryListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      fontSize: 14,
-                      color: isSelected ? Colors.white : const Color(0xFF0D47A1),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 14,
+                          color: isSelected ? Colors.white : const Color(0xFF0D47A1),
+                        ),
+                      ),
+                      if (category != null && category!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isSelected 
+                                ? Colors.white.withOpacity(0.2) 
+                                : _getCategoryColor(category!).withOpacity(0.1),
+                            border: Border.all(
+                              color: isSelected 
+                                  ? Colors.white54 
+                                  : _getCategoryColor(category!),
+                              width: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            category!,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? Colors.white : _getCategoryColor(category!),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Icon(
@@ -831,5 +919,16 @@ class NRCSStoryListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getCategoryColor(String categoryStr) {
+    switch (categoryStr) {
+      case 'NEWS':      return Colors.blue;
+      case 'POLITICS':  return Colors.purple;
+      case 'SPORTS':    return Colors.green;
+      case 'FOREIGN':   return Colors.orange;
+      case 'BUSINESS':  return Colors.teal;
+      default:          return Colors.grey;
+    }
   }
 }

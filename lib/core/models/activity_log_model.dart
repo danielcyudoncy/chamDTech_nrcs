@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ActivityLogModel {
   final String id;
   final String userId;
@@ -42,6 +44,14 @@ class ActivityLogModel {
   }
 
   factory ActivityLogModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic date) {
+      if (date == null) return DateTime.now();
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+      return DateTime.now();
+    }
+
     return ActivityLogModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -52,9 +62,7 @@ class ActivityLogModel {
       entityTitle: json['entityTitle'],
       changes: json['changes'],
       description: json['description'],
-      timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'])
-          : DateTime.now(),
+      timestamp: parseDate(json['timestamp']),
       ipAddress: json['ipAddress'],
     );
   }

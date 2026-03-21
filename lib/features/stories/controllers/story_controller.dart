@@ -13,6 +13,7 @@ class StoryController extends GetxController {
   final stories = <StoryModel>[].obs;
   final isLoading = false.obs;
   final currentFilter = 'all'.obs;
+  final categoryFilter = 'all'.obs; // Category filter: 'all' or a specific category
   final selectedStoryId = ''.obs;
 
   StoryModel? get selectedStory => 
@@ -44,22 +45,24 @@ class StoryController extends GetxController {
     }
     
     storyStream.listen((storyList) {
-      // Apply filter
+      // Apply status filter
+      List<StoryModel> filtered;
       if (currentFilter.value == 'draft') {
-        stories.value = storyList
-            .where((s) => s.status == AppConstants.statusDraft)
-            .toList();
+        filtered = storyList.where((s) => s.status == AppConstants.statusDraft).toList();
       } else if (currentFilter.value == 'approved') {
-        stories.value = storyList
-            .where((s) => s.status == AppConstants.statusApproved)
-            .toList();
+        filtered = storyList.where((s) => s.status == AppConstants.statusApproved).toList();
       } else if (currentFilter.value == 'pending') {
-        stories.value = storyList
-            .where((s) => s.status == AppConstants.statusPending)
-            .toList();
+        filtered = storyList.where((s) => s.status == AppConstants.statusPending).toList();
       } else {
-        stories.value = storyList;
+        filtered = storyList;
       }
+
+      // Apply category filter
+      if (categoryFilter.value != 'all') {
+        filtered = filtered.where((s) => s.category == categoryFilter.value).toList();
+      }
+
+      stories.value = filtered;
       isLoading.value = false;
     });
   }
@@ -68,9 +71,104 @@ class StoryController extends GetxController {
     currentFilter.value = filter;
     loadStories();
   }
+
+  void setCategoryFilter(String category) {
+    categoryFilter.value = category;
+    loadStories();
+  }
   
   void createNewStory() {
-    Get.toNamed('/story/editor');
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 400, // Constrain width for a nice popup appearance
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'Select Story Category',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1976D2), // topNavBlue
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Please classify this story before proceeding.',
+                style: TextStyle(fontSize: 15, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.center,
+                children: AppConstants.storyCategories.map((cat) {
+                  return InkWell(
+                    onTap: () {
+                      Get.back(); // Close dialog
+                      // Navigate to editor with the selected category pre-filled
+                      Get.toNamed('/story/editor', arguments: {'category': cat});
+                    },
+                    child: Container(
+                      width: 140,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.shade50,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: _categoryColor(cat),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            cat,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false, // Force them to close it directly
+    );
+  }
+
+  Color _categoryColor(String category) {
+    switch (category) {
+      case 'NEWS':      return Colors.blue;
+      case 'POLITICS':  return Colors.purple;
+      case 'SPORTS':    return Colors.green;
+      case 'FOREIGN':   return Colors.orange;
+      case 'BUSINESS':  return Colors.teal;
+      default:          return Colors.grey;
+    }
   }
   
   void openStory(StoryModel story) {

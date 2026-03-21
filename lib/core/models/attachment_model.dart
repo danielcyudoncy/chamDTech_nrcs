@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AttachmentModel {
   final String id;
   final String name;
@@ -48,6 +50,14 @@ class AttachmentModel {
   }
 
   factory AttachmentModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic date) {
+      if (date == null) return DateTime.now();
+      if (date is Timestamp) return date.toDate();
+      if (date is String) return DateTime.tryParse(date) ?? DateTime.now();
+      if (date is int) return DateTime.fromMillisecondsSinceEpoch(date);
+      return DateTime.now();
+    }
+
     return AttachmentModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
@@ -59,9 +69,7 @@ class AttachmentModel {
       durationSeconds: json['durationSeconds'],
       width: json['width'],
       height: json['height'],
-      uploadedAt: json['uploadedAt'] != null
-          ? DateTime.parse(json['uploadedAt'])
-          : DateTime.now(),
+      uploadedAt: parseDate(json['uploadedAt']),
       uploadedBy: json['uploadedBy'] ?? '',
       metadata: json['metadata'],
     );

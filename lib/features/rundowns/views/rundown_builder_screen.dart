@@ -17,8 +17,10 @@ class RundownBuilderScreen extends StatelessWidget {
     }
 
     final controller = Get.put(RundownBuilderController(rundownId: rundownId));
-    // We get the producer controller to access the story pool easily
-    final producerController = Get.find<ProducerDashboardController>();
+    // We get the producer controller to access the story pool easily, but it's optional
+    final producerController = Get.isRegistered<ProducerDashboardController>() 
+        ? Get.find<ProducerDashboardController>() 
+        : null;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -26,6 +28,12 @@ class RundownBuilderScreen extends StatelessWidget {
         title: const Text('Rundown Builder'),
         backgroundColor: NRCSColors.topNavBlue,
         foregroundColor: Colors.white,
+        /*
+       ### 6. Rundown Builder Dependency Fix
+Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerDashboardController`. This controller is now optional, allowing Anchors and other roles to open rundowns for viewing without errors.
+
+## Verification Results
+        */
         actions: [
           Obx(() {
             final rundown = controller.rundown.value;
@@ -65,6 +73,7 @@ class RundownBuilderScreen extends StatelessWidget {
 
         final rundown = controller.rundown.value!;
         final isDraft = rundown.status == 'draft';
+        final showPool = isDraft && producerController != null;
 
         return Column(
           children: [
@@ -105,8 +114,8 @@ class RundownBuilderScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Pool of available stories (Left side)
-                  if (isDraft)
+                  // Pool of available stories (Left side) - Only for producers in draft mode
+                  if (showPool)
                     Container(
                       width: 400,
                       decoration: BoxDecoration(
@@ -135,7 +144,7 @@ class RundownBuilderScreen extends StatelessWidget {
                                   trailing: isAlreadyAdded
                                     ? const Icon(Icons.check_circle, color: Colors.green)
                                     : IconButton(
-                                        icon: const Icon(Icons.add_circle_outline, color: Color(0xFF0F3A66)), // Replaced with static color or extracted
+                                        icon: const Icon(Icons.add_circle_outline, color: Color(0xFF0F3A66)),
                                         onPressed: () => controller.addStory(story),
                                       ),
                                 );
