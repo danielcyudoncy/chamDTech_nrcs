@@ -72,13 +72,22 @@ class UserManagementScreen extends StatelessWidget {
 
     return Container(
       width: 250,
-      color: const Color(0xFFECEFF1),
+      color: NRCSColors.subNavGray,
+
       child: Column(
         children: [
           const Padding(
             padding: EdgeInsets.all(16.0),
-            child: Text('Privilege Masters', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text(
+              'Privilege Masters',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: NRCSColors.textDark,
+              ),
+            ),
           ),
+
           _SidebarItem(label: 'Administrators', count: counts['admin']!, isSelected: true),
           _SidebarItem(label: 'Producers', count: counts['producer']!),
           _SidebarItem(label: 'Reporters', count: counts['reporter']!),
@@ -107,10 +116,22 @@ class UserManagementScreen extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: NRCSColors.borderGray)),
+      ),
+
       child: Row(
         children: [
-          const Text('All Users', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text(
+            'All Users',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: NRCSColors.textDark,
+            ),
+          ),
+
           const Spacer(),
           Flexible(
             child: Container(
@@ -136,9 +157,13 @@ class UserManagementScreen extends StatelessWidget {
       leading: Stack(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.blue[100],
-            child: Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U'),
+            backgroundColor: NRCSColors.primaryBlue.withValues(alpha: 0.1),
+            child: Text(
+              user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U',
+              style: const TextStyle(color: NRCSColors.primaryBlue, fontWeight: FontWeight.bold),
+            ),
           ),
+
           Positioned(
             right: 0,
             bottom: 0,
@@ -159,9 +184,10 @@ class UserManagementScreen extends StatelessWidget {
           Expanded(
             child: Text(
               user.displayName, 
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark),
               overflow: TextOverflow.ellipsis,
             ),
+
           ),
           const SizedBox(width: 12),
           _Badge(label: user.role.replaceAll('_', ' ').toUpperCase(), color: Colors.blue[50]!, textColor: Colors.blue[900]!),
@@ -171,7 +197,11 @@ class UserManagementScreen extends StatelessWidget {
           ],
         ],
       ),
-      subtitle: Text(user.email),
+      subtitle: Text(
+        user.email,
+        style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7)),
+      ),
+
       onTap: () => _showEditUserDialog(context, user),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -180,9 +210,20 @@ class UserManagementScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Last seen: ${user.lastSeen != null ? DateFormat('HH:mm').format(user.lastSeen!) : 'Never'}', style: const TextStyle(fontSize: 12)),
-              Text(user.isOnline ? 'ONLINE' : 'OFFLINE', style: TextStyle(fontSize: 10, color: user.isOnline ? Colors.green : Colors.grey, fontWeight: FontWeight.bold)),
+              Text(
+                'Last seen: ${user.lastSeen != null ? DateFormat('HH:mm').format(user.lastSeen!) : 'Never'}',
+                style: TextStyle(fontSize: 12, color: NRCSColors.textDark.withValues(alpha: 0.6)),
+              ),
+              Text(
+                user.isOnline ? 'ONLINE' : 'OFFLINE',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: user.isOnline ? Colors.green : Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
+
           ),
           const SizedBox(width: 16),
           IconButton(
@@ -274,9 +315,22 @@ class _SidebarItem extends StatelessWidget {
         children: [
           Icon(Icons.folder_open, size: 20, color: isSelected ? Colors.blue : Colors.grey[700]),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: isSelected ? Colors.blue : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? NRCSColors.primaryBlue : NRCSColors.textDark,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           const Spacer(),
-          Text(count.toString(), style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              color: NRCSColors.textDark.withValues(alpha: 0.5),
+              fontSize: 12,
+            ),
+          ),
+
         ],
       ),
     );

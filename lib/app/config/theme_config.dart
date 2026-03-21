@@ -4,18 +4,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 class ThemeConfig {
   // Brand Colors
-  static const Color primaryColor = Color(0xFF1976D2); // Deep Blue
-  static const Color accentColor = Color(0xFF00BCD4); // Cyan Accent
-  static const Color secondaryColor = Color(0xFF263238); // Dark Blue Grey
+  static const Color primaryColor = Color(0xFF4F6FD2); 
+  static const Color accentColor = Color(0xFFB61F24); 
+  static const Color secondaryColor = Color(0xFF2B439B); 
 
   // Neutral Colors
-  static const Color surfaceColor = Colors.white;
-  static const Color backgroundColor = Color(0xFFF5F7FA); // Very Light Grey
-  static const Color errorColor = Color(0xFFD32F2F);
+  static const Color surfaceColor = Color(0xFFFFFFFF);
+  static const Color backgroundColor = Color(0xFFFFFFFF); 
+  static const Color errorColor = Color(0xFFB61F24);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textPrimary = Color(0xFF313131);
+  static const Color textSecondary = Color(0xFF555555);
+
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -24,12 +25,13 @@ class ThemeConfig {
       scaffoldBackgroundColor: backgroundColor,
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
-        secondary: accentColor,
+        secondary: secondaryColor,
         surface: surfaceColor,
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onSurface: textPrimary,
+        onSurfaceVariant: textSecondary,
       ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.outfit(
@@ -42,12 +44,21 @@ class ThemeConfig {
           fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
+        titleLarge: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
         bodyLarge: GoogleFonts.inter(
           fontSize: 16,
           color: textPrimary,
         ),
         bodyMedium: GoogleFonts.inter(
           fontSize: 14,
+          color: textPrimary, // Changed to textPrimary for better visibility
+        ),
+        bodySmall: GoogleFonts.inter(
+          fontSize: 12,
           color: textSecondary,
         ),
         labelLarge: GoogleFonts.inter(
@@ -109,7 +120,7 @@ class ThemeConfig {
       scaffoldBackgroundColor: const Color(0xFF121212),
       colorScheme: const ColorScheme.dark(
         primary: primaryColor,
-        secondary: accentColor,
+        secondary: secondaryColor,
         surface: Color(0xFF1E1E1E),
         error: errorColor,
         onPrimary: Colors.white,
@@ -127,12 +138,21 @@ class ThemeConfig {
           fontWeight: FontWeight.w600,
           color: Colors.white,
         ),
+        titleLarge: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
         bodyLarge: GoogleFonts.inter(
           fontSize: 16,
           color: Colors.white,
         ),
         bodyMedium: GoogleFonts.inter(
           fontSize: 14,
+          color: Colors.white, // Ensured white for dark mode
+        ),
+        bodySmall: GoogleFonts.inter(
+          fontSize: 12,
           color: Colors.grey.shade400,
         ),
       ),
@@ -172,4 +192,5 @@ class ThemeConfig {
       ),
     );
   }
+
 }

@@ -17,12 +17,13 @@ class MasterManagementScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.construction, size: 64, color: Colors.grey[600]),
+            Icon(Icons.construction, size: 64, color: NRCSColors.primaryBlue.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             Text(
               '$title Management coming soon',
-              style: TextStyle(color: Colors.grey[600]),
+              style: const TextStyle(color: NRCSColors.textDark, fontWeight: FontWeight.w500),
             ),
+
           ],
         ),
       ),

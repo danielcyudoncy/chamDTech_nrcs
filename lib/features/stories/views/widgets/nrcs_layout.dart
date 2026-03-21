@@ -13,13 +13,15 @@ import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 
 class NRCSColors {
-  static const Color topNavBlue = Color(0xFF0046AD);
-  static const Color subNavGray = Color(0xFFE0E0E0);
-  static const Color activeOrange = Color(0xFFFF9800);
-  static const Color borderGray = Color(0xFF9E9E9E);
-  static const Color textDark = Color(0xFF212121);
-  static const Color breakingRed = Color(0xFFB71C1C);
+  static const Color topNavBlue = Color(0xFF2B439B);
+  static const Color primaryBlue = Color(0xFF4F6FD2);
+  static const Color subNavGray = Color(0xFFF5F5F5);
+  static const Color activeOrange = Color(0xFFFF9800); 
+  static const Color borderGray = Color(0xFFD1D1D1);
+  static const Color textDark = Color(0xFF313131);
+  static const Color breakingRed = Color(0xFFB61F24);
 }
+
 
 class NRCSAppShell extends StatelessWidget {
   final Widget? sidebar;
@@ -413,10 +415,11 @@ class _UserSection extends StatelessWidget {
 
       return Container(
         height: 50,
-        decoration: const BoxDecoration(
-          color: Color(0xFF0D47A1),
-          border: Border(left: BorderSide(color: Colors.white24, width: 1)),
+        decoration: BoxDecoration(
+          color: NRCSColors.topNavBlue.withValues(alpha: 0.9),
+          border: const Border(left: BorderSide(color: Colors.white24, width: 1)),
         ),
+
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -426,10 +429,11 @@ class _UserSection extends StatelessWidget {
               child: Text(
                 currentTime,
                 style: const TextStyle(
-                  color: Color(0xFFC8E6C9),
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
+
               ),
             ),
             // Divider
@@ -438,9 +442,10 @@ class _UserSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.8),
+                color: NRCSColors.breakingRed,
                 borderRadius: BorderRadius.circular(2),
               ),
+
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -726,7 +731,14 @@ class _ToolbarButton extends StatelessWidget {
         children: [
           Icon(icon, size: 18),
           const SizedBox(width: 4),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: NRCSColors.textDark,
+            ),
+          ),
+
         ],
       ),
     );
@@ -744,11 +756,19 @@ class _ToolbarSearch extends StatelessWidget {
         border: Border.all(color: NRCSColors.borderGray),
       ),
       alignment: Alignment.centerLeft,
-      child: const Row(
+      child: Row(
+
         children: [
           Icon(Icons.search, size: 16),
           SizedBox(width: 4),
-          Text('search', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            'search',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: NRCSColors.textDark.withValues(alpha: 0.6),
+            ),
+          ),
+
         ],
       ),
     );
@@ -783,8 +803,9 @@ class _ToolbarActionButton extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1976D2)),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: NRCSColors.primaryBlue),
         ),
+
       ),
     );
   }
@@ -819,7 +840,7 @@ class NRCSStoryListItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected ? NRCSColors.activeOrange : Colors.white,
+          color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.1) : Colors.white,
           border: const Border(bottom: BorderSide(color: NRCSColors.borderGray)),
         ),
         child: Column(
@@ -837,7 +858,9 @@ class NRCSStoryListItem extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                           fontSize: 14,
-                          color: isSelected ? Colors.white : const Color(0xFF0D47A1),
+                          color: NRCSColors.topNavBlue,
+
+
                         ),
                       ),
                       if (category != null && category!.isNotEmpty) ...[

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/app/config/theme_config.dart';
 import 'package:chamdtech_nrcs/shared/layouts/responsive_layout.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -109,13 +111,18 @@ class MainLayout extends StatelessWidget {
                   onTap: () => Get.toNamed('/settings'),
                   isActive: Get.currentRoute == '/settings',
                 ),
-                if (true) // TODO: Add admin check
-                  _SidebarItem(
-                    icon: Icons.admin_panel_settings_outlined,
-                    label: 'Admin',
-                    onTap: () => Get.toNamed('/admin'),
-                    isActive: Get.currentRoute.startsWith('/admin'),
-                  ),
+                Obx(() {
+                  final user = Get.find<AuthService>().currentUser.value;
+                  if (user?.role == AppConstants.roleAdmin) {
+                    return _SidebarItem(
+                      icon: Icons.admin_panel_settings_outlined,
+                      label: 'Admin',
+                      onTap: () => Get.toNamed('/admin'),
+                      isActive: Get.currentRoute.startsWith('/admin'),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
               ],
             ),
           ),
@@ -158,6 +165,8 @@ class MainLayout extends StatelessWidget {
   }
 
   Widget _buildSidebarFooter(BuildContext context) {
+    final authService = Get.find<AuthService>();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -167,42 +176,53 @@ class MainLayout extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: ThemeConfig.primaryColor,
-            child: Text(
-              'A',
-              style: TextStyle(color: Colors.white, fontSize: 14),
+      child: Obx(() {
+        final user = authService.currentUser.value;
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: ThemeConfig.primaryColor,
+              backgroundImage: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) 
+                  ? NetworkImage(user.photoUrl!) 
+                  : null,
+              child: (user?.photoUrl == null || user!.photoUrl!.isEmpty)
+                  ? Text(
+                      (user?.displayName != null && user!.displayName.isNotEmpty)
+                          ? user!.displayName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    )
+                  : null,
             ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Admin User',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  'Online',
-                  style: TextStyle(color: Colors.green, fontSize: 11),
-                ),
-              ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    user?.displayName ?? 'User',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    user?.isOnline ?? false ? 'Online' : 'Offline',
+                    style: TextStyle(
+                      color: user?.isOnline ?? false ? Colors.green : Colors.grey,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, size: 20),
-            onPressed: () {
-              // TODO: Implement logout
-            },
-          ),
-        ],
-      ),
+            IconButton(
+              icon: const Icon(Icons.logout, size: 20),
+              onPressed: () => authService.signOut(),
+            ),
+          ],
+        );
+      }),
     );
   }
 }

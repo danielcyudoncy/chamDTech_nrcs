@@ -32,7 +32,8 @@ class PrivilegeMasterScreen extends StatelessWidget {
   Widget _buildSidebar(PrivilegeMasterController controller) {
     return Container(
       width: 250,
-      color: Colors.grey[50],
+      color: NRCSColors.subNavGray,
+
       child: Column(
         children: [
           Padding(
@@ -55,9 +56,21 @@ class PrivilegeMasterScreen extends StatelessWidget {
                 itemCount: sets.length,
                 itemBuilder: (context, index) {
                   final set = sets[index];
-                  return Obx(() => ListTile(
+                      return Obx(() => ListTile(
                         selected: controller.selectedSet.value?.id == set.id,
-                        title: Text(set.name),
+                        selectedTileColor: NRCSColors.primaryBlue.withValues(alpha: 0.1),
+                        title: Text(
+                          set.name,
+                          style: TextStyle(
+                            color: controller.selectedSet.value?.id == set.id
+                                ? NRCSColors.primaryBlue
+                                : NRCSColors.textDark,
+                            fontWeight: controller.selectedSet.value?.id == set.id
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+
                         onTap: () => controller.selectSet(set),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
@@ -79,7 +92,11 @@ class PrivilegeMasterScreen extends StatelessWidget {
         // Header
         Container(
           padding: const EdgeInsets.all(16),
-          color: Colors.white,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: NRCSColors.borderGray)),
+          ),
+
           child: Row(
             children: [
               Expanded(
@@ -124,8 +141,9 @@ class PrivilegeMasterScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: NRCSColors.borderGray),
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -140,9 +158,14 @@ class PrivilegeMasterScreen extends StatelessWidget {
               children: [
                 Text(
                   group.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: NRCSColors.primaryBlue,
+                  ),
                 ),
                 Checkbox(
+
                   value: controller.activePrivileges[group]!.values.every((v) => v),
                   onChanged: (_) => controller.toggleGroup(group),
                 ),
@@ -151,7 +174,11 @@ class PrivilegeMasterScreen extends StatelessWidget {
           ),
           ...controller.activePrivileges[group]!.keys.map((item) {
             return CheckboxListTile(
-              title: Text(item, style: const TextStyle(fontSize: 14)),
+              title: Text(
+                item,
+                style: const TextStyle(fontSize: 14, color: NRCSColors.textDark),
+              ),
+
               value: controller.activePrivileges[group]![item],
               onChanged: (_) => controller.togglePrivilege(group, item),
               controlAffinity: ListTileControlAffinity.leading,
