@@ -23,6 +23,9 @@ class ReporterDashboardController extends GetxController {
   final rejectedStories = <StoryModel>[].obs;    // rejected (needs revision)
   final approvedStories = <StoryModel>[].obs;    // approved / verified / ready_to_air
   final archivedStories = <StoryModel>[].obs;    // archived / aired
+  
+  /// Combined list of all stories created by this reporter
+  final allMyStories = <StoryModel>[].obs;
  
   /// The story currently selected in the UI for toolbar actions.
   final selectedStory = Rxn<StoryModel>();
@@ -82,7 +85,10 @@ class ReporterDashboardController extends GetxController {
               s.stage == AppConstants.stageAired)
           .toList();
 
+      allMyStories.value = stories;
+
       isLoading.value = false;
+
     });
   }
 

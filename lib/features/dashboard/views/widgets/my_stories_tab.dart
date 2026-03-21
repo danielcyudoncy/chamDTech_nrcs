@@ -1,5 +1,7 @@
 // features/dashboard/views/widgets/my_stories_tab.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
@@ -62,521 +64,395 @@ class MyStoriesTab extends StatefulWidget {
   State<MyStoriesTab> createState() => _MyStoriesTabState();
 }
 
-class _MyStoriesTabState extends State<MyStoriesTab>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  final List<_StoryGroup> _groups = _StoryGroup.values;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _groups.length, vsync: this);
-  }
+class _MyStoriesTabState extends State<MyStoriesTab> {
+  final TextEditingController _searchController = TextEditingController();
+  final RxString _searchQuery = ''.obs;
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
-  }
-
-  List<StoryModel> _storiesForGroup(_StoryGroup group) {
-    switch (group) {
-      case _StoryGroup.drafts:        return widget.controller.draftStories;
-      case _StoryGroup.submitted:     return widget.controller.submittedStories;
-      case _StoryGroup.needsRevision: return widget.controller.rejectedStories;
-      case _StoryGroup.approved:      return widget.controller.approvedStories;
-      case _StoryGroup.archived:      return widget.controller.archivedStories;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final c = widget.controller;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        // ── Header row ────────────────────────────────────────────────────────
+        // ── Left Side: Story List (Master) ──────────────────────────────────
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          width: 400,
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(
-              bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5),
-            ),
+            border: Border(right: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              Text(
-                'My Stories',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: NRCSColors.topNavBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const Spacer(),
-              ElevatedButton.icon(
-                onPressed: () => c.createNewStory(),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('New Story'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: NRCSColors.topNavBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6)),
+              // List Header & Search
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'My Stories',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: NRCSColors.topNavBlue,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle, color: NRCSColors.topNavBlue),
+                          onPressed: () => c.createNewStory(),
+                          tooltip: 'New Story',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (v) => _searchQuery.value = v,
+                      decoration: InputDecoration(
+                        hintText: 'Search stories...',
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        isDense: true,
+                        filled: true,
+                        fillColor: NRCSColors.subNavGray,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Story List
+              Expanded(
+                child: Obx(() {
+                  if (c.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final filteredStories = c.allMyStories.where((s) {
+                    final query = _searchQuery.value.toLowerCase();
+                    return s.title.toLowerCase().contains(query) ||
+                           s.content.toLowerCase().contains(query);
+                  }).toList();
+
+
+                  if (filteredStories.isEmpty) {
+                    return const Center(
+                      child: Text('No stories found', style: TextStyle(color: Colors.grey)),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: filteredStories.length,
+                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+                    itemBuilder: (context, index) {
+                      final story = filteredStories[index];
+                      return Obx(() {
+                        final isSelected = c.selectedStory.value?.id == story.id;
+                        return _CompactStoryTile(
+                          story: story,
+                          isSelected: isSelected,
+                          onTap: () => c.selectStory(story),
+                        );
+                      });
+                    },
+                  );
+                }),
               ),
             ],
           ),
         ),
-
-        // ── Tab Bar ───────────────────────────────────────────────────────────
-        Obx(() {
-          return Container(
-            color: Colors.white,
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              labelColor: NRCSColors.topNavBlue,
-              unselectedLabelColor: Colors.grey.shade600,
-              labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13),
-              indicatorColor: NRCSColors.topNavBlue,
-              indicatorWeight: 3,
-              tabs: _groups.map((g) {
-                final count = _storiesForGroup(g).length;
-                final hasAlert = g == _StoryGroup.needsRevision && count > 0;
-                return Tab(
-                  child: Row(
-                    children: [
-                      Icon(g.icon, size: 16, color: g.color),
-                      const SizedBox(width: 6),
-                      Text(g.label),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: hasAlert
-                              ? Colors.red.shade700
-                              : g.color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '$count',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: hasAlert ? Colors.white : g.color,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          );
-        }),
-
-        // ── Tab Content ───────────────────────────────────────────────────────
+        // ── Right Side: Story Detail (Detail) ────────────────────────────────
         Expanded(
-          child: c.isLoading.value
-              ? const Center(child: CircularProgressIndicator())
-              : TabBarView(
-                  controller: _tabController,
-                  children: _groups
-                      .map((g) => _StoryGroupList(
-                            group: g,
-                            controller: c,
-                          ))
-                      .toList(),
+          child: Obx(() {
+            final story = c.selectedStory.value;
+            if (story == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.description_outlined, size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Select a story to view its content',
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+                    ),
+                  ],
                 ),
+              );
+            }
+            return _StoryDetailView(story: story, controller: c);
+          }),
         ),
       ],
     );
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Per-group story list
-// ─────────────────────────────────────────────────────────────────────────────
-class _StoryGroupList extends StatelessWidget {
-  final _StoryGroup group;
-  final ReporterDashboardController controller;
-
-  const _StoryGroupList(
-      {required this.group, required this.controller});
-
-  List<StoryModel> get stories {
-    switch (group) {
-      case _StoryGroup.drafts:        return controller.draftStories;
-      case _StoryGroup.submitted:     return controller.submittedStories;
-      case _StoryGroup.needsRevision: return controller.rejectedStories;
-      case _StoryGroup.approved:      return controller.approvedStories;
-      case _StoryGroup.archived:      return controller.archivedStories;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final list = stories;
-      if (list.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(group.icon, size: 48, color: Colors.grey.shade400),
-              const SizedBox(height: 12),
-              Text(
-                'No ${group.label.toLowerCase()} stories',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-              ),
-              if (group == _StoryGroup.drafts) ...[
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () => controller.createNewStory(),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Your First Story'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: NRCSColors.topNavBlue,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      }
-
-      return ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: list.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          return _StoryCard(
-            story: list[index],
-            group: group,
-            controller: controller,
-          );
-        },
-      );
-    });
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Individual Story Card
+// Compact Story Tile for Sidebar
 // ─────────────────────────────────────────────────────────────────────────────
-class _StoryCard extends StatelessWidget {
+class _CompactStoryTile extends StatelessWidget {
   final StoryModel story;
-  final _StoryGroup group;
-  final ReporterDashboardController controller;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  const _StoryCard(
-      {required this.story,
-      required this.group,
-      required this.controller});
-
-  bool get _isApproved => group == _StoryGroup.approved;
-  bool get _canEditBasic =>
-      group == _StoryGroup.drafts || group == _StoryGroup.needsRevision;
-  bool get _canSubmit =>
-      group == _StoryGroup.drafts || group == _StoryGroup.needsRevision;
-  bool get _canDelete => group == _StoryGroup.drafts;
-  bool get _showRevisionBanner => group == _StoryGroup.needsRevision;
+  const _CompactStoryTile({
+    required this.story,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final timeFormat = DateFormat('HH:mm');
-    final dateFormat = DateFormat('MMM dd, yyyy');
-    final durationStr =
-        '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}';
-
-    return Obx(() {
-      // Reactively check rundown lock status for approved stories
-      final isRundownLocked =
-          _isApproved && controller.isStoryEditLocked(story.id);
-      
-      final isSelected = controller.selectedStory.value?.id == story.id;
-
-      return InkWell(
-        onTap: () => controller.selectStory(story),
-        onSecondaryTapDown: (details) => 
-            controller.showStoryMenu(context, story, details.globalPosition),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.05) : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected 
-                  ? NRCSColors.topNavBlue 
-                  : _showRevisionBanner
-                      ? Colors.red.shade200
-                      : isRundownLocked
-                          ? Colors.orange.shade300
-                          : NRCSColors.borderGray,
-              width: (isSelected || _showRevisionBanner || isRundownLocked) ? 1.5 : 1,
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? NRCSColors.primaryBlue.withValues(alpha: 0.05) : Colors.transparent,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    story.title.isEmpty ? 'Untitled' : story.title,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontSize: 14,
+                      color: isSelected ? NRCSColors.primaryBlue : NRCSColors.textDark,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  timeFormat.format(story.updatedAt),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isSelected ? 0.08 : 0.04),
-                blurRadius: isSelected ? 8 : 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            // ── Revision alert banner ────────────────────────────────────────
-            if (_showRevisionBanner)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(7)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                _StatusIndicator(status: story.status),
+                const SizedBox(width: 8),
+                Text(
+                  story.format,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.feedback_outlined,
-                        size: 14, color: Colors.red.shade700),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Returned by editor — revision required',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red.shade700,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                const Spacer(),
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: isSelected ? NRCSColors.primaryBlue : Colors.grey.shade300,
                 ),
-              ),
-
-            // ── Rundown-locked banner ────────────────────────────────────────
-            if (isRundownLocked)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(7)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.lock, size: 14, color: Colors.orange.shade800),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Locked in rundown — editing disabled',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.orange.shade800,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.orange.shade300),
-                      ),
-                      child: Text(
-                        'VIEW ONLY',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade800),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // ── Approved (editable) banner ───────────────────────────────────
-            if (_isApproved && !isRundownLocked)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(7)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle_outline,
-                        size: 14, color: Colors.green.shade700),
-                    const SizedBox(width: 6),
-                    Text(
-                      story.approvedBy != null
-                          ? 'Approved by ${story.approvedBy}'
-                          : 'Approved — ready for air',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green.shade700,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-
-            // ── Main card body ───────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          story.title.isEmpty ? 'Untitled Story' : story.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Color(0xFF1A237E),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      _StatusBadge(status: story.status),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 4,
-                    children: [
-                      _MetaChip(
-                          icon: Icons.folder_outlined,
-                          label: story.deskId ?? 'No Desk'),
-                      _MetaChip(
-                          icon: Icons.video_label, label: story.format),
-                      _MetaChip(
-                          icon: Icons.timer_outlined, label: durationStr),
-                      _MetaChip(
-                          icon: Icons.update,
-                          label:
-                              '${timeFormat.format(story.updatedAt)} · ${dateFormat.format(story.updatedAt)}'),
-                      if (story.version > 1)
-                        _MetaChip(
-                            icon: Icons.history,
-                            label: 'v${story.version}'),
-                      if (story.linkedRundownId != null)
-                        const _MetaChip(
-                            icon: Icons.playlist_play,
-                            label: 'In rundown'),
-                    ],
-                  ),
-
-                  // ── Action buttons ─────────────────────────────────────────
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-
-                  if (_canEditBasic || _canSubmit || _canDelete)
-                    Row(
-                      children: [
-                        if (_canEditBasic)
-                          _ActionButton(
-                            label: 'Edit',
-                            icon: Icons.edit_outlined,
-                            color: NRCSColors.topNavBlue,
-                            onTap: () => controller.editStory(story),
-                          ),
-                        if (_canEditBasic && _canSubmit)
-                          const SizedBox(width: 8),
-                        if (_canSubmit)
-                          _ActionButton(
-                            label: group == _StoryGroup.needsRevision
-                                ? 'Resubmit'
-                                : 'Submit for Review',
-                            icon: Icons.send_outlined,
-                            color: Colors.green.shade700,
-                            onTap: () {
-                              if (group == _StoryGroup.needsRevision) {
-                                controller.resubmitStory(story);
-                              } else {
-                                controller.submitStory(story);
-                              }
-                            },
-                          ),
-                        const Spacer(),
-                        if (_canDelete)
-                          _ActionButton(
-                            label: 'Delete',
-                            icon: Icons.delete_outline,
-                            color: Colors.red.shade600,
-                            onTap: () =>
-                                controller.deleteStory(context, story),
-                            outlined: true,
-                          ),
-                      ],
-                    )
-                  else if (_isApproved)
-                    // Approved story — edit gated by rundown lock
-                    Row(
-                      children: [
-                        _ActionButton(
-                          label: isRundownLocked ? 'Locked — View Only' : 'Edit',
-                          icon: isRundownLocked
-                              ? Icons.lock_outline
-                              : Icons.edit_outlined,
-                          color: isRundownLocked
-                              ? Colors.orange.shade700
-                              : NRCSColors.topNavBlue,
-                          onTap: () => controller.tryEditApprovedStory(
-                              context, story),
-                        ),
-                      ],
-                    )
-                  else
-                    // Other view-only groups (submitted, archived)
-                    Row(
-                      children: [
-                        const Icon(Icons.lock_outline,
-                            size: 14, color: NRCSColors.topNavBlue),
-                        const SizedBox(width: 4),
-                        Text(
-                          group == _StoryGroup.submitted
-                              ? 'Locked — awaiting editor review'
-                              : 'Read only',
-                          style: const TextStyle(
-                              fontSize: 12, color: NRCSColors.topNavBlue),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+              ],
             ),
           ],
         ),
-        ),
-      );
-    });
+      ),
+    );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers
+// Detailed Story View
 // ─────────────────────────────────────────────────────────────────────────────
-class _StatusBadge extends StatelessWidget {
+class _StoryDetailView extends StatelessWidget {
+  final StoryModel story;
+  final ReporterDashboardController controller;
+
+  const _StoryDetailView({required this.story, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateFormat = DateFormat('EEEE, MMMM dd, yyyy · HH:mm');
+    final durationStr = '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}';
+    
+    final plainText = _getPlainText(story.content);
+    final wordCount = _calculateWordCount(plainText);
+
+    return Column(
+
+      children: [
+        // Action Bar
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ),
+          child: Row(
+            children: [
+              _ActionButton(
+                label: 'Edit Content',
+                icon: Icons.edit_document,
+                color: NRCSColors.primaryBlue,
+                onTap: () => controller.editStory(story),
+              ),
+              const SizedBox(width: 12),
+              _ActionButton(
+                label: 'Story Log',
+                icon: Icons.history,
+                color: Colors.grey.shade700,
+                onTap: () => controller.performAction('Story Log'),
+              ),
+              const Spacer(),
+              if (story.status == AppConstants.statusDraft || story.status == AppConstants.statusRejected)
+                ElevatedButton(
+                  onPressed: () {
+                    if (story.status == AppConstants.statusRejected) {
+                      controller.resubmitStory(story);
+                    } else {
+                      controller.submitStory(story);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: Text(story.status == AppConstants.statusRejected ? 'Resubmit' : 'Submit for Review'),
+                ),
+            ],
+          ),
+        ),
+        // Content Area
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title Area
+                Text(
+                  story.title.isEmpty ? 'Untitled Story' : story.title,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A237E),
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Metadata Bar
+                Wrap(
+                  spacing: 24,
+                  runSpacing: 8,
+                  children: [
+                    _DetailMeta(label: 'AUTHOR', value: story.authorName),
+                    _DetailMeta(label: 'FORMAT', value: story.format),
+                    _DetailMeta(label: 'DURATION', value: durationStr),
+                    _DetailMeta(label: 'DESK', value: story.deskId ?? 'None'),
+                    _DetailMeta(label: 'VERSION', value: 'v${story.version}'),
+                    _DetailMeta(label: 'WORDS', value: '$wordCount'),
+                  ],
+
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Last updated $dateFormat',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                ),
+                const SizedBox(height: 32),
+                const Divider(),
+                const SizedBox(height: 32),
+                // Story Body (The Content)
+                Text(
+                  plainText.trim().isEmpty ? 'The content of this story is empty.' : plainText,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    height: 1.6,
+                    color: NRCSColors.textDark,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+
+
+                const SizedBox(height: 60), // Extra space at bottom
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getPlainText(String jsonContent) {
+    if (jsonContent.isEmpty) return '';
+    try {
+      final dynamic decoded = jsonDecode(jsonContent);
+      if (decoded is List) {
+        return decoded.map((op) => op['insert']?.toString() ?? '').join();
+      } else if (decoded is Map && decoded.containsKey('ops')) {
+        final ops = decoded['ops'] as List;
+        return ops.map((op) => op['insert']?.toString() ?? '').join();
+      }
+      return jsonContent;
+    } catch (_) {
+      // If it's not JSON, it might be already plain text
+      return jsonContent;
+    }
+  }
+
+  int _calculateWordCount(String text) {
+    if (text.trim().isEmpty) return 0;
+    return text.trim().split(RegExp(r'\s+')).length;
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sub-components & Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DetailMeta extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailMeta({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: NRCSColors.textDark),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusIndicator extends StatelessWidget {
   final String status;
-  const _StatusBadge({required this.status});
+  const _StatusIndicator({required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -586,41 +462,20 @@ class _StatusBadge extends StatelessWidget {
       case AppConstants.statusPending:  color = Colors.orange.shade700; break;
       case AppConstants.statusApproved: color = Colors.green.shade700; break;
       case AppConstants.statusRejected: color = Colors.red.shade700; break;
-      case AppConstants.statusArchived: color = Colors.blueGrey; break;
-      default:                          color = Colors.grey.shade600;
+      default:                          color = Colors.grey.shade400;
     }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-            fontSize: 10, fontWeight: FontWeight.bold, color: color),
-      ),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _MetaChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: NRCSColors.topNavBlue),
-        const SizedBox(width: 3),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
         Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: NRCSColors.textDark),
+          status.toUpperCase(),
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
         ),
       ],
     );
@@ -632,40 +487,28 @@ class _ActionButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  final bool outlined;
 
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-    this.outlined = false,
-  });
+  const _ActionButton({required this.label, required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    if (outlined) {
-      return OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 15, color: color),
-        label: Text(label, style: TextStyle(color: color, fontSize: 13)),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: color.withValues(alpha: 0.5)),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(6),
         ),
-      );
-    }
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 15, color: Colors.white),
-      label: Text(label, style: const TextStyle(color: Colors.white, fontSize: 13)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-        elevation: 0,
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: NRCSColors.textDark)),
+          ],
+        ),
       ),
     );
   }
 }
+
