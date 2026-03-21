@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/settings/controllers/settings_controller.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/settings/controllers/settings_controller.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

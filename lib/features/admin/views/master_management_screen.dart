@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class MasterManagementScreen extends StatelessWidget {
   final String title;

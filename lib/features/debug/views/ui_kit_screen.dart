@@ -1,11 +1,11 @@
+// features/debug/views/ui_kit_screen.dart
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/shared/widgets/app_button.dart';
-import 'package:chamDTech_nrcs/shared/widgets/app_text_field.dart';
-import 'package:chamDTech_nrcs/shared/widgets/app_card.dart';
-import 'package:chamDTech_nrcs/shared/widgets/loading_overlay.dart';
-import 'package:chamDTech_nrcs/shared/widgets/empty_state_view.dart';
-import 'package:chamDTech_nrcs/shared/layouts/main_layout.dart';
+import 'package:chamdtech_nrcs/shared/widgets/app_button.dart';
+import 'package:chamdtech_nrcs/shared/widgets/app_text_field.dart';
+import 'package:chamdtech_nrcs/shared/widgets/app_card.dart';
+import 'package:chamdtech_nrcs/shared/widgets/loading_overlay.dart';
+import 'package:chamdtech_nrcs/shared/widgets/empty_state_view.dart';
+import 'package:chamdtech_nrcs/shared/layouts/main_layout.dart';
 
 class UIKitScreen extends StatefulWidget {
   const UIKitScreen({super.key});
@@ -127,7 +127,7 @@ class _UIKitScreenState extends State<UIKitScreen> {
                     Expanded(
                       child: AppCard(
                         onTap: () {},
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
+                        color: Theme.of(context).primaryColor.withValues(alpha:0.1),
                         child: const Column(
                           children: [
                             Icon(Icons.touch_app, size: 32),

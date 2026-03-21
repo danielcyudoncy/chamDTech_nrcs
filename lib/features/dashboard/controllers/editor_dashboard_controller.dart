@@ -1,11 +1,12 @@
+// features/dashboard/controllers/editor_dashboard_controller.dart
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
 
@@ -92,7 +93,7 @@ class EditorDashboardController extends GetxController {
         title: 'Story Rejected',
         message: '${user?.displayName ?? "An editor"} sent back "${story.title}" for revision.',
         createdAt: DateTime.now(),
-        actionUrl: AppRoutes.storyEditor + '?id=${story.id}',
+        actionUrl: '${AppRoutes.storyEditor}?id=${story.id}',
         data: {'storyId': story.id},
       ));
 
@@ -142,7 +143,7 @@ class EditorDashboardController extends GetxController {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   DropdownButtonFormField<String>(
-                    value: selectedStatus,
+                    initialValue: selectedStatus,
                     decoration: const InputDecoration(labelText: 'Status'),
                     items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
                     onChanged: (val) {
@@ -151,7 +152,7 @@ class EditorDashboardController extends GetxController {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedStage,
+                    initialValue: selectedStage,
                     decoration: const InputDecoration(labelText: 'Stage'),
                     items: stages.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
                     onChanged: (val) {
@@ -233,7 +234,7 @@ class EditorDashboardController extends GetxController {
       ],
       elevation: 8.0,
     ).then((value) {
-      if (value == null) return;
+      if (value == null || !context.mounted) return;
       
       switch (value) {
         case 'copy_edit':

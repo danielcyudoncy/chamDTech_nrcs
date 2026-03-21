@@ -1,4 +1,4 @@
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 
 class TemplateModel {
   final String id;

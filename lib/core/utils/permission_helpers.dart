@@ -1,5 +1,5 @@
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 
 class PermissionHelpers {
   // Check if user can edit a specific story

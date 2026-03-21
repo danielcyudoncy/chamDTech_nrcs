@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/app/config/theme_config.dart';
-import 'package:chamDTech_nrcs/shared/widgets/app_card.dart';
+import 'package:chamdtech_nrcs/app/config/theme_config.dart';
+import 'package:chamdtech_nrcs/shared/widgets/app_card.dart';
 
 class AuthLayout extends StatelessWidget {
   final Widget child;
@@ -56,7 +56,7 @@ class AuthLayout extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),

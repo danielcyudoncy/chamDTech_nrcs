@@ -1,10 +1,9 @@
+// features/rundowns/views/rundown_builder_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart'; 
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart'; 
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class RundownBuilderScreen extends StatelessWidget {
   const RundownBuilderScreen({super.key});
@@ -91,7 +90,7 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(rundown.status).withOpacity(0.2),
+                      color: _getStatusColor(rundown.status).withValues(alpha:0.2),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: _getStatusColor(rundown.status)),
                     ),
@@ -118,7 +117,7 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
                   if (showPool)
                     Container(
                       width: 400,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         border: Border(right: BorderSide(color: NRCSColors.borderGray)),
                       ),
                       child: Column(

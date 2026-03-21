@@ -1,13 +1,13 @@
+// features/dashboard/controllers/producer_dashboard_controller.dart
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/features/rundowns/services/rundown_service.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class ProducerDashboardController extends GetxController {
   final RundownService _rundownService = Get.put(RundownService());
@@ -85,7 +85,7 @@ class ProducerDashboardController extends GetxController {
               const SizedBox(height: 16),
               // Simpler numeric input for this rapid iteration
               DropdownButtonFormField<int>(
-                value: targetDurationMinutes,
+                initialValue: targetDurationMinutes,
                 decoration: const InputDecoration(labelText: 'Target Duration'),
                 items: const [
                   DropdownMenuItem(value: 15, child: Text('15 Minutes')),

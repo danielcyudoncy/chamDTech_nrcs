@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/profile/controllers/profile_controller.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/profile/controllers/profile_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

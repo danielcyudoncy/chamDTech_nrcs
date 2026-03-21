@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/shared/widgets/app_button.dart';
+import 'package:chamdtech_nrcs/shared/widgets/app_button.dart';
 
 class EmptyStateView extends StatelessWidget {
   final IconData icon;
@@ -33,7 +33,7 @@ class EmptyStateView extends StatelessWidget {
             Icon(
               icon,
               size: 80,
-              color: theme.disabledColor.withOpacity(0.2),
+              color: theme.disabledColor.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 24),
             Text(

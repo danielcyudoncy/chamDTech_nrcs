@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 
 class RbacService extends GetxService {
   final AuthService _authService = Get.find<AuthService>();

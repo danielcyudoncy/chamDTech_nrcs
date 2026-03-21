@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/app/config/theme_config.dart';
+import 'package:chamdtech_nrcs/app/config/theme_config.dart';
 
 enum AppButtonStyle { primary, secondary, outline, text }
 

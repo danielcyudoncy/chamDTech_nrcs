@@ -1,7 +1,8 @@
+// features/auth/views/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/controllers/auth_controller.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/auth/controllers/auth_controller.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -23,7 +24,7 @@ class LoginScreen extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).primaryColor.withOpacity(0.1),
+                  Theme.of(context).primaryColor.withValues(alpha:0.1),
                   Theme.of(context).scaffoldBackgroundColor,
                 ],
               ),

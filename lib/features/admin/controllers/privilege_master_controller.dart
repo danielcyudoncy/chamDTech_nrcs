@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
-import 'package:chamDTech_nrcs/features/admin/services/privilege_service.dart';
+import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:uuid/uuid.dart';
 
 class PrivilegeMasterController extends GetxController {

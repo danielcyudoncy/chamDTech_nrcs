@@ -1,8 +1,9 @@
+// features/auth/controllers/auth_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -34,7 +35,7 @@ class AuthController extends GetxController {
         'Login Error',
         'An unexpected error occurred.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha:0.1),
         colorText: Colors.red,
       );
     } finally {
@@ -66,7 +67,7 @@ class AuthController extends GetxController {
         'Sign Up Error',
         'An unexpected error occurred.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha:0.1),
         colorText: Colors.red,
       );
     } finally {
@@ -162,7 +163,7 @@ class AuthController extends GetxController {
                   ),
                   const SizedBox(height: 16),
                   Obx(() => DropdownButtonFormField<String>(
-                    value: selectedRole.value,
+                    initialValue: selectedRole.value,
                     decoration: const InputDecoration(
                       labelText: 'Role',
                       prefixIcon: Icon(Icons.work_outlined),

@@ -1,10 +1,11 @@
+// features/dashboard/views/widgets/my_stories_tab.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Workflow groups definition
@@ -476,7 +477,7 @@ class _StoryCard extends StatelessWidget {
                             icon: Icons.history,
                             label: 'v${story.version}'),
                       if (story.linkedRundownId != null)
-                        _MetaChip(
+                        const _MetaChip(
                             icon: Icons.playlist_play,
                             label: 'In rundown'),
                     ],
@@ -547,14 +548,14 @@ class _StoryCard extends StatelessWidget {
                     // Other view-only groups (submitted, archived)
                     Row(
                       children: [
-                        Icon(Icons.lock_outline,
+                        const Icon(Icons.lock_outline,
                             size: 14, color: NRCSColors.topNavBlue),
                         const SizedBox(width: 4),
                         Text(
                           group == _StoryGroup.submitted
                               ? 'Locked — awaiting editor review'
                               : 'Read only',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 12, color: NRCSColors.topNavBlue),
                         ),
                       ],
@@ -619,7 +620,7 @@ class _MetaChip extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: NRCSColors.textDark),
+          style: const TextStyle(fontSize: 12, color: NRCSColors.textDark),
         ),
       ],
     );

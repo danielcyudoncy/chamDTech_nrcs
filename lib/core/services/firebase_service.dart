@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/firebase_options.dart';
+import 'package:chamdtech_nrcs/firebase_options.dart';
 
 class FirebaseService extends GetxService {
   static FirebaseAuth get auth => FirebaseAuth.instance;

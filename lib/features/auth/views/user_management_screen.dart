@@ -1,12 +1,12 @@
+// features/auth/views/user_management_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
-import 'package:chamDTech_nrcs/features/admin/services/privilege_service.dart';
-import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
+import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class UserManagementScreen extends StatelessWidget {
   const UserManagementScreen({super.key});
@@ -206,7 +206,8 @@ class UserManagementScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Obx(() => DropdownButtonFormField<String>(
-                  value: selectedRole.value,
+                  initialValue: selectedRole.value,
+                
                   decoration: const InputDecoration(labelText: 'System Role'),
                   items: const [
                     DropdownMenuItem(value: 'admin', child: Text('Admin')),
@@ -225,7 +226,7 @@ class UserManagementScreen extends StatelessWidget {
                 if (!snapshot.hasData) return const CircularProgressIndicator();
                 final sets = snapshot.data!;
                 return Obx(() => DropdownButtonFormField<String?>(
-                      value: selectedPrivilegeSet.value,
+                      initialValue: selectedPrivilegeSet.value,
                       decoration: const InputDecoration(labelText: 'Privilege Master Set'),
                       items: [
                         const DropdownMenuItem(value: null, child: Text('None (Use Default)')),

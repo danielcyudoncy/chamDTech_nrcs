@@ -1,15 +1,16 @@
+// features/stories/views/widgets/nrcs_layout.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/stories/controllers/story_controller.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/top_stories_ticker.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/top_stories_ticker.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 
 class NRCSColors {
   static const Color topNavBlue = Color(0xFF0046AD);
@@ -746,7 +747,7 @@ class _ToolbarSearch extends StatelessWidget {
       child: const Row(
         children: [
           Icon(Icons.search, size: 16),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text('search', style: TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
@@ -845,8 +846,8 @@ class NRCSStoryListItem extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: isSelected 
-                                ? Colors.white.withOpacity(0.2) 
-                                : _getCategoryColor(category!).withOpacity(0.1),
+                                ? Colors.white.withValues(alpha: 0.2) 
+                                : _getCategoryColor(category!).withValues(alpha: 0.1),
                             border: Border.all(
                               color: isSelected 
                                   ? Colors.white54 

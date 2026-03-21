@@ -1,15 +1,15 @@
+// features/auth/services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/core/services/firebase_service.dart';
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
-import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
-import 'package:chamDTech_nrcs/features/admin/services/privilege_service.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
@@ -56,7 +56,7 @@ class AuthService extends GetxService {
             'Session Error',
             'Failed to load user profile. Please log in again.',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+            backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
             colorText: Get.theme.colorScheme.error,
           );
         });
@@ -83,7 +83,7 @@ class AuthService extends GetxService {
         'Login Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
@@ -92,7 +92,7 @@ class AuthService extends GetxService {
         'Login Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
@@ -139,7 +139,7 @@ class AuthService extends GetxService {
         'Sign Up Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
@@ -148,7 +148,7 @@ class AuthService extends GetxService {
         'Sign Up Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;

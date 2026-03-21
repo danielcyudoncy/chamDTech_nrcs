@@ -1,7 +1,8 @@
-import 'dart:html' as html;
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 
 void suppressContextMenu() {
-  html.window.onContextMenu.listen((event) {
+  web.document.addEventListener('contextmenu', (web.Event event) {
     event.preventDefault();
-  });
+  }.toJS);
 }

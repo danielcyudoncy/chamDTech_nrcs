@@ -1,6 +1,6 @@
+// features/dashboard/views/producer_dashboard_screen.dart
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class ProducerDashboardScreen extends StatelessWidget {
   const ProducerDashboardScreen({super.key});

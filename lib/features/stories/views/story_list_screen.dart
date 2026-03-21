@@ -1,12 +1,11 @@
+// features/stories/views/story_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/stories/controllers/story_controller.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/core/utils/date_utils.dart' as core_date_utils;
-import 'package:chamDTech_nrcs/core/utils/string_helpers.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/utils/date_utils.dart' as core_date_utils;
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class StoryListScreen extends StatelessWidget {
   const StoryListScreen({super.key});
@@ -84,7 +83,7 @@ class StoryListScreen extends StatelessWidget {
           return const Center(
             child: Text(
               'Select a story to view details',
-              style: TextStyle(color: const Color(0xFF757575), fontSize: 18),
+              style: TextStyle(color: Color(0xFF757575), fontSize: 18),
             ),
           );
         }
@@ -164,7 +163,7 @@ class _DetailHeader extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 32),
-            _MiniBadge(label: '250'),
+            const _MiniBadge(label: '250'),
             const SizedBox(width: 16),
             _MiniBadge(label: core_date_utils.DateUtils.formatDuration(selectedStory.duration)),
           ],
@@ -230,7 +229,7 @@ class _DetailMeta extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _getCategoryColor(selectedStory.category).withOpacity(0.1),
+                  color: _getCategoryColor(selectedStory.category).withValues(alpha:0.1),
                   border: Border.all(color: _getCategoryColor(selectedStory.category)),
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -302,7 +301,7 @@ class _CategoryFilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.15) : Colors.transparent,
+          color: isSelected ? color.withValues(alpha:0.15) : Colors.transparent,
           border: Border.all(
             color: isSelected ? color : Colors.grey.shade400,
             width: isSelected ? 1.5 : 1,

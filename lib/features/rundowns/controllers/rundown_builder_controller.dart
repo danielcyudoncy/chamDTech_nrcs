@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
-import 'package:chamDTech_nrcs/features/rundowns/services/rundown_service.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 
 class RundownBuilderController extends GetxController {
   final RundownService _rundownService = Get.find<RundownService>();

@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
+// features/profile/controllers/profile_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 
 
 class ProfileController extends GetxController {
@@ -56,7 +56,6 @@ class ProfileController extends GetxController {
     }
     
     isLoading.value = true;
-    print('DEBUG: Profile saving started...');
     try {
       String? photoUrl;
       
@@ -64,11 +63,9 @@ class ProfileController extends GetxController {
       if (selectedXFile.value != null) {
         final user = _authService.currentUser.value;
         if (user != null) {
-          print('DEBUG: Image selection found, uploading for user ${user.id}...');
           final ref = _storage.ref().child('${AppConstants.profilePicturesPath}/${user.id}/profile.jpg');
           
           final bytes = await selectedXFile.value!.readAsBytes();
-          print('DEBUG: Read ${bytes.length} bytes for upload.');
           
           // Use metadata to ensure content type
           final uploadTask = ref.putData(
@@ -76,30 +73,22 @@ class ProfileController extends GetxController {
             SettableMetadata(contentType: 'image/jpeg'),
           );
           
-          print('DEBUG: Waiting for upload task completion...');
           final snapshot = await uploadTask;
-          print('DEBUG: Upload task finished. State: ${snapshot.state}');
           
           photoUrl = await snapshot.ref.getDownloadURL();
-          print('DEBUG: Download URL obtained: $photoUrl');
         }
       }
       
-      print('DEBUG: Calling AuthService.updateUserProfile...');
       await _authService.updateUserProfile(
         displayName: displayNameController.text.trim(),
         photoUrl: photoUrl,
       );
-      print('DEBUG: AuthService.updateUserProfile succeeded.');
       
       Get.back();
       Get.snackbar('Success', 'Profile updated successfully');
-    } catch (e, stack) {
-      print('DEBUG: Error in saveProfile: $e');
-      print('DEBUG: Stack trace: $stack');
+    } catch (e) {
       Get.snackbar('Error', 'Failed to update profile: $e');
     } finally {
-      print('DEBUG: saveProfile finally block. Setting isLoading to false.');
       isLoading.value = false;
     }
   }

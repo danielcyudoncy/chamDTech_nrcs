@@ -1,12 +1,10 @@
+// features/dashboard/views/shells/producer_app_shell.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
 
 class ProducerAppShell extends StatefulWidget {
   const ProducerAppShell({super.key});
@@ -207,7 +205,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
               Obx(() => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: NRCSColors.topNavBlue.withOpacity(0.1),
+                  color: NRCSColors.topNavBlue.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -251,15 +249,15 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                       ),
                       subtitle: Row(
                         children: [
-                          Icon(Icons.schedule, size: 14, color: NRCSColors.topNavBlue),
+                          const Icon(Icons.schedule, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text(DateFormat('hh:mm a').format(rundown.scheduledTime)),
                           const SizedBox(width: 16),
-                          Icon(Icons.article, size: 14, color: NRCSColors.topNavBlue),
+                          const Icon(Icons.article, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text('${rundown.storyIds.length} Stories'),
                           const SizedBox(width: 16),
-                          Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
+                          const Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
                           const SizedBox(width: 4),
                           Text('Target: ${controller.formatDuration(rundown.targetDuration)}'),
                         ],
@@ -298,9 +296,9 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha:0.5)),
       ),
       child: Text(
         status.toUpperCase(),
@@ -340,7 +338,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
               Obx(() => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: NRCSColors.topNavBlue.withOpacity(0.1),
+                  color: NRCSColors.topNavBlue.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -390,14 +388,14 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
+                              const Icon(Icons.timer, size: 14, color: NRCSColors.topNavBlue),
                               const SizedBox(width: 4),
                               Text('${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}'),
                               const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
+                                  color: Colors.green.withValues(alpha:0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(

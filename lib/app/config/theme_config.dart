@@ -1,3 +1,4 @@
+// app/config/theme_config.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -21,7 +22,7 @@ class ThemeConfig {
       useMaterial3: true,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: accentColor,
         surface: surfaceColor,
@@ -106,10 +107,10 @@ class ThemeConfig {
       brightness: Brightness.dark,
       primaryColor: primaryColor,
       scaffoldBackgroundColor: const Color(0xFF121212),
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: primaryColor,
         secondary: accentColor,
-        surface: const Color(0xFF1E1E1E),
+        surface: Color(0xFF1E1E1E),
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,

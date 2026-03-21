@@ -1,10 +1,10 @@
+// features/stories/controllers/story_controller.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:uuid/uuid.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class StoryController extends GetxController {
   final StoryService _storyService = Get.put(StoryService());
@@ -255,7 +255,7 @@ class StoryController extends GetxController {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color: Theme.of(context).primaryColor.withValues(alpha:0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(

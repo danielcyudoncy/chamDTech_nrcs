@@ -1,14 +1,15 @@
+// features/stories/views/story_editor_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:chamDTech_nrcs/features/stories/controllers/story_editor_controller.dart';
-import 'package:chamDTech_nrcs/core/models/attachment_model.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/core/utils/permission_helpers.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
+import 'package:chamdtech_nrcs/core/models/attachment_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/utils/permission_helpers.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:intl/intl.dart';
 
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class StoryEditorScreen extends StatelessWidget {
   const StoryEditorScreen({super.key});
@@ -61,28 +62,6 @@ class StoryEditorScreen extends StatelessWidget {
     ));
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, StoryEditorController controller) {
-    return AppBar(
-      title: Obx(() => Text(
-        controller.storyTitle.value.isNotEmpty ? controller.storyTitle.value : 'New Story',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      )),
-      backgroundColor: const Color(0xFF263238),
-      toolbarHeight: 40,
-      actions: [
-        Obx(() => controller.isSaving.value 
-          ? const Center(child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-            ))
-          : const SizedBox()),
-        IconButton(
-          icon: const Icon(Icons.close, size: 20),
-          onPressed: () => Get.back(),
-        ),
-      ],
-    );
-  }
 
   Widget _buildActionToolbar(BuildContext context, StoryEditorController controller) {
     return Container(
@@ -177,7 +156,7 @@ class StoryEditorScreen extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
               decoration: BoxDecoration(
-                color: isEmpty ? Colors.red.withOpacity(0.05) : Colors.white,
+                color: isEmpty ? Colors.red.withValues(alpha:0.05) : Colors.white,
                 border: Border.all(
                   color: isEmpty ? Colors.red.shade300 : Colors.grey.shade400,
                   width: isEmpty ? 1.5 : 1,

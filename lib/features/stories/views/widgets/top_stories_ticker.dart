@@ -1,3 +1,4 @@
+// features/stories/views/widgets/top_stories_ticker.dart
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 import '../../services/channel_news_service.dart';
@@ -82,7 +83,7 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
             alignment: Alignment.centerLeft,
             child: Marquee(
               text: stories.join("   🔴   "),
-              style:  TextStyle(
+              style:  const TextStyle(
                 color: NRCSColors.topNavBlue,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

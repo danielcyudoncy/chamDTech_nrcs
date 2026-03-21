@@ -1,8 +1,9 @@
+// features/admin/views/admin_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/admin/controllers/admin_controller.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -20,45 +21,45 @@ class AdminDashboardScreen extends StatelessWidget {
             context,
             'Identity & Access',
             [
-              _AdminTile(label: 'Users', icon: Icons.people, route: AppRoutes.userManagement),
-              _AdminTile(label: 'Privileges Master', icon: Icons.security, route: AppRoutes.adminPrivileges),
-              _AdminTile(label: 'Designations', icon: Icons.badge, route: AppRoutes.adminDesignations),
+              const _AdminTile(label: 'Users', icon: Icons.people, route: AppRoutes.userManagement),
+              const _AdminTile(label: 'Privileges Master', icon: Icons.security, route: AppRoutes.adminPrivileges),
+              const _AdminTile(label: 'Designations', icon: Icons.badge, route: AppRoutes.adminDesignations),
             ],
           ),
           _buildCategory(
             context,
             'Production Masters',
             [
-              _AdminTile(label: 'Story State', icon: Icons.rule, route: AppRoutes.adminStoryState),
-              _AdminTile(label: 'Format', icon: Icons.view_headline, route: AppRoutes.adminFormat),
-              _AdminTile(label: 'Sub Format', icon: Icons.view_list, route: AppRoutes.adminSubFormat),
-              _AdminTile(label: 'Show Template', icon: Icons.dashboard_customize, route: AppRoutes.adminShowTemplate),
-              _AdminTile(label: 'Show Master', icon: Icons.tv, route: AppRoutes.adminShowMaster),
+              const _AdminTile(label: 'Story State', icon: Icons.rule, route: AppRoutes.adminStoryState),
+              const _AdminTile(label: 'Format', icon: Icons.view_headline, route: AppRoutes.adminFormat),
+              const _AdminTile(label: 'Sub Format', icon: Icons.view_list, route: AppRoutes.adminSubFormat),
+              const _AdminTile(label: 'Show Template', icon: Icons.dashboard_customize, route: AppRoutes.adminShowTemplate),
+              const _AdminTile(label: 'Show Master', icon: Icons.tv, route: AppRoutes.adminShowMaster),
             ],
           ),
           _buildCategory(
             context,
             'Operations',
             [
-              _AdminTile(label: 'Desks', icon: Icons.work, route: AppRoutes.adminDesks),
-              _AdminTile(label: 'Wire', icon: Icons.rss_feed, route: AppRoutes.adminWire),
-              _AdminTile(label: 'Locations', icon: Icons.location_on, route: AppRoutes.adminLocations),
-              _AdminTile(label: 'Strings', icon: Icons.text_fields, route: AppRoutes.adminStrings),
+              const _AdminTile(label: 'Desks', icon: Icons.work, route: AppRoutes.adminDesks),
+              const _AdminTile(label: 'Wire', icon: Icons.rss_feed, route: AppRoutes.adminWire),
+              const _AdminTile(label: 'Locations', icon: Icons.location_on, route: AppRoutes.adminLocations),
+              const _AdminTile(label: 'Strings', icon: Icons.text_fields, route: AppRoutes.adminStrings),
             ],
           ),
           _buildCategory(
             context,
             'Technical',
             [
-              _AdminTile(label: 'MOS Devices', icon: Icons.settings_input_component, route: AppRoutes.adminMosDevices),
-              _AdminTile(label: 'Configurations', icon: Icons.settings, route: AppRoutes.adminConfigurations),
+              const _AdminTile(label: 'MOS Devices', icon: Icons.settings_input_component, route: AppRoutes.adminMosDevices),
+              const _AdminTile(label: 'Configurations', icon: Icons.settings, route: AppRoutes.adminConfigurations),
             ],
           ),
           _buildCategory(
             context,
             'Analytics',
             [
-              _AdminTile(label: 'Audit Trail', icon: Icons.history, route: AppRoutes.adminAuditTrail),
+              const _AdminTile(label: 'Audit Trail', icon: Icons.history, route: AppRoutes.adminAuditTrail),
             ],
           ),
         ],

@@ -1,15 +1,15 @@
+// features/dashboard/controllers/reporter_dashboard_controller.dart
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/features/rundowns/services/rundown_service.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class ReporterDashboardController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();

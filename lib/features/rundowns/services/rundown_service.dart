@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/services/firebase_service.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 
 class RundownService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;

@@ -1,7 +1,8 @@
+// core/services/activity_log_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/models/activity_log_model.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/models/activity_log_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class ActivityLogService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -32,7 +33,6 @@ class ActivityLogService extends GetxService {
             .set(log.toJson());
       }
     } catch (e) {
-      print('Error logging activity: $e');
       // Non-blocking error - we don't want to stop the main action if logging fails
     }
   }

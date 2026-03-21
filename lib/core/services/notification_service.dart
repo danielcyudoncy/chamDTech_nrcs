@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 
 class NotificationService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

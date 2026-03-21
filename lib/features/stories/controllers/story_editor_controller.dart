@@ -1,18 +1,19 @@
+// features/stories/controllers/story_editor_controller.dart
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/core/models/attachment_model.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/stories/controllers/story_controller.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
-import 'package:chamDTech_nrcs/features/auth/models/user_model.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/core/models/attachment_model.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 
 class StoryEditorController extends GetxController {
@@ -187,7 +188,7 @@ class StoryEditorController extends GetxController {
         'Category Required',
         'Please select a category before saving.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
         duration: const Duration(seconds: 3),
       );
@@ -251,7 +252,7 @@ class StoryEditorController extends GetxController {
           'Saved', 
           'Story saved successfully.',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withOpacity(0.1),
+          backgroundColor: Colors.green.withValues(alpha: 0.1),
           colorText: Colors.green.shade800,
         );
       }
@@ -260,7 +261,7 @@ class StoryEditorController extends GetxController {
         'Error', 
         'Failed to save story.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withOpacity(0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
     }
@@ -415,7 +416,7 @@ class StoryEditorController extends GetxController {
         title: 'Story Assigned',
         message: '${currentUser?.displayName ?? "Someone"} assigned you the story: "${updatedStory.title}"',
         createdAt: DateTime.now(),
-        actionUrl: AppRoutes.storyEditor + '?id=${updatedStory.id}',
+        actionUrl: '${AppRoutes.storyEditor}?id=${updatedStory.id}',
         data: {'storyId': updatedStory.id},
       ));
 
@@ -430,7 +431,7 @@ class StoryEditorController extends GetxController {
       '$feature Pending', 
       'The $feature module is currently under active development and will be available soon.',
       snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.blue.withOpacity(0.1),
+      backgroundColor: Colors.blue.withValues(alpha: 0.1),
       colorText: Colors.blue.shade900,
       duration: const Duration(seconds: 3),
     );

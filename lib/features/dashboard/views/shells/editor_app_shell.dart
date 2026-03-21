@@ -1,11 +1,11 @@
+// features/dashboard/views/shells/editor_app_shell.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 
 class EditorAppShell extends StatefulWidget {
   const EditorAppShell({super.key});
@@ -201,7 +201,7 @@ class _EditorAppShellState extends State<EditorAppShell> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: NRCSColors.topNavBlue.withOpacity(0.1),
+                  color: NRCSColors.topNavBlue.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

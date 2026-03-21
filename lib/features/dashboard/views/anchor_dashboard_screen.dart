@@ -1,11 +1,11 @@
+// features/dashboard/views/anchor_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
-import 'package:chamDTech_nrcs/features/rundowns/services/rundown_service.dart';
-import 'package:chamDTech_nrcs/features/rundowns/models/rundown_model.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class AnchorDashboardScreen extends StatelessWidget {
   const AnchorDashboardScreen({super.key});
@@ -72,7 +72,7 @@ class AnchorDashboardScreen extends StatelessWidget {
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: CircleAvatar(
-                            backgroundColor: _getStatusColor(rundown.status).withOpacity(0.1),
+                            backgroundColor: _getStatusColor(rundown.status).withValues(alpha:0.1),
                             child: Icon(Icons.schedule, color: _getStatusColor(rundown.status)),
                           ),
                           title: Text(
@@ -83,7 +83,7 @@ class AnchorDashboardScreen extends StatelessWidget {
                             children: [
                               Text(DateFormat('hh:mm a').format(rundown.scheduledTime)),
                               const SizedBox(width: 16),
-                              Icon(Icons.article, size: 14, color: NRCSColors.topNavBlue),
+                              const Icon(Icons.article, size: 14, color: NRCSColors.topNavBlue),
                               const SizedBox(width: 4),
                               Text('${rundown.storyIds.length} Stories'),
                             ],
@@ -110,9 +110,9 @@ class AnchorDashboardScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha:0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha:0.5)),
       ),
       child: Text(
         status.toUpperCase(),

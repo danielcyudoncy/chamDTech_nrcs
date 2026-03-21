@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/admin/controllers/privilege_master_controller.dart';
-import 'package:chamDTech_nrcs/features/admin/models/privilege_set_model.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/admin/controllers/privilege_master_controller.dart';
+import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class PrivilegeMasterScreen extends StatelessWidget {
   const PrivilegeMasterScreen({super.key});

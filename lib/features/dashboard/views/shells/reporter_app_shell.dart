@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:chamDTech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamDTech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
-import 'package:chamDTech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/widgets/my_stories_tab.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/my_stories_tab.dart';
 
 class ReporterAppShell extends StatefulWidget {
   const ReporterAppShell({super.key});
@@ -240,8 +240,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     required bool isWarning,
   }) {
     final headerColor = isWarning ? Colors.red : NRCSColors.topNavBlue;
-    final bgColor = isWarning ? Colors.red.withOpacity(0.05) : Colors.white;
-    final borderColor = isWarning ? Colors.red.withOpacity(0.3) : NRCSColors.borderGray;
+    final bgColor = isWarning ? Colors.red.withValues(alpha: 0.05) : Colors.white;
+    final borderColor = isWarning ? Colors.red.withValues(alpha: 0.3) : NRCSColors.borderGray;
 
     return Container(
       decoration: BoxDecoration(
@@ -271,7 +271,7 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: headerColor.withOpacity(0.1),
+                  color: headerColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/core/models/notification_model.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/core/models/notification_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -96,9 +96,9 @@ class _NotificationItem extends StatelessWidget {
     final notificationService = Get.find<NotificationService>();
 
     return ListTile(
-      tileColor: notification.isRead ? Colors.transparent : Colors.blue.withOpacity(0.05),
+      tileColor: notification.isRead ? Colors.transparent : Colors.blue.withValues(alpha: 0.05),
       leading: CircleAvatar(
-        backgroundColor: _getNotificationColor(notification.type).withOpacity(0.2),
+        backgroundColor: _getNotificationColor(notification.type).withValues(alpha: 0.2),
         child: Icon(_getNotificationIcon(notification.type), color: _getNotificationColor(notification.type)),
       ),
       title: Text(

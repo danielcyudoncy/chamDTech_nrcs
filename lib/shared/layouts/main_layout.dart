@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/app/config/theme_config.dart';
-import 'package:chamDTech_nrcs/shared/layouts/responsive_layout.dart';
+import 'package:chamdtech_nrcs/app/config/theme_config.dart';
+import 'package:chamdtech_nrcs/shared/layouts/responsive_layout.dart';
 
 class MainLayout extends StatelessWidget {
   final Widget child;
@@ -49,7 +49,7 @@ class MainLayout extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -163,7 +163,7 @@ class MainLayout extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -232,7 +232,7 @@ class _SidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isActive ? ThemeConfig.primaryColor.withOpacity(0.1) : Colors.transparent,
+            color: isActive ? ThemeConfig.primaryColor.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -240,7 +240,7 @@ class _SidebarItem extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: isActive ? ThemeConfig.primaryColor : theme.iconTheme.color?.withOpacity(0.7),
+                color: isActive ? ThemeConfig.primaryColor : theme.iconTheme.color?.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 12),
               Text(
@@ -248,7 +248,7 @@ class _SidebarItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: isActive ? ThemeConfig.primaryColor : theme.textTheme.bodyMedium?.color?.withOpacity(0.8),
+                  color: isActive ? ThemeConfig.primaryColor : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                 ),
               ),
             ],

@@ -1,19 +1,19 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/app/routes/app_routes.dart';
-import 'package:chamDTech_nrcs/app/config/theme_config.dart';
-import 'package:chamDTech_nrcs/core/services/firebase_service.dart';
-import 'package:chamDTech_nrcs/features/auth/services/auth_service.dart';
-import 'package:chamDTech_nrcs/features/stories/services/story_service.dart';
-import 'package:chamDTech_nrcs/features/rundowns/services/rundown_service.dart';
-import 'package:chamDTech_nrcs/core/services/notification_service.dart';
-import 'package:flutter/services.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/app/config/theme_config.dart';
+import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_quill/flutter_quill.dart'; // For FlutterQuillLocalizations
+// For FlutterQuillLocalizations
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_quill/translations.dart';
 
-import 'package:chamDTech_nrcs/core/utils/context_menu_suppressor.dart';
+import 'package:chamdtech_nrcs/core/utils/context_menu_suppressor.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Respect system setting or use Get.changeThemeMode
       initialRoute: AppRoutes.splash,
       getPages: AppRoutes.routes,
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

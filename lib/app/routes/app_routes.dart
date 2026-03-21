@@ -1,24 +1,23 @@
+// app/routes/app_routes.dart
 import 'package:get/get.dart';
-import 'package:chamDTech_nrcs/features/auth/views/login_screen.dart';
-import 'package:chamDTech_nrcs/features/auth/views/splash_screen.dart';
-import 'package:chamDTech_nrcs/features/auth/views/user_management_screen.dart';
-import 'package:chamDTech_nrcs/features/stories/views/story_list_screen.dart';
-import 'package:chamDTech_nrcs/features/stories/views/story_editor_screen.dart';
-import 'package:chamDTech_nrcs/features/rundowns/views/rundown_list_screen.dart';
-import 'package:chamDTech_nrcs/features/rundowns/views/rundown_builder_screen.dart';
-import 'package:chamDTech_nrcs/features/settings/views/settings_screen.dart';
-import 'package:chamDTech_nrcs/features/profile/views/profile_screen.dart';
-import 'package:chamDTech_nrcs/features/admin/views/admin_dashboard_screen.dart';
-import 'package:chamDTech_nrcs/features/admin/views/master_management_screen.dart';
-import 'package:chamDTech_nrcs/features/admin/views/privilege_master_screen.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/shells/reporter_app_shell.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/shells/editor_app_shell.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/shells/producer_app_shell.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
-import 'package:chamDTech_nrcs/features/rundowns/views/rundown_builder_screen.dart';
-import 'package:chamDTech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
-import 'package:chamDTech_nrcs/features/notifications/views/notification_screen.dart';
-import 'package:chamDTech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/auth/views/login_screen.dart';
+import 'package:chamdtech_nrcs/features/auth/views/splash_screen.dart';
+import 'package:chamdtech_nrcs/features/auth/views/user_management_screen.dart';
+import 'package:chamdtech_nrcs/features/stories/views/story_list_screen.dart';
+import 'package:chamdtech_nrcs/features/stories/views/story_editor_screen.dart';
+import 'package:chamdtech_nrcs/features/rundowns/views/rundown_list_screen.dart';
+import 'package:chamdtech_nrcs/features/rundowns/views/rundown_builder_screen.dart';
+import 'package:chamdtech_nrcs/features/settings/views/settings_screen.dart';
+import 'package:chamdtech_nrcs/features/profile/views/profile_screen.dart';
+import 'package:chamdtech_nrcs/features/admin/views/master_management_screen.dart';
+import 'package:chamdtech_nrcs/features/admin/views/privilege_master_screen.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/shells/reporter_app_shell.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/shells/editor_app_shell.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/shells/producer_app_shell.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/notification_screen.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class AppRoutes {
   static const String splash = '/';
