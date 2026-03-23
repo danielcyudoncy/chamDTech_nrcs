@@ -178,6 +178,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Anchor Dashboard': AppRoutes.anchorDashboard,
       'Admin Dashboard': AppRoutes.adminDashboard,
       'My Stories': '/stories', // Could filter stories logically by current user later
+      'Archive': '/stories', // Will use filter
       'Create Story': AppRoutes.storyEditor,
       'Review Queue': '/stories', // Could filter logically later
       'Rundowns': '/rundowns',
@@ -194,17 +195,17 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
     // Calculate dynamic tabs based on active role permissions
     List<String> tabs = [];
     if (role == AppConstants.roleReporter) {
-      tabs = ['Reporter Dashboard', 'My Stories', 'Create Story', 'Notifications'];
+      tabs = ['Reporter Dashboard', 'My Stories', 'Create Story', 'Archive', 'Notifications'];
     } else if (role == AppConstants.roleEditor) {
-      tabs = ['Editor Dashboard', 'Review Queue', 'Desks', 'Notifications'];
+      tabs = ['Editor Dashboard', 'Review Queue', 'Desks', 'Archive', 'Notifications'];
     } else if (role == AppConstants.roleProducer) {
-      tabs = ['Producer Dashboard', 'Rundowns', 'Story Pool', 'Reports'];
+      tabs = ['Producer Dashboard', 'Rundowns', 'Story Pool', 'Archive', 'Reports'];
     } else if (role == AppConstants.roleAdmin) {
-      tabs = ['Admin Dashboard', 'Users', 'Privileges', 'Desks', 'Story States', 'Audit Logs', 'Configurations'];
+      tabs = ['Admin Dashboard', 'Users', 'Privileges', 'Desks', 'Story States', 'Archive', 'Audit Logs', 'Configurations'];
     } else if (role == AppConstants.roleAnchor) {
-       tabs = ['Anchor Dashboard', 'Rundowns', 'Notifications'];
+       tabs = ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
     } else {
-       tabs = ['Workspace', 'Settings'];
+       tabs = ['Workspace', 'Archive', 'Settings'];
     }
 
     final currentRoute = Get.currentRoute;
@@ -239,6 +240,32 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                           Get.put(StoryController()).createNewStory();
                         }
                         return;
+                      }
+
+                      if (tab == 'Archive') {
+                        try {
+                          final controller = Get.find<StoryController>();
+                          controller.showArchived.value = true;
+                          controller.loadStories();
+                        } catch (e) {
+                          final controller = Get.put(StoryController());
+                          controller.showArchived.value = true;
+                          controller.loadStories();
+                        }
+                        if (currentRoute != '/stories') {
+                          Get.offAllNamed('/stories');
+                        }
+                        return;
+                      }
+
+                      if (tab == 'My Stories' || tab == 'Workspace' || tab == 'Reporter Dashboard') {
+                        try {
+                          final controller = Get.find<StoryController>();
+                          controller.showArchived.value = false;
+                          controller.loadStories();
+                        } catch (e) {
+                          // Controller not initialized yet, will be handled on creation
+                        }
                       }
 
                       if (route != null) {
@@ -657,33 +684,36 @@ class NRCSToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 45,
-      color: NRCSColors.subNavGray,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _ToolbarIcon(icon: Icons.refresh, onTap: onRefresh),
-            const _ToolbarButton(icon: Icons.folder_open, label: 'news'),
-            const _ToolbarButton(icon: Icons.folder_open, label: 'Politics'),
-            _ToolbarSearch(),
-            _ToolbarActionButton(label: 'New', onTap: onNew),
-            _ToolbarActionButton(label: 'Edit', onTap: onEdit),
-            _ToolbarActionButton(label: 'Delete', onTap: onDelete),
-            _ToolbarActionButton(label: 'Copy', onTap: onCopy),
-            _ToolbarActionButton(label: 'Move', onTap: onMove),
-            _ToolbarActionButton(label: 'Link', onTap: onLink),
-            _ToolbarActionButton(label: 'Assign', onTap: onAssign),
-            _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog),
-            _ToolbarActionButton(label: 'Print', onTap: onPrint),
+            const SizedBox(width: 8),
+            _ToolbarActionButton(label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
+            _ToolbarActionButton(label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
+            _ToolbarActionButton(label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
+            _ToolbarActionButton(label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
+            _ToolbarActionButton(label: 'Move', onTap: onMove, icon: Icons.move_to_inbox_outlined),
+            _ToolbarActionButton(label: 'Link', onTap: onLink, icon: Icons.link),
+            _ToolbarActionButton(label: 'Assign', onTap: onAssign, icon: Icons.assignment_ind_outlined),
+            _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
+            _ToolbarActionButton(label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
+            const SizedBox(width: 8),
             _ToolbarActionButton(
               label: 'Powerview', 
               isBordered: true, 
-              borderColor: Colors.red,
+              borderColor: NRCSColors.activeOrange,
               onTap: onPowerview,
+              icon: Icons.remove_red_eye_outlined,
             ),
+            const SizedBox(width: 16),
           ],
         ),
       ),
@@ -703,7 +733,7 @@ class CategoryToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const categories = AppConstants.storyCategories;
+    final categories = ['All', ...AppConstants.storyCategories];
 
     return Container(
       height: 56,
@@ -717,7 +747,7 @@ class CategoryToolbar extends StatelessWidget {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final isActive = selectedCategory == cat;
+          final isActive = (cat == 'All' && (selectedCategory == null || selectedCategory == 'all' || selectedCategory == 'All')) || selectedCategory == cat;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _ModernCategoryChip(
@@ -789,6 +819,7 @@ class _ModernCategoryChip extends StatelessWidget {
 
   Color _getCategoryColor(String categoryStr) {
     switch (categoryStr) {
+      case 'All':                       return Colors.blueGrey.shade700;
       case 'Local News':                return Colors.blue.shade700;
       case 'Politics':                  return Colors.purple.shade700;
       case 'Sports':                    return Colors.green.shade700;
@@ -804,121 +835,61 @@ class _ModernCategoryChip extends StatelessWidget {
   }
 }
 
-class _ToolbarIcon extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-  const _ToolbarIcon({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: 45,
-        height: 45,
-        decoration: BoxDecoration(
-          border: Border.all(color: NRCSColors.borderGray),
-        ),
-        child: Icon(icon, size: 24),
-      ),
-    );
-  }
-}
-
-class _ToolbarButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _ToolbarButton({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 45,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: NRCSColors.borderGray),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Row(
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: NRCSColors.textDark,
-            ),
-          ),
-
-        ],
-      ),
-    );
-  }
-}
-
-class _ToolbarSearch extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 147,
-      height: 45,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: NRCSColors.borderGray),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Row(
-
-        children: [
-          const Icon(Icons.search, size: 16),
-          const SizedBox(width: 4),
-          Text(
-            'search',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: NRCSColors.textDark.withValues(alpha: 0.6),
-            ),
-          ),
-
-        ],
-      ),
-    );
-  }
-}
-
 class _ToolbarActionButton extends StatelessWidget {
   final String label;
   final bool isBordered;
   final Color? borderColor;
   final VoidCallback? onTap;
+  final IconData? icon;
 
   const _ToolbarActionButton({
     required this.label, 
     this.isBordered = false,
     this.borderColor,
     this.onTap,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 45,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          border: isBordered && borderColor != null
-              ? Border.all(color: borderColor!, width: 2)
-              : Border.all(color: NRCSColors.borderGray),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: isBordered && borderColor != null
+                ? Border.all(color: borderColor!, width: 1.5)
+                : Border.all(color: Colors.transparent),
+            color: isBordered ? Colors.transparent : Colors.grey.shade50,
+          ),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon, 
+                  size: 16, 
+                  color: isBordered ? (borderColor ?? NRCSColors.primaryBlue) : NRCSColors.primaryBlue
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: 12, 
+                  color: isBordered ? (borderColor ?? NRCSColors.primaryBlue) : NRCSColors.textDark
+                ),
+              ),
+            ],
+          ),
         ),
-        alignment: Alignment.centerLeft,
-        child: Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: NRCSColors.primaryBlue),
-        ),
-
       ),
     );
   }
@@ -933,6 +904,7 @@ class NRCSStoryListItem extends StatelessWidget {
   final String? category;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const NRCSStoryListItem({
     super.key,
@@ -944,6 +916,7 @@ class NRCSStoryListItem extends StatelessWidget {
     this.category,
     required this.onTap,
     this.isSelected = false,
+    this.onDelete,
   });
 
   @override
@@ -1005,11 +978,24 @@ class NRCSStoryListItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.videocam, 
-                  size: 16, 
-                  color: isSelected ? Colors.white : Colors.grey[600]
-                ),
+                if (onDelete != null)
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline, 
+                      size: 18, 
+                      color: isSelected ? Colors.white : Colors.red.shade300
+                    ),
+                    onPressed: onDelete,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Archive Story',
+                  )
+                else
+                  Icon(
+                    Icons.videocam, 
+                    size: 16, 
+                    color: isSelected ? Colors.white : Colors.grey[600]
+                  ),
               ],
             ),
             const SizedBox(height: 8),

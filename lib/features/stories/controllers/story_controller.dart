@@ -13,7 +13,8 @@ class StoryController extends GetxController {
   final stories = <StoryModel>[].obs;
   final isLoading = false.obs;
   final currentFilter = 'all'.obs;
-  final categoryFilter = 'all'.obs; // Category filter: 'all' or a specific category
+  final categoryFilter = 'all'.obs; 
+  final showArchived = false.obs;
   final selectedStoryId = ''.obs;
 
   StoryModel? get selectedStory => 
@@ -47,14 +48,24 @@ class StoryController extends GetxController {
     storyStream.listen((storyList) {
       // Apply status filter
       List<StoryModel> filtered;
+      
+      // Filter by archive status
+      final baseStories = storyList.where((s) {
+        if (showArchived.value) {
+          return s.status == AppConstants.statusArchived;
+        } else {
+          return s.status != AppConstants.statusArchived;
+        }
+      }).toList();
+
       if (currentFilter.value == 'draft') {
-        filtered = storyList.where((s) => s.status == AppConstants.statusDraft).toList();
+        filtered = baseStories.where((s) => s.status == AppConstants.statusDraft).toList();
       } else if (currentFilter.value == 'approved') {
-        filtered = storyList.where((s) => s.status == AppConstants.statusApproved).toList();
+        filtered = baseStories.where((s) => s.status == AppConstants.statusApproved).toList();
       } else if (currentFilter.value == 'pending') {
-        filtered = storyList.where((s) => s.status == AppConstants.statusPending).toList();
+        filtered = baseStories.where((s) => s.status == AppConstants.statusPending).toList();
       } else {
-        filtered = storyList;
+        filtered = baseStories;
       }
 
       // Apply category filter
@@ -162,12 +173,17 @@ class StoryController extends GetxController {
 
   Color _categoryColor(String category) {
     switch (category) {
-      case 'NEWS':      return Colors.blue;
-      case 'POLITICS':  return Colors.purple;
-      case 'SPORTS':    return Colors.green;
-      case 'FOREIGN':   return Colors.orange;
-      case 'BUSINESS':  return Colors.teal;
-      default:          return Colors.grey;
+      case 'Local News':                return Colors.blue.shade700;
+      case 'Politics':                  return Colors.purple.shade700;
+      case 'Sports':                    return Colors.green.shade700;
+      case 'Foreign':                   return Colors.orange.shade700;
+      case 'Business & Finance':        return Colors.teal.shade700;
+      case 'Breaking News':             return Colors.red.shade700;
+      case 'Technology':                return Colors.indigo.shade700;
+      case 'Environment':               return Colors.green.shade900;
+      case 'Health':                    return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle': return Colors.amber.shade800;
+      default:                          return Colors.grey.shade700;
     }
   }
   
@@ -175,6 +191,38 @@ class StoryController extends GetxController {
     Get.toNamed('/story/editor', arguments: story);
   }
   
+  Future<void> archiveStory(String storyId) async {
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Archive Story'),
+        content: const Text('Are you sure you want to move this story to the archive? It will be removed from your active workspace.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text('Archive'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      await _storyService.archiveStory(storyId);
+      if (selectedStoryId.value == storyId) {
+        selectedStoryId.value = '';
+      }
+    }
+  }
+
   Future<void> deleteStory(String storyId) async {
     final confirmed = await Get.dialog<bool>(
       AlertDialog(

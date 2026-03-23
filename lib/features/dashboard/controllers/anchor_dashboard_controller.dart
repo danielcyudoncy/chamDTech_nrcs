@@ -27,7 +27,15 @@ class AnchorDashboardController extends GetxController {
 
   void _fetchStoriesByCategory(String category) {
     isLoading.value = true;
-    _storyService.getStoriesByCategory(category).listen((storyList) {
+    
+    Stream<List<StoryModel>> stream;
+    if (category == 'All' || category == 'all') {
+      stream = _storyService.getStories();
+    } else {
+      stream = _storyService.getStoriesByCategory(category);
+    }
+
+    stream.listen((storyList) {
       stories.value = storyList;
       isLoading.value = false;
     }, onError: (error) {

@@ -285,7 +285,50 @@ class StoryService extends GetxService {
     }
   }
   
-  // Delete story
+  // Archive story (soft delete)
+  Future<bool> archiveStory(String storyId) async {
+    try {
+      await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .update({
+        'status': AppConstants.statusArchived,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      Get.snackbar(
+        'Success',
+        'Story moved to archive',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      // Log archiving
+      final user = _authService.currentUser.value;
+      if (user != null) {
+        await _activityLogService.logActivity(ActivityLogModel(
+          id: const Uuid().v4(),
+          userId: user.id,
+          userName: user.displayName,
+          action: 'archive',
+          entityType: 'story',
+          entityId: storyId,
+          description: 'Archived story',
+          timestamp: DateTime.now(),
+        ));
+      }
+      
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to archive story: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
+
+  // Delete story (physical delete)
   Future<bool> deleteStory(String storyId) async {
     try {
       await _firestore

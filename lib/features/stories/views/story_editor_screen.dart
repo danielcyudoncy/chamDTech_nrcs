@@ -178,8 +178,9 @@ class StoryEditorScreen extends StatelessWidget {
                     color: isEmpty ? Colors.red.shade400 : Colors.grey[700],
                   ),
                   isDense: true,
-                  dropdownColor: Colors.white,
+                  dropdownColor: Get.isDarkMode ? const Color(0xFF424242) : Colors.white,
                   items: AppConstants.storyCategories.map((cat) {
+                    final color = _categoryColor(cat);
                     return DropdownMenuItem<String>(
                       value: cat,
                       child: Row(
@@ -188,17 +189,17 @@ class StoryEditorScreen extends StatelessWidget {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: _categoryColor(cat),
+                              color: color,
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Text(
                             cat,
-                            style: const TextStyle(
-                              fontSize: 13, 
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black87,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Get.isDarkMode ? Colors.white70 : Colors.black87,
                             ),
                           ),
                         ],

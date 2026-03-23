@@ -47,6 +47,53 @@ class StoryEditorController extends GetxController {
   // Get current user for permission checks
   get currentUser => _authService.currentUser.value;
 
+  // Generate dropdown items with correct styling
+  List<DropdownMenuItem<String>> get categoryDropdownItems {
+    return AppConstants.storyCategories.map((cat) {
+      final color = _categoryColor(cat);
+      return DropdownMenuItem<String>(
+        value: cat,
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              cat,
+              style: TextStyle(
+                fontSize: 14, 
+                fontWeight: FontWeight.w500,
+                color: Get.isDarkMode ? Colors.white70 : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  Color _categoryColor(String category) {
+    switch (category) {
+      case 'Local News':                return Colors.blue;
+      case 'Politics':                  return Colors.purple;
+      case 'Sports':                    return Colors.green;
+      case 'Foreign':                   return Colors.orange;
+      case 'Business & Finance':        return Colors.teal;
+      case 'Breaking News':             return Colors.red;
+      case 'Technology':                return Colors.indigo;
+      case 'Environment':               return Colors.green.shade800;
+      case 'Health':                    return Colors.pink;
+      case 'Entertainment & Lifestyle': return Colors.amber;
+      default:                          return Colors.grey;
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
