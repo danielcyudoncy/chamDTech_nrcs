@@ -759,8 +759,8 @@ class _ToolbarSearch extends StatelessWidget {
       child: Row(
 
         children: [
-          Icon(Icons.search, size: 16),
-          SizedBox(width: 4),
+          const Icon(Icons.search, size: 16),
+          const SizedBox(width: 4),
           Text(
             'search',
             style: TextStyle(

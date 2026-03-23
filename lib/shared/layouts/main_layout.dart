@@ -1,3 +1,4 @@
+// shared/layouts/main_layout.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/app/config/theme_config.dart';
@@ -188,7 +189,7 @@ class MainLayout extends StatelessWidget {
                   : null,
               child: (user?.photoUrl == null || user!.photoUrl!.isEmpty)
                   ? Text(
-                      (user?.displayName != null && user!.displayName.isNotEmpty)
+                      (user?.displayName.isNotEmpty ?? false)
                           ? user!.displayName[0].toUpperCase()
                           : 'U',
                       style: const TextStyle(color: Colors.white, fontSize: 14),

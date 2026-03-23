@@ -10,49 +10,6 @@ import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Workflow groups definition
-// ─────────────────────────────────────────────────────────────────────────────
-enum _StoryGroup {
-  drafts,
-  submitted,
-  needsRevision,
-  approved,
-  archived,
-}
-
-extension _StoryGroupExt on _StoryGroup {
-  String get label {
-    switch (this) {
-      case _StoryGroup.drafts:        return 'Drafts';
-      case _StoryGroup.submitted:     return 'Submitted';
-      case _StoryGroup.needsRevision: return 'Needs Revision';
-      case _StoryGroup.approved:      return 'Approved';
-      case _StoryGroup.archived:      return 'Archived';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case _StoryGroup.drafts:        return Icons.edit_note;
-      case _StoryGroup.submitted:     return Icons.send_time_extension;
-      case _StoryGroup.needsRevision: return Icons.error_outline;
-      case _StoryGroup.approved:      return Icons.verified;
-      case _StoryGroup.archived:      return Icons.archive_outlined;
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case _StoryGroup.drafts:        return NRCSColors.topNavBlue;
-      case _StoryGroup.submitted:     return Colors.orange.shade700;
-      case _StoryGroup.needsRevision: return Colors.red.shade700;
-      case _StoryGroup.approved:      return Colors.green.shade700;
-      case _StoryGroup.archived:      return Colors.grey.shade600;
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Main Widget
 // ─────────────────────────────────────────────────────────────────────────────
 class MyStoriesTab extends StatefulWidget {
