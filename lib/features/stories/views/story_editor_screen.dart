@@ -237,12 +237,17 @@ class StoryEditorScreen extends StatelessWidget {
   /// Returns a distinct color for each category.
   static Color _categoryColor(String category) {
     switch (category) {
-      case 'NEWS':      return Colors.blue;
-      case 'POLITICS':  return Colors.purple;
-      case 'SPORTS':    return Colors.green;
-      case 'FOREIGN':   return Colors.orange;
-      case 'BUSINESS':  return Colors.teal;
-      default:          return Colors.grey;
+      case 'Local News':                return Colors.blue;
+      case 'Politics':                  return Colors.purple;
+      case 'Sports':                    return Colors.green;
+      case 'Foreign':                   return Colors.orange;
+      case 'Business & Finance':        return Colors.teal;
+      case 'Breaking News':             return Colors.red;
+      case 'Technology':                return Colors.indigo;
+      case 'Environment':               return Colors.green.shade800;
+      case 'Health':                    return Colors.pink;
+      case 'Entertainment & Lifestyle': return Colors.amber;
+      default:                          return Colors.grey;
     }
   }
 

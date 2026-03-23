@@ -1,3 +1,4 @@
+// core/constants/app_constants.dart
 class AppConstants {
   // App Info
   static const String appName = 'chamDTech NRCS';
@@ -55,18 +56,28 @@ class AppConstants {
   static const String formatGraphic = 'GFX';
 
   // Story Categories
-  static const String categoryNews = 'NEWS';
-  static const String categoryPolitics = 'POLITICS';
-  static const String categorySports = 'SPORTS';
-  static const String categoryForeign = 'FOREIGN';
-  static const String categoryBusiness = 'BUSINESS';
+  static const String categoryLocalNews = 'Local News';
+  static const String categoryPolitics = 'Politics';
+  static const String categorySports = 'Sports';
+  static const String categoryForeign = 'Foreign';
+  static const String categoryBusinessFinance = 'Business & Finance';
+  static const String categoryBreakingNews = 'Breaking News';
+  static const String categoryTechnology = 'Technology';
+  static const String categoryEnvironment = 'Environment';
+  static const String categoryHealth = 'Health';
+  static const String categoryEntertainmentLifestyle = 'Entertainment & Lifestyle';
 
   static const List<String> storyCategories = [
-    categoryNews,
+    categoryLocalNews,
     categoryPolitics,
     categorySports,
     categoryForeign,
-    categoryBusiness,
+    categoryBusinessFinance,
+    categoryBreakingNews,
+    categoryTechnology,
+    categoryEnvironment,
+    categoryHealth,
+    categoryEntertainmentLifestyle,
   ];
 
   

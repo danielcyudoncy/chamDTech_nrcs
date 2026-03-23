@@ -691,6 +691,119 @@ class NRCSToolbar extends StatelessWidget {
   }
 }
 
+class CategoryToolbar extends StatelessWidget {
+  final String? selectedCategory;
+  final Function(String)? onCategorySelected;
+
+  const CategoryToolbar({
+    super.key,
+    this.selectedCategory,
+    this.onCategorySelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const categories = AppConstants.storyCategories;
+
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+      ),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final cat = categories[index];
+          final isActive = selectedCategory == cat;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _ModernCategoryChip(
+              label: cat,
+              isActive: isActive,
+              onTap: () => onCategorySelected?.call(cat),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ModernCategoryChip extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _ModernCategoryChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getCategoryColor(label);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: Material(
+        color: isActive ? color : Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isActive ? Colors.transparent : Colors.grey.shade300,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isActive)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.check_circle, size: 14, color: Colors.white),
+                  ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isActive ? Colors.white : Colors.grey.shade700,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _getCategoryColor(String categoryStr) {
+    switch (categoryStr) {
+      case 'Local News':                return Colors.blue.shade700;
+      case 'Politics':                  return Colors.purple.shade700;
+      case 'Sports':                    return Colors.green.shade700;
+      case 'Foreign':                   return Colors.orange.shade700;
+      case 'Business & Finance':        return Colors.teal.shade700;
+      case 'Breaking News':             return Colors.red.shade700;
+      case 'Technology':                return Colors.indigo.shade700;
+      case 'Environment':               return Colors.green.shade900;
+      case 'Health':                    return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle': return Colors.amber.shade800;
+      default:                          return Colors.grey.shade700;
+    }
+  }
+}
+
 class _ToolbarIcon extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -947,12 +1060,17 @@ class NRCSStoryListItem extends StatelessWidget {
 
   Color _getCategoryColor(String categoryStr) {
     switch (categoryStr) {
-      case 'NEWS':      return Colors.blue;
-      case 'POLITICS':  return Colors.purple;
-      case 'SPORTS':    return Colors.green;
-      case 'FOREIGN':   return Colors.orange;
-      case 'BUSINESS':  return Colors.teal;
-      default:          return Colors.grey;
+      case 'Local News':                return Colors.blue;
+      case 'Politics':                  return Colors.purple;
+      case 'Sports':                    return Colors.green;
+      case 'Foreign':                   return Colors.orange;
+      case 'Business & Finance':        return Colors.teal;
+      case 'Breaking News':             return Colors.red;
+      case 'Technology':                return Colors.indigo;
+      case 'Environment':               return Colors.green.shade800;
+      case 'Health':                    return Colors.pink;
+      case 'Entertainment & Lifestyle': return Colors.amber;
+      default:                          return Colors.grey;
     }
   }
 }

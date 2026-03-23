@@ -1,3 +1,4 @@
+// features/stories/services/story_service.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -17,6 +18,21 @@ class StoryService extends GetxService {
 
   final AuthService _authService = Get.find<AuthService>();
   final ActivityLogService _activityLogService = Get.put(ActivityLogService());
+  
+  // Get stories by category
+  Stream<List<StoryModel>> getStoriesByCategory(String category) {
+    return _firestore
+        .collection(AppConstants.storiesCollection)
+        .where('category', isEqualTo: category)
+        .snapshots()
+        .map((snapshot) {
+          final docs = snapshot.docs
+              .map((doc) => StoryModel.fromJson(doc.data()))
+              .toList();
+          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          return docs;
+        });
+  }
   
   // Get all stories
   Stream<List<StoryModel>> getStories() {
