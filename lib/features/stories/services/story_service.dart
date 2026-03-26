@@ -1,8 +1,10 @@
 // features/stories/services/story_service.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
@@ -415,6 +417,23 @@ class StoryService extends GetxService {
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
+    }
+  }
+
+  // Helper to extract text from Quill JSON content
+  String getPlainTextFromQuill(String jsonStr) {
+    try {
+      final decoded = jsonDecode(jsonStr);
+      // Try to extract from 'anchor' if it's our split format
+      if (decoded is Map && decoded.containsKey('anchor')) {
+        final doc = quill.Document.fromJson(decoded['anchor']);
+        return doc.toPlainText();
+      }
+      // Otherwise assume it's a standard Quill Delta list
+      final doc = quill.Document.fromJson(decoded);
+      return doc.toPlainText();
+    } catch (e) {
+      return jsonStr;
     }
   }
 }

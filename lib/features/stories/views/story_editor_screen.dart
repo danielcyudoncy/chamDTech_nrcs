@@ -166,11 +166,17 @@ class StoryEditorScreen extends StatelessWidget {
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selected.isEmpty ? null : selected,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF263238), // Dark color for light background
+                  ),
                   hint: Text(
                     'Select Category',
                     style: TextStyle(
                       fontSize: 13,
-                      color: isEmpty ? Colors.red.shade400 : Colors.grey,
+                      fontWeight: FontWeight.w500,
+                      color: isEmpty ? Colors.red.shade400 : Colors.grey.shade600,
                     ),
                   ),
                   icon: Icon(
@@ -178,7 +184,7 @@ class StoryEditorScreen extends StatelessWidget {
                     color: isEmpty ? Colors.red.shade400 : Colors.grey[700],
                   ),
                   isDense: true,
-                  dropdownColor: Get.isDarkMode ? const Color(0xFF424242) : Colors.white,
+                  dropdownColor: Colors.white,
                   items: AppConstants.storyCategories.map((cat) {
                     final color = _categoryColor(cat);
                     return DropdownMenuItem<String>(
@@ -196,10 +202,10 @@ class StoryEditorScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             cat,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: Get.isDarkMode ? Colors.white70 : Colors.black87,
+                              color: Color(0xFF263238), // Explicit dark text
                             ),
                           ),
                         ],

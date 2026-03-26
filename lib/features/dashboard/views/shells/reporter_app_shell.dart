@@ -1,10 +1,14 @@
+// features/dashboard/views/shells/reporter_app_shell.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/widgets/my_stories_tab.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 
 class ReporterAppShell extends StatefulWidget {
   const ReporterAppShell({super.key});
@@ -129,201 +133,653 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
   }
 
   Widget _buildReporterHome(ReporterDashboardController controller) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHomeHeader(controller),
+            const SizedBox(height: 32),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Left Column: Calendar & Approved Stories
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      _buildCalendarCard(controller),
+                      const SizedBox(height: 24),
+                      _buildApprovedStoriesList(context, controller),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 32),
+                // Right Column: My Active Stories & Stats
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    children: [
+                      _buildQuickStats(controller),
+                      const SizedBox(height: 24),
+                      _buildActiveStoriesSection(context, controller),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeHeader(ReporterDashboardController controller) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'My Workspace',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A237E),
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Manage your news stories and view approved content.',
+              style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+        ElevatedButton.icon(
+          onPressed: () => controller.createNewStory(),
+          icon: const Icon(Icons.add, size: 20),
+          label: const Text('CREATE NEW STORY'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1A237E),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 0,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalendarCard(ReporterDashboardController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.calendar_today, size: 18, color: Color(0xFF1A237E)),
+              SizedBox(width: 12),
+              Text(
+                'Schedule',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Obx(() => TableCalendar(
+                firstDay: DateTime.utc(2024, 1, 1),
+                lastDay: DateTime.utc(2030, 12, 31),
+                focusedDay: controller.focusedDay.value,
+                selectedDayPredicate: (day) => isSameDay(controller.selectedDate.value, day),
+                onDaySelected: controller.onDateSelected,
+                calendarFormat: CalendarFormat.month,
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.w800, fontSize: 13),
+                  weekendStyle: TextStyle(color: Color(0xFFE91E63), fontWeight: FontWeight.w800, fontSize: 13),
+                ),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  titleTextStyle: TextStyle(
+                    fontWeight: FontWeight.w800, 
+                    fontSize: 18, 
+                    color: Color(0xFF1A237E)
+                  ),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF1A237E)),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF1A237E)),
+                  headerPadding: EdgeInsets.symmetric(vertical: 12),
+                ),
+                calendarStyle: const CalendarStyle(
+                  defaultTextStyle: TextStyle(color: Color(0xFF263238), fontWeight: FontWeight.w600),
+                  weekendTextStyle: TextStyle(color: Color(0xFFE91E63), fontWeight: FontWeight.w600),
+                  outsideTextStyle: TextStyle(color: Color(0xFFE0E0E0)),
+                  todayDecoration: BoxDecoration(
+                    color: Color(0xFF1A237E),
+                    shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                  selectedDecoration: BoxDecoration(
+                    color: Color(0xFF3F51B5),
+                    shape: BoxShape.circle,
+                  ),
+                  selectedTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  markerDecoration: BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                eventLoader: (day) {
+                  return controller.approvedStories
+                      .where((s) => isSameDay(s.updatedAt, day))
+                      .toList();
+                },
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApprovedStoriesList(BuildContext context, ReporterDashboardController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'My Workspace',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: NRCSColors.topNavBlue,
-                      fontWeight: FontWeight.bold,
-                    ),
+              const Text(
+                'Approved Stories',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
               ),
-              ElevatedButton.icon(
-                onPressed: () => controller.createNewStory(),
-                icon: const Icon(Icons.add),
-                label: const Text('Create New Story'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: NRCSColors.topNavBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
+              Obx(() => Text(
+                    DateFormat('MMM dd').format(controller.selectedDate.value),
+                    style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.bold, fontSize: 14),
+                  )),
             ],
           ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              return Column(
-                children: [
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _buildSection(
-                            context: context,
-                            controller: controller,
-                            title: 'Draft Stories',
-                            icon: Icons.edit_note,
-                            stories: controller.draftStories,
-                            isWarning: false,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildSection(
-                            context: context,
-                            controller: controller,
-                            title: 'Recently Submitted',
-                            icon: Icons.send_time_extension,
-                            stories: controller.submittedStories,
-                            isWarning: false,
-                          ),
-                        ),
-                      ],
-                    ),
+          const SizedBox(height: 20),
+          Obx(() {
+            if (controller.approvedStoriesForDate.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      Icon(Icons.event_note, size: 48, color: Colors.grey.shade200),
+                      const SizedBox(height: 16),
+                      Text('No approved stories for this date.', style: TextStyle(color: Colors.grey.shade400)),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: _buildSection(
-                            context: context,
-                            controller: controller,
-                            title: 'Rejected / Revision Required',
-                            icon: Icons.error_outline,
-                            stories: controller.rejectedStories,
-                            isWarning: true,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildSection(
-                            context: context,
-                            controller: controller,
-                            title: 'Approved Stories',
-                            icon: Icons.verified,
-                            stories: controller.approvedStories,
-                            isWarning: false,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               );
-            }),
-          ),
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.approvedStoriesForDate.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final story = controller.approvedStoriesForDate[index];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.verified, size: 20, color: Colors.green.shade700),
+                  ),
+                  title: Text(
+                    story.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    DateFormat('hh:mm a').format(story.updatedAt),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                  onTap: () => _showStoryViewer(context, story, controller),
+                );
+              },
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildSection({
-    required BuildContext context,
-    required ReporterDashboardController controller,
-    required String title,
-    required IconData icon,
-    required List<StoryModel> stories,
-    required bool isWarning,
-  }) {
-    final headerColor = isWarning ? Colors.red : NRCSColors.topNavBlue;
-    final bgColor = isWarning ? Colors.red.withValues(alpha: 0.05) : Colors.white;
-    final borderColor = isWarning ? Colors.red.withValues(alpha: 0.3) : NRCSColors.borderGray;
+  Widget _buildQuickStats(ReporterDashboardController controller) {
+    return Row(
+      children: [
+        _StatCard(
+          label: 'In Draft',
+          value: '${controller.draftStories.length}',
+          icon: Icons.edit_note,
+          color: Colors.blue,
+        ),
+        const SizedBox(width: 16),
+        _StatCard(
+          label: 'Pending',
+          value: '${controller.submittedStories.length}',
+          icon: Icons.hourglass_empty,
+          color: Colors.orange,
+        ),
+        const SizedBox(width: 16),
+        _StatCard(
+          label: 'Approved',
+          value: '${controller.approvedStories.length}',
+          icon: Icons.check_circle,
+          color: Colors.green,
+        ),
+      ],
+    );
+  }
 
+  Widget _buildActiveStoriesSection(BuildContext context, ReporterDashboardController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: headerColor),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: headerColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: headerColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${stories.length}',
-                  style: TextStyle(
-                    color: headerColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: stories.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No stories right now',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: stories.length,
-                    itemBuilder: (context, index) {
-                      final story = stories[index];
-                      final timeFormat = DateFormat('HH:mm');
-                      final dateFormat = DateFormat('MMM dd');
-                      
-                      return GestureDetector(
-                        onSecondaryTapDown: (details) {
-                          controller.showStoryMenu(context, story, details.globalPosition);
-                        },
-                        onLongPressStart: (details) {
-                          controller.showStoryMenu(context, story, details.globalPosition);
-                        },
-                        child: Obx(() => NRCSStoryListItem(
-                          title: story.title.isEmpty ? 'Untitled' : story.title,
-                          author: story.authorName,
-                          time: timeFormat.format(story.updatedAt),
-                          date: dateFormat.format(story.updatedAt),
-                          duration: '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}',
-                          isSelected: controller.selectedStory.value?.id == story.id,
-                          onTap: () {
-                            controller.selectStory(story);
-                          },
-                        )),
-                      );
-                    },
-                  ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Active Workspace',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+          ),
+          const SizedBox(height: 20),
+          Obx(() {
+            final activeStories = [
+              ...controller.draftStories,
+              ...controller.submittedStories,
+              ...controller.rejectedStories,
+            ];
+
+            if (activeStories.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 80),
+                  child: Column(
+                    children: [
+                      Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade100),
+                      const SizedBox(height: 24),
+                      Text('No active stories found.', style: TextStyle(color: Colors.grey.shade400, fontSize: 16)),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: activeStories.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final story = activeStories[index];
+                return _ModernStoryRow(
+                  story: story,
+                  onTap: () => controller.editStory(story),
+                );
+              },
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  void _showStoryViewer(BuildContext context, StoryModel story, ReporterDashboardController controller) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white, // Explicitly white background
+        elevation: 0,
+        child: Container(
+          width: 800,
+          height: 600,
+          padding: const EdgeInsets.all(40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'APPROVED STORY',
+                            style: TextStyle(
+                              color: Colors.green.shade700, 
+                              fontWeight: FontWeight.w800, 
+                              fontSize: 10, 
+                              letterSpacing: 0.5
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          story.title,
+                          style: const TextStyle(
+                            fontSize: 28, 
+                            fontWeight: FontWeight.w800, 
+                            color: Color(0xFF1A237E), // Explicit dark navy
+                            letterSpacing: -0.5
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.close, color: Color(0xFF1A237E)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  _InfoBadge(icon: Icons.person_outline, label: 'Author', value: story.authorName),
+                  const SizedBox(width: 24),
+                  _InfoBadge(icon: Icons.category_outlined, label: 'Category', value: story.category),
+                  const SizedBox(width: 24),
+                  _InfoBadge(
+                    icon: Icons.history, 
+                    label: 'Last Updated', 
+                    value: DateFormat('MMM dd, hh:mm a').format(story.updatedAt)
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+              Divider(color: Colors.grey.shade200),
+              const SizedBox(height: 32),
+              const Text(
+                'CONTENT',
+                style: TextStyle(
+                  fontSize: 11, 
+                  fontWeight: FontWeight.w800, 
+                  color: Color(0xFF90A4AE), // Blue grey for label
+                  letterSpacing: 1
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
+                      style: const TextStyle(
+                        fontSize: 16, 
+                        height: 1.6, 
+                        color: Color(0xFF263238) // Explicit dark charcoal
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    ),
+                    child: const Text(
+                      'Close', 
+                      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final content = story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content);
+                      Clipboard.setData(ClipboardData(text: content)).then((_) {
+                        Get.snackbar(
+                          'Copied', 
+                          'Story content copied to clipboard',
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: const Color(0xFF1A237E),
+                          colorText: Colors.white,
+                          margin: const EdgeInsets.all(16),
+                        );
+                      });
+                    },
+                    icon: const Icon(Icons.copy_all, size: 18),
+                    label: const Text('Copy Content'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A237E), 
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierColor: Colors.black.withValues(alpha: 0.5), // Dim the background
+    );
+  }
+
+  // Helper to extract text from Quill JSON content
+  String _stripQuillJson(String jsonStr) {
+    try {
+      final isJson = jsonStr.trim().startsWith('{') || jsonStr.trim().startsWith('[');
+      if (!isJson) return jsonStr;
+      return Get.find<StoryService>().getPlainTextFromQuill(jsonStr);
+    } catch (e) {
+      return jsonStr;
+    }
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatCard({required this.label, required this.value, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1)),
+                Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModernStoryRow extends StatelessWidget {
+  final StoryModel story;
+  final VoidCallback onTap;
+
+  const _ModernStoryRow({required this.story, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            _buildStatusIndicator(story.status),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    story.title.isEmpty ? 'Untitled Story' : story.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF263238)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.category_outlined, size: 12, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Text(story.category, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      const SizedBox(width: 16),
+                      Icon(Icons.access_time, size: 12, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Text(DateFormat('hh:mm a').format(story.updatedAt), style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade300),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator(String status) {
+    Color color;
+    switch (status.toLowerCase()) {
+      case 'draft': color = Colors.blue; break;
+      case 'pending': color = Colors.orange; break;
+      case 'rejected': color = Colors.red; break;
+      default: color = Colors.grey;
+    }
+    return Container(
+      width: 4,
+      height: 32,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+}
+
+class _InfoBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoBadge({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 12, color: Colors.grey),
+            const SizedBox(width: 6),
+            Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF263238))),
+      ],
     );
   }
 }

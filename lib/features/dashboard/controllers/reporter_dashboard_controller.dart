@@ -36,11 +36,30 @@ class ReporterDashboardController extends GetxController {
 
   final isLoading = true.obs;
 
+  // Calendar and date-based filtering
+  final selectedDate = DateTime.now().obs;
+  final focusedDay = DateTime.now().obs;
+  final approvedStoriesForDate = <StoryModel>[].obs;
+
   @override
   void onInit() {
     super.onInit();
     loadReporterStories();
     _listenForRundownLocks();
+  }
+
+  void onDateSelected(DateTime selected, DateTime focused) {
+    selectedDate.value = selected;
+    focusedDay.value = focused;
+    _filterApprovedStoriesByDate();
+  }
+
+  void _filterApprovedStoriesByDate() {
+    approvedStoriesForDate.value = approvedStories.where((s) {
+      return s.updatedAt.year == selectedDate.value.year &&
+             s.updatedAt.month == selectedDate.value.month &&
+             s.updatedAt.day == selectedDate.value.day;
+    }).toList();
   }
 
   /// Subscribe to locked/on-air rundowns and keep lockedStoryIds up to date.
@@ -86,6 +105,8 @@ class ReporterDashboardController extends GetxController {
           .toList();
 
       allMyStories.value = stories;
+      
+      _filterApprovedStoriesByDate();
 
       isLoading.value = false;
 
@@ -95,94 +116,146 @@ class ReporterDashboardController extends GetxController {
   void createNewStory() {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
         child: Container(
-          width: 400, // Constrain width for a nice popup appearance
-          padding: const EdgeInsets.all(32),
+          width: 500, // Slightly wider for better layout
+          padding: const EdgeInsets.all(40),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Icon(Icons.category_outlined, size: 48, color: Color(0xFF1A237E)),
+              const SizedBox(height: 20),
               const Text(
                 'Select Story Category',
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1976D2), // topNavBlue
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A237E),
+                  letterSpacing: -0.5,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               const Text(
-                'Please classify this story before proceeding.',
-                style: TextStyle(fontSize: 15, color: Colors.grey),
+                'Please classify this story to ensure it appears in the correct department workspace.',
+                style: TextStyle(
+                  fontSize: 15, 
+                  color: Color(0xFF546E7A),
+                  height: 1.4,
+                ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: AppConstants.storyCategories.map((cat) {
-                  return InkWell(
-                    onTap: () {
-                      Get.back(); // Close dialog
-                      // Navigate to editor with the selected category pre-filled
-                      Get.toNamed(AppRoutes.storyEditor, arguments: {'category': cat});
-                    },
-                    child: Container(
-                      width: 140,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
+              const SizedBox(height: 40),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: AppConstants.storyCategories.map((cat) {
+                      final color = _categoryColor(cat);
+                      return InkWell(
+                        onTap: () {
+                          Get.back();
+                          Get.toNamed('/story/editor', arguments: {'category': cat});
+                        },
                         borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey.shade50,
-                      ),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: _categoryColor(cat),
-                              shape: BoxShape.circle,
-                            ),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 135,
+                          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade200),
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            cat,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: color.withValues(alpha: 0.3),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                cat,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: Color(0xFF263238),
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => Get.back(),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    ),
+                    child: const Text(
+                      'Cancel', 
+                      style: TextStyle(
+                        color: Colors.grey, 
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 32),
-              TextButton(
-                onPressed: () => Get.back(),
-                child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
-      barrierDismissible: false, // Force them to close it directly
+      barrierDismissible: true,
     );
   }
 
   Color _categoryColor(String category) {
     switch (category) {
-      case 'NEWS':      return Colors.blue;
-      case 'POLITICS':  return Colors.purple;
-      case 'SPORTS':    return Colors.green;
-      case 'FOREIGN':   return Colors.orange;
-      case 'BUSINESS':  return Colors.teal;
-      default:          return Colors.grey;
+      case 'Local News':                return Colors.blue.shade700;
+      case 'Politics':                  return Colors.purple.shade700;
+      case 'Sports':                    return Colors.green.shade700;
+      case 'Foreign':                   return Colors.orange.shade700;
+      case 'Business & Finance':        return Colors.teal.shade700;
+      case 'Breaking News':             return Colors.red.shade700;
+      case 'Technology':                return Colors.indigo.shade700;
+      case 'Environment':               return Colors.green.shade900;
+      case 'Health':                    return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle': return Colors.amber.shade800;
+      default:                          return Colors.grey.shade700;
     }
   }
 
