@@ -233,7 +233,12 @@ class AuthController extends GetxController {
           ),
         ),
       ),
-    );
+    ).then((_) {
+      // Dispose controllers when dialog is closed
+      emailCtrl.dispose();
+      passwordCtrl.dispose();
+      nameCtrl.dispose();
+    });
   }
   
   @override

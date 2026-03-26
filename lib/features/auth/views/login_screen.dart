@@ -9,7 +9,10 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AuthController authController = Get.put(AuthController());
+    // Check if controller is already registered to avoid "used after disposed"
+    final AuthController authController = Get.isRegistered<AuthController>() 
+        ? Get.find<AuthController>() 
+        : Get.put(AuthController());
     final formKey = GlobalKey<FormState>();
 
     return Scaffold(
