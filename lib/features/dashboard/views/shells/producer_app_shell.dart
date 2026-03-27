@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 
@@ -28,8 +30,11 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize controller for the shell
+    // Initialize controllers
     final controller = Get.put(ProducerDashboardController());
+    final authService = Get.find<AuthService>();
+    final isDirector = authService.currentUser.value?.role == AppConstants.roleDirector;
+    final workspaceTitle = isDirector ? 'DIRECTOR WORKSPACE' : 'PRODUCER WORKSPACE';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -42,9 +47,9 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
             backgroundColor: Colors.white,
             elevation: 0,
             scrolledUnderElevation: 0,
-            title: const Text(
-              'PRODUCER WORKSPACE',
-              style: TextStyle(
+            title: Text(
+              workspaceTitle,
+              style: const TextStyle(
                 color: Color(0xFF1A237E),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -71,9 +76,9 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                   child: Row(
                     children: [
                       const SizedBox(width: 24),
-                      const Text(
-                        'PRODUCER WORKSPACE',
-                        style: TextStyle(
+                      Text(
+                        workspaceTitle,
+                        style: const TextStyle(
                           color: NRCSColors.textDark,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -93,7 +98,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                   ),
                 ),
               ],
-              const NRCSToolbar(),
+              if (!isDirector) const NRCSToolbar(),
               Expanded(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -173,22 +178,25 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
   }
 
   Widget _buildDrawer(ProducerDashboardController controller) {
+    final authService = Get.find<AuthService>();
+    final isDirector = authService.currentUser.value?.role == AppConstants.roleDirector;
+    
     return Drawer(
       backgroundColor: Colors.white,
       elevation: 0,
       child: Column(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF1A237E)),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFF1A237E)),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.video_settings, size: 64, color: Colors.white),
-                  SizedBox(height: 12),
+                  const Icon(Icons.video_settings, size: 64, color: Colors.white),
+                  const SizedBox(height: 12),
                   Text(
-                    'Producer Menu',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    isDirector ? 'Director Menu' : 'Producer Menu',
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -253,6 +261,9 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
   }
 
   Widget _buildProducerHome(ProducerDashboardController controller, bool isMobile) {
+    final authService = Get.find<AuthService>();
+    final isDirector = authService.currentUser.value?.role == AppConstants.roleDirector;
+
     return Container(
       color: const Color(0xFFF8F9FA),
       child: SingleChildScrollView(
@@ -284,7 +295,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
                     ],
                   ),
                 ),
-                if (!isMobile)
+                if (!isMobile && !isDirector)
                   ElevatedButton.icon(
                     onPressed: () => controller.createNewRundown(context),
                     icon: const Icon(Icons.add, size: 20),
@@ -306,7 +317,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
               _buildMiniStoryPoolSection(controller, isMobile),
             ] else ...[
               Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     flex: 2,

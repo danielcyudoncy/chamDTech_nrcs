@@ -24,6 +24,7 @@ class AppConstants {
   static const String roleReporter = 'reporter';
   static const String roleAnchor = 'anchor';
   static const String roleEditor = 'editor';
+  static const String roleDirector = 'director';
 
   // Designations (Hierarchy)
   static const String desigExecutiveProducer = 'executive_producer';
