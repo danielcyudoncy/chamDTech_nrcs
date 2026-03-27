@@ -39,81 +39,115 @@ class NRCSAppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const NRCSTopNav(),
-          const NRCSSubNav(),
-          // Sub-header with back button and title
-          Container(
-            height: 40,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 1100;
+
+        return Scaffold(
+          key: GlobalKey<ScaffoldState>(),
+          backgroundColor: Colors.white,
+          appBar: isMobile ? AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
+              onPressed: () {
+                if (Get.previousRoute.isNotEmpty) {
+                  Get.back();
+                } else {
+                  final authService = Get.find<AuthService>();
+                  final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
+                  Get.offAllNamed(_getRoleDashboard(role));
+                }
+              },
             ),
-            child: Row(
-              children: [
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 20, color: NRCSColors.topNavBlue),
-                  onPressed: () {
-                    // Use GetX history: if there's a real previous route, go back.
-                    // Otherwise navigate to the user's role-based home dashboard.
-                    if (Get.previousRoute.isNotEmpty) {
-                      Get.back();
-                    } else {
-                      final authService = Get.find<AuthService>();
-                      final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
-                      final homeRoute = _getRoleDashboard(role);
-                      Get.offAllNamed(homeRoute);
-                    }
-                  },
-                  tooltip: 'Go Back',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+            title: Text(
+              title?.toUpperCase() ?? 'NRCS',
+              style: const TextStyle(
+                color: Color(0xFF1A237E),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1.1,
+              ),
+            ),
+            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ) : null,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!isMobile) ...[
+                const NRCSTopNav(),
+                const NRCSSubNav(),
+                // Sub-header with back button and title
+                Container(
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, size: 20, color: NRCSColors.topNavBlue),
+                        onPressed: () {
+                          if (Get.previousRoute.isNotEmpty) {
+                            Get.back();
+                          } else {
+                            final authService = Get.find<AuthService>();
+                            final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
+                            Get.offAllNamed(_getRoleDashboard(role));
+                          }
+                        },
+                        tooltip: 'Go Back',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      if (title != null) ...[
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            title!.toUpperCase(),
+                            style: const TextStyle(
+                              color: NRCSColors.textDark,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 1.1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-                if (title != null) ...[
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      title!.toUpperCase(),
-                      style: const TextStyle(
-                        color: NRCSColors.textDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 1.1,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
               ],
-            ),
-          ),
-          if (toolbar != null) toolbar!,
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (sidebar != null)
-                  Container(
-                    width: 361,
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: NRCSColors.borderGray, width: 8),
+              if (toolbar != null) toolbar!,
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (sidebar != null && !isMobile)
+                      Container(
+                        width: 300,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: NRCSColors.borderGray, width: 8),
+                          ),
+                        ),
+                        child: sidebar!,
                       ),
-                    ),
-                    child: sidebar!,
-                  ),
-                if (body != null) Expanded(child: body!),
-              ],
-            ),
+                    if (body != null) Expanded(child: body!),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }
     );
   }
 
@@ -804,8 +838,8 @@ class _ModernCategoryChip extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isActive ? Colors.white : Colors.grey.shade700,
-                    fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                    color: isActive ? Colors.white : const Color(0xFF263238),
+                    fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
                     fontSize: 13,
                   ),
                 ),
@@ -924,10 +958,16 @@ class NRCSStoryListItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.1) : Colors.white,
-          border: const Border(bottom: BorderSide(color: NRCSColors.borderGray)),
+          color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.05) : Colors.white,
+          border: Border(
+            bottom: const BorderSide(color: NRCSColors.borderGray),
+            left: BorderSide(
+              color: isSelected ? NRCSColors.topNavBlue : Colors.transparent,
+              width: 4,
+            ),
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -942,35 +982,25 @@ class NRCSStoryListItem extends StatelessWidget {
                       Text(
                         title,
                         style: TextStyle(
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: NRCSColors.topNavBlue,
-
-
+                          color: isSelected ? NRCSColors.topNavBlue : NRCSColors.textDark,
                         ),
                       ),
                       if (category != null && category!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: isSelected 
-                                ? Colors.white.withValues(alpha: 0.2) 
-                                : _getCategoryColor(category!).withValues(alpha: 0.1),
-                            border: Border.all(
-                              color: isSelected 
-                                  ? Colors.white54 
-                                  : _getCategoryColor(category!),
-                              width: 0.5,
-                            ),
+                            color: _getCategoryColor(category!).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            category!,
+                            category!.toUpperCase(),
                             style: TextStyle(
                               fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : _getCategoryColor(category!),
+                              fontWeight: FontWeight.w800,
+                              color: _getCategoryColor(category!),
                             ),
                           ),
                         ),
@@ -983,7 +1013,7 @@ class NRCSStoryListItem extends StatelessWidget {
                     icon: Icon(
                       Icons.delete_outline, 
                       size: 18, 
-                      color: isSelected ? Colors.white : Colors.red.shade300
+                      color: Colors.red.shade400
                     ),
                     onPressed: onDelete,
                     padding: EdgeInsets.zero,
@@ -992,50 +1022,53 @@ class NRCSStoryListItem extends StatelessWidget {
                   )
                 else
                   Icon(
-                    Icons.videocam, 
-                    size: 16, 
-                    color: isSelected ? Colors.white : Colors.grey[600]
+                    Icons.videocam_outlined, 
+                    size: 18, 
+                    color: isSelected ? NRCSColors.topNavBlue : Colors.grey.shade400
                   ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.person, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
+                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
                 Text(
                   author, 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : NRCSColors.textDark
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
                   )
                 ),
                 const Spacer(),
-                Icon(Icons.access_time, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
+                Icon(Icons.timer_outlined, size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
                 Text(
                   duration, 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : NRCSColors.textDark
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
                   )
                 ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 14, color: isSelected ? Colors.white70 : NRCSColors.topNavBlue),
+                Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
                 Text(
                   '$time $date', 
                   style: TextStyle(
                     fontSize: 11, 
-                    color: isSelected ? Colors.white70 : NRCSColors.textDark
+                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w500,
                   )
                 ),
                 const Spacer(),
-                Icon(Icons.menu, size: 14, color: isSelected ? Colors.white70 : Colors.grey[600]),
+                Icon(Icons.more_horiz, size: 14, color: Colors.grey.shade400),
               ],
             ),
           ],
@@ -1046,17 +1079,17 @@ class NRCSStoryListItem extends StatelessWidget {
 
   Color _getCategoryColor(String categoryStr) {
     switch (categoryStr) {
-      case 'Local News':                return Colors.blue;
-      case 'Politics':                  return Colors.purple;
-      case 'Sports':                    return Colors.green;
-      case 'Foreign':                   return Colors.orange;
-      case 'Business & Finance':        return Colors.teal;
-      case 'Breaking News':             return Colors.red;
-      case 'Technology':                return Colors.indigo;
-      case 'Environment':               return Colors.green.shade800;
-      case 'Health':                    return Colors.pink;
-      case 'Entertainment & Lifestyle': return Colors.amber;
-      default:                          return Colors.grey;
+      case 'Local News':                return Colors.blue.shade700;
+      case 'Politics':                  return Colors.purple.shade700;
+      case 'Sports':                    return Colors.green.shade700;
+      case 'Foreign':                   return Colors.orange.shade800;
+      case 'Business & Finance':        return Colors.teal.shade700;
+      case 'Breaking News':             return Colors.red.shade700;
+      case 'Technology':                return Colors.indigo.shade700;
+      case 'Environment':               return Colors.green.shade900;
+      case 'Health':                    return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle': return Colors.amber.shade900;
+      default:                          return Colors.grey.shade700;
     }
   }
 }

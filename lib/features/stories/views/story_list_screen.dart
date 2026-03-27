@@ -14,7 +14,7 @@ class StoryListScreen extends StatelessWidget {
     final StoryController controller = Get.put(StoryController());
 
     return NRCSAppShell(
-      title: 'Workspace',
+      title: controller.showArchived.value ? 'Archive' : 'Workspace',
       toolbar: Obx(() => CategoryToolbar(
         selectedCategory: controller.categoryFilter.value,
         onCategorySelected: (cat) {
@@ -45,9 +45,9 @@ class StoryListScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'STORY LIST',
-                          style: TextStyle(
+                        Text(
+                          controller.showArchived.value ? 'ARCHIVE LIST' : 'STORY LIST',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
                             color: Color(0xFF1A237E),
@@ -59,7 +59,7 @@ class StoryListScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade400,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
@@ -84,7 +84,7 @@ class StoryListScreen extends StatelessWidget {
                       onTap: () {
                         controller.selectedStoryId.value = story.id;
                       },
-                      onDelete: () => controller.archiveStory(story.id),
+                      onDelete: controller.showArchived.value ? null : () => controller.archiveStory(story.id),
                     ));
                   },
                 ),
@@ -143,7 +143,7 @@ class StoryListScreen extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: Colors.grey,
+                          color: Color(0xFF546E7A),
                           letterSpacing: 1,
                         ),
                       ),
@@ -243,7 +243,7 @@ class _DetailHeader extends StatelessWidget {
               'FIRST VERSION',
               style: TextStyle(
                 fontWeight: FontWeight.w600, 
-                color: Colors.grey,
+                color: Color(0xFF546E7A),
                 fontSize: 13,
               ),
             ),
@@ -284,13 +284,13 @@ class _HeaderBadge extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: Colors.grey),
+          Icon(icon, size: 14, color: const Color(0xFF546E7A)),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label.toUpperCase(), style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.grey.shade400)),
+              Text(label.toUpperCase(), style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF90A4AE))),
               Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1A237E))),
             ],
           ),
@@ -358,13 +358,13 @@ class _ModernMetaItem extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.grey.shade400),
+            Icon(icon, size: 14, color: const Color(0xFF546E7A)),
             const SizedBox(width: 6),
             Text(
               label.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 10, 
-                color: Colors.grey.shade400, 
+                color: Color(0xFF90A4AE), 
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),

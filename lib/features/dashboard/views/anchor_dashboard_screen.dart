@@ -6,6 +6,7 @@ import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/anchor_dashboard_controller.dart';
 
 class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
@@ -15,32 +16,170 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
   Widget build(BuildContext context) {
     final controller = Get.put(AnchorDashboardController());
 
-    return Obx(() => NRCSAppShell(
-      title: 'Anchor Dashboard',
-      toolbar: CategoryToolbar(
-        selectedCategory: controller.selectedCategory.value,
-        onCategorySelected: (cat) => controller.selectCategory(cat),
-      ),
-      body: Container(
-        color: const Color(0xFFF8F9FA), // Modern soft background
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 1100;
+
+        return Scaffold(
+          key: GlobalKey<ScaffoldState>(),
+          backgroundColor: Colors.white,
+          appBar: isMobile ? AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: const Text(
+              'ANCHOR DASHBOARD',
+              style: TextStyle(
+                color: Color(0xFF1A237E),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1.1,
+              ),
+            ),
+            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ) : null,
+          drawer: isMobile ? _buildDrawer(controller) : null,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              if (!isMobile) ...[
+                const NRCSTopNav(),
+                const NRCSSubNav(),
+                // Sub-header
+                Container(
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                  ),
+                  child: const Row(
+                    children: [
+                      SizedBox(width: 24),
+                      Text(
+                        'ANCHOR DASHBOARD',
+                        style: TextStyle(
+                          color: NRCSColors.textDark,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              Obx(() => CategoryToolbar(
+                selectedCategory: controller.selectedCategory.value,
+                onCategorySelected: (cat) => controller.selectCategory(cat),
+              )),
+              Expanded(
+                child: _buildContentArea(controller, isMobile),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildDrawer(AnchorDashboardController controller) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      child: Column(
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF1A237E)),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Column(
+                  Icon(Icons.record_voice_over_outlined, size: 64, color: Colors.white),
+                  SizedBox(height: 12),
+                  Text(
+                    'Anchor Menu',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.dashboard_outlined, color: Color(0xFF1A237E)),
+            title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+            onTap: () => Get.back(),
+          ),
+          ListTile(
+            leading: const Icon(Icons.view_list_outlined, color: Color(0xFF455A64)),
+            title: const Text('Rundowns', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            onTap: () {
+              Get.back();
+              Get.snackbar('Coming Soon', 'Rundowns module is under development.');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.archive_outlined, color: Color(0xFF455A64)),
+            title: const Text('Archive', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            onTap: () {
+              Get.back();
+              try {
+                final controller = Get.find<StoryController>();
+                controller.showArchived.value = true;
+                controller.loadStories();
+              } catch (e) {
+                final controller = Get.put(StoryController());
+                controller.showArchived.value = true;
+                controller.loadStories();
+              }
+              Get.toNamed('/stories');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_none, color: Color(0xFF455A64)),
+            title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            onTap: () {
+              Get.back();
+              Get.toNamed(AppRoutes.notifications);
+            },
+          ),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            onTap: () {
+              // Add logout logic
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContentArea(AnchorDashboardController controller, bool isMobile) {
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: Obx(() => Padding(
+        padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         controller.selectedCategory.value,
-                        style: const TextStyle(
-                          fontSize: 28,
+                        style: TextStyle(
+                          fontSize: isMobile ? 24 : 28,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1A237E),
+                          color: const Color(0xFF1A237E),
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -55,29 +194,33 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
                       ),
                     ],
                   ),
-                  _buildHeaderStats(controller),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Expanded(
-                child: controller.isLoading.value
-                    ? const Center(child: CircularProgressIndicator())
-                    : controller.stories.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            itemCount: controller.stories.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 16),
-                            itemBuilder: (context, index) {
-                              final story = controller.stories[index];
-                              return _ModernStoryCard(story: story);
-                            },
-                          ),
-              ),
+                ),
+                if (!isMobile) _buildHeaderStats(controller),
+              ],
+            ),
+            const SizedBox(height: 32),
+            if (isMobile) ...[
+               _buildHeaderStats(controller),
+               const SizedBox(height: 24),
             ],
-          ),
+            Expanded(
+              child: controller.isLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : controller.stories.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.separated(
+                          itemCount: controller.stories.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          itemBuilder: (context, index) {
+                            final story = controller.stories[index];
+                            return _ModernStoryCard(story: story, isMobile: isMobile);
+                          },
+                        ),
+            ),
+          ],
         ),
-      ),
-    ));
+      )),
+    );
   }
 
   Widget _buildHeaderStats(AnchorDashboardController controller) {
@@ -107,20 +250,20 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: const Color(0xFFF1F3F4),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade400),
+            child: const Icon(Icons.auto_stories_outlined, size: 64, color: Color(0xFF90A4AE)),
           ),
           const SizedBox(height: 24),
           const Text(
             'No stories found',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF455A64)),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'There are no stories created under this category yet.',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 15),
+            style: TextStyle(color: Color(0xFF546E7A), fontSize: 15, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -130,8 +273,9 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
 
 class _ModernStoryCard extends StatelessWidget {
   final StoryModel story;
+  final bool isMobile;
 
-  const _ModernStoryCard({required this.story});
+  const _ModernStoryCard({required this.story, this.isMobile = false});
 
   @override
   Widget build(BuildContext context) {
@@ -153,20 +297,22 @@ class _ModernStoryCard extends StatelessWidget {
           onTap: () => Get.toNamed(AppRoutes.storyEditor, arguments: story.id),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
             child: Row(
               children: [
                 // Leading Indicator
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8EAF6),
-                    borderRadius: BorderRadius.circular(12),
+                if (!isMobile) ...[
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8EAF6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.description_outlined, color: Color(0xFF3F51B5)),
                   ),
-                  child: const Icon(Icons.description_outlined, color: Color(0xFF3F51B5)),
-                ),
-                const SizedBox(width: 20),
+                  const SizedBox(width: 20),
+                ],
                 // Main Content
                 Expanded(
                   child: Column(
@@ -177,10 +323,10 @@ class _ModernStoryCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               story.title.isEmpty ? 'Untitled Story' : story.title,
-                              style: const TextStyle(
-                                fontSize: 17,
+                              style: TextStyle(
+                                fontSize: isMobile ? 15 : 17,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF263238),
+                                color: const Color(0xFF263238),
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -190,27 +336,18 @@ class _ModernStoryCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Row(
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
                         children: [
                           _InfoChip(icon: Icons.person_outline, label: story.authorName),
-                          const SizedBox(width: 16),
                           _InfoChip(
                             icon: Icons.access_time, 
                             label: DateFormat('HH:mm').format(story.updatedAt)
                           ),
-                          const SizedBox(width: 16),
                           _InfoChip(
                             icon: Icons.calendar_today_outlined, 
                             label: DateFormat('MMM dd').format(story.updatedAt)
-                          ),
-                          const Spacer(),
-                          Text(
-                            'v${story.version}',
-                            style: TextStyle(
-                              fontSize: 12, 
-                              fontWeight: FontWeight.bold, 
-                              color: Colors.grey.shade400
-                            ),
                           ),
                         ],
                       ),
@@ -218,7 +355,7 @@ class _ModernStoryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.chevron_right, color: Colors.grey.shade300),
+                Icon(Icons.chevron_right, color: Colors.grey.shade300, size: 20),
               ],
             ),
           ),
@@ -261,12 +398,12 @@ class _StatItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: color ?? Colors.grey.shade400),
+        Icon(icon, size: 18, color: color ?? const Color(0xFF546E7A)),
         const SizedBox(width: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label.toUpperCase(), style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, color: Color(0xFF455A64), fontWeight: FontWeight.w900, letterSpacing: 1)),
             Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
           ],
         ),
@@ -286,11 +423,11 @@ class _InfoChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.grey.shade400),
+        Icon(icon, size: 14, color: const Color(0xFF455A64)),
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 12, color: Color(0xFF263238), fontWeight: FontWeight.w600),
         ),
       ],
     );

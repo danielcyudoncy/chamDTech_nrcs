@@ -78,15 +78,14 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Container(
+          child: SizedBox(
             height: 30,
-            alignment: Alignment.centerLeft,
             child: Marquee(
-              text: stories.join("   🔴   "),
-              style:  const TextStyle(
+              text: stories.map((s) => s.replaceAll(RegExp(r'[\n\r]+'), ' ').trim()).join("   🔴   "),
+              style: const TextStyle(
                 color: NRCSColors.topNavBlue,
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
               velocity: 40,
               blankSpace: 100,

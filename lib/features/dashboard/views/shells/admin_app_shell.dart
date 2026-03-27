@@ -6,6 +6,7 @@ import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 import 'package:intl/intl.dart';
 
@@ -27,193 +28,354 @@ class _AdminAppShellState extends State<AdminAppShell> {
     'Privileges',
     'Desks',
     'Story States',
+    'Archive',
     'Configurations',
     'Audit Logs',
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const NRCSTopNav(),
-          const NRCSSubNav(),
-          // Sub-header
-          Container(
-            height: 40,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+    final AdminController controller = Get.put(AdminController());
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 1100;
+
+        return Scaffold(
+          key: GlobalKey<ScaffoldState>(),
+          backgroundColor: Colors.white,
+          appBar: isMobile ? AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            title: const Text(
+              'ADMIN CONTROL CENTER',
+              style: TextStyle(
+                color: Color(0xFF1A237E),
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                letterSpacing: 1.1,
+              ),
             ),
-            child: const Row(
-              children: [
-                SizedBox(width: 24),
-                Text(
-                  'ADMIN CONTROL CENTER',
-                  style: TextStyle(
-                    color: NRCSColors.breakingRed,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const NRCSToolbar(),
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Hardcoded Admin Sidebar
+            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ) : null,
+          drawer: isMobile ? _buildDrawer(controller) : null,
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (!isMobile) ...[
+                const NRCSTopNav(),
+                const NRCSSubNav(),
+                // Sub-header
                 Container(
-                  width: 361,
+                  height: 40,
                   decoration: const BoxDecoration(
-                    border: Border(
-                      right: BorderSide(color: NRCSColors.borderGray, width: 8),
-                    ),
+                    color: Colors.white,
+                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
                   ),
-                  child: ListView.builder(
-                    itemCount: _tabs.length,
-                    itemBuilder: (context, index) {
-                      final tab = _tabs[index];
-                      return ListTile(
-                        title: Text(tab, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        selected: _selectedIndex == index,
-                        selectedTileColor: NRCSColors.subNavGray,
-                        onTap: () {
-                          if (tab == 'Users') {
-                            Get.toNamed(AppRoutes.userManagement);
-                          } else if (tab == 'Privileges') {
-                            Get.toNamed(AppRoutes.adminPrivileges);
-                          } else if (tab == 'Desks') {
-                            Get.toNamed(AppRoutes.adminDesks);
-                          } else if (tab == 'Story States') {
-                            Get.toNamed(AppRoutes.adminStoryState);
-                          } else if (tab == 'Configurations') {
-                            Get.toNamed(AppRoutes.adminConfigurations);
-                          } else if (tab == 'Audit Logs') {
-                            Get.toNamed(AppRoutes.adminAuditTrail);
-                          } else {
-                            setState(() {
-                              _selectedIndex = index;
-                            });
-                          }
-                        },
-                      );
-                    },
+                  child: const Row(
+                    children: [
+                      SizedBox(width: 24),
+                      Text(
+                        'ADMIN CONTROL CENTER',
+                        style: TextStyle(
+                          color: NRCSColors.breakingRed,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                // Main Content Area
-                Expanded(
-                  child: _buildContentArea(),
                 ),
               ],
+              const NRCSToolbar(),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Sidebar (Desktop only)
+                    if (!isMobile)
+                      Container(
+                        width: 300,
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            right: BorderSide(color: NRCSColors.borderGray, width: 8),
+                          ),
+                        ),
+                        child: ListView.builder(
+                          itemCount: _tabs.length,
+                          itemBuilder: (context, index) {
+                            final tab = _tabs[index];
+                            IconData icon;
+                            switch (tab) {
+                              case 'Dashboard': icon = Icons.dashboard_outlined; break;
+                              case 'Users': icon = Icons.people_outline; break;
+                              case 'Privileges': icon = Icons.security_outlined; break;
+                              case 'Desks': icon = Icons.desk_outlined; break;
+                              case 'Story States': icon = Icons.low_priority; break;
+                              case 'Archive': icon = Icons.archive_outlined; break;
+                              case 'Configurations': icon = Icons.settings_outlined; break;
+                              case 'Audit Logs': icon = Icons.history; break;
+                              default: icon = Icons.folder_outlined;
+                            }
+                            return ListTile(
+                              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey.shade600),
+                              title: Text(
+                                tab, 
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
+                                )
+                              ),
+                              selected: _selectedIndex == index,
+                              selectedTileColor: NRCSColors.subNavGray.withValues(alpha: 0.5),
+                              onTap: () => _handleTabSelection(tab, index),
+                            );
+                          },
+                        ),
+                      ),
+                    // Main Content Area
+                    Expanded(
+                      child: _buildContentArea(controller, isMobile),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  void _handleTabSelection(String tab, int index) {
+    if (tab == 'Users') {
+      Get.toNamed(AppRoutes.userManagement);
+    } else if (tab == 'Privileges') {
+      Get.toNamed(AppRoutes.adminPrivileges);
+    } else if (tab == 'Desks') {
+      Get.toNamed(AppRoutes.adminDesks);
+    } else if (tab == 'Story States') {
+      Get.toNamed(AppRoutes.adminStoryState);
+    } else if (tab == 'Configurations') {
+      Get.toNamed(AppRoutes.adminConfigurations);
+    } else if (tab == 'Audit Logs') {
+      Get.toNamed(AppRoutes.adminAuditTrail);
+    } else if (tab == 'Archive') {
+      try {
+        final controller = Get.find<StoryController>();
+        controller.showArchived.value = true;
+        controller.loadStories();
+      } catch (e) {
+        final controller = Get.put(StoryController());
+        controller.showArchived.value = true;
+        controller.loadStories();
+      }
+      Get.toNamed('/stories');
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  Widget _buildDrawer(AdminController controller) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      child: Column(
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF1A237E)),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.admin_panel_settings, size: 64, color: Colors.white),
+                  SizedBox(height: 12),
+                  Text(
+                    'Admin Menu',
+                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
           ),
+          ...List.generate(_tabs.length, (index) {
+            final tab = _tabs[index];
+            IconData icon;
+            switch (tab) {
+              case 'Dashboard': icon = Icons.dashboard_outlined; break;
+              case 'Users': icon = Icons.people_outline; break;
+              case 'Privileges': icon = Icons.security_outlined; break;
+              case 'Desks': icon = Icons.desk_outlined; break;
+              case 'Story States': icon = Icons.low_priority; break;
+              case 'Configurations': icon = Icons.settings_outlined; break;
+              case 'Audit Logs': icon = Icons.history; break;
+              default: icon = Icons.folder_outlined;
+            }
+
+            return ListTile(
+              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey),
+              title: Text(
+                tab, 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
+                )
+              ),
+              selected: _selectedIndex == index,
+              onTap: () {
+                Get.back(); // Close drawer
+                _handleTabSelection(tab, index);
+              },
+            );
+          }),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            onTap: () {
+              // Add logout logic
+            },
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildContentArea() {
+  Widget _buildContentArea(AdminController controller, bool isMobile) {
     switch (_selectedIndex) {
       case 0:
-        return _buildAdminHome();
+        return _buildAdminHome(controller, isMobile);
       default:
-        return _buildAdminHome();
+        return _buildAdminHome(controller, isMobile);
     }
   }
 
-  Widget _buildAdminHome() {
-    final AdminController controller = Get.put(AdminController());
-
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'System Overview',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: NRCSColors.textDark,
-                  fontWeight: FontWeight.bold,
+  Widget _buildAdminHome(AdminController controller, bool isMobile) {
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'System Overview',
+              style: TextStyle(
+                fontSize: isMobile ? 24 : 32,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF1A237E),
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Monitor system health and administrative activities.',
+              style: TextStyle(fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 32),
+            Obx(() {
+              final stats = [
+                _buildStatCard(
+                  'Total Users',
+                  '${controller.totalUsersCount.value}',
+                  icon: Icons.people_outline,
+                  isSelected: controller.selectedStat.value == 'users',
+                  onTap: () => controller.selectStat('users'),
                 ),
-          ),
-          const SizedBox(height: 24),
-          Obx(() => Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'Total Users',
-                      '${controller.totalUsersCount.value}',
-                      isSelected: controller.selectedStat.value == 'users',
-                      onTap: () => controller.selectStat('users'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Active Today',
-                      '${controller.activeTodayCount.value}',
-                      color: Colors.green,
-                      isSelected: controller.selectedStat.value == 'active',
-                      onTap: () => controller.selectStat('active'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Stories Today',
-                      '${controller.storiesTodayCount.value}',
-                      isSelected: controller.selectedStat.value == 'stories',
-                      onTap: () => controller.selectStat('stories'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Active Rundowns',
-                      '${controller.activeRundownsCount.value}',
-                      color: NRCSColors.activeOrange,
-                      isSelected: controller.selectedStat.value == 'rundowns',
-                      onTap: () => controller.selectStat('rundowns'),
-                    ),
-                  ),
-                ],
-              )),
-          const SizedBox(height: 32),
-          Obx(() {
-            final selection = controller.selectedStat.value;
-            String title = 'Recent Audit Activity';
-            if (selection == 'users') title = 'All Users';
-            if (selection == 'active') title = 'Active Today';
-            if (selection == 'stories') title = 'Stories Today';
-            if (selection == 'rundowns') title = 'Active Rundowns';
+                _buildStatCard(
+                  'Active Today',
+                  '${controller.activeTodayCount.value}',
+                  icon: Icons.person_pin_circle_outlined,
+                  color: Colors.green,
+                  isSelected: controller.selectedStat.value == 'active',
+                  onTap: () => controller.selectStat('active'),
+                ),
+                _buildStatCard(
+                  'Stories Today',
+                  '${controller.storiesTodayCount.value}',
+                  icon: Icons.article_outlined,
+                  isSelected: controller.selectedStat.value == 'stories',
+                  onTap: () => controller.selectStat('stories'),
+                ),
+                _buildStatCard(
+                  'Active Rundowns',
+                  '${controller.activeRundownsCount.value}',
+                  icon: Icons.view_list_outlined,
+                  color: NRCSColors.activeOrange,
+                  isSelected: controller.selectedStat.value == 'rundowns',
+                  onTap: () => controller.selectStat('rundowns'),
+                ),
+              ];
 
-            return Text(
-              title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+              if (isMobile) {
+                return Column(
+                  children: stats.map((s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: s,
+                  )).toList(),
+                );
+              }
+
+              return Row(
+                children: stats.map((s) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: s,
                   ),
-            );
-          }),
-          const SizedBox(height: 16),
-          Expanded(
-            child: Container(
+                )).toList(),
+              );
+            }),
+            const SizedBox(height: 32),
+            Obx(() {
+              final selection = controller.selectedStat.value;
+              String title = 'Recent Audit Activity';
+              if (selection == 'users') title = 'All Users';
+              if (selection == 'active') title = 'Active Today';
+              if (selection == 'stories') title = 'Stories Today';
+              if (selection == 'rundowns') title = 'Active Rundowns';
+
+              return Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A237E),
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+            Container(
+              height: 500, // Fixed height for the list area in the scroll view
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border.all(color: NRCSColors.borderGray),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-
               child: Obx(() {
                 final selection = controller.selectedStat.value;
                 if (selection == 'none') {
-                  return const Center(
-                    child: Text('Click a card above to see details', style: TextStyle(color: Colors.grey)),
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.touch_app_outlined, size: 48, color: Colors.grey.shade200),
+                        const SizedBox(height: 16),
+                        Text('Click a card above to see details', style: TextStyle(color: Colors.grey.shade400)),
+                      ],
+                    ),
                   );
                 }
 
@@ -227,15 +389,13 @@ class _AdminAppShellState extends State<AdminAppShell> {
                   return _buildRundownList(controller.activeRundownsList);
                 }
 
-
                 return const Center(child: Text('No data available'));
               }),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
+    );  }
 
   Widget _buildUserList(List<UserModel> users) {
     if (users.isEmpty) return const Center(child: Text('No users found'));
@@ -348,52 +508,66 @@ class _AdminAppShellState extends State<AdminAppShell> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, {Color? color, bool isSelected = false, VoidCallback? onTap}) {
+  Widget _buildStatCard(String title, String value, {IconData? icon, Color? color, bool isSelected = false, VoidCallback? onTap}) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isSelected ? (color ?? NRCSColors.primaryBlue).withValues(alpha: 0.05) : Colors.white,
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? (color ?? NRCSColors.primaryBlue) : NRCSColors.borderGray,
-              width: isSelected ? 2 : 1,
+              color: isSelected ? (color ?? const Color(0xFF1A237E)) : Colors.transparent,
+              width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                offset: const Offset(0, 2),
-                blurRadius: 4,
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w600,
+              if (icon != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (color ?? const Color(0xFF1A237E)).withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color ?? const Color(0xFF1A237E), size: 20),
                 ),
-
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: color ?? NRCSColors.primaryBlue,
-                ),
+                const SizedBox(width: 16),
+              ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A237E),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-
         ),
       ),
     );

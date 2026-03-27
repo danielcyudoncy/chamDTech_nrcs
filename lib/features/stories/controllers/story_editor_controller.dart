@@ -323,10 +323,14 @@ class StoryEditorController extends GetxController {
   void handleNew() {
     Get.dialog(
       AlertDialog(
-        title: const Text('Create New Story?'),
-        content: const Text('If you have unsaved changes in this story, they will be auto-saved.'),
+        backgroundColor: Colors.white,
+        title: const Text('Create New Story?', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+        content: const Text('If you have unsaved changes in this story, they will be auto-saved.', style: TextStyle(color: Color(0xFF263238))),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(), 
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
           TextButton(
             onPressed: () {
               Get.back(); // close dialog
@@ -334,7 +338,7 @@ class StoryEditorController extends GetxController {
               Get.back(); // exit current editor
               Get.find<StoryController>().createNewStory();
             }, 
-            child: const Text('Proceed', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Proceed', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
           ),
         ],
       )
@@ -374,10 +378,14 @@ class StoryEditorController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        title: const Text('Delete Story', style: TextStyle(color: Colors.red)),
-        content: const Text('Are you sure you want to delete this story? This action cannot be undone.'),
+        backgroundColor: Colors.white,
+        title: const Text('Delete Story', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to delete this story? This action cannot be undone.', style: TextStyle(color: Color(0xFF263238))),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Get.back(), 
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () async {
@@ -403,7 +411,8 @@ class StoryEditorController extends GetxController {
   Future<void> showAssignDialog() async {
     Get.dialog(
       AlertDialog(
-        title: const Text('Assign Story'),
+        backgroundColor: Colors.white,
+        title: const Text('Assign Story', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: 300,
           child: StreamBuilder<List<UserModel>>(
@@ -420,10 +429,11 @@ class StoryEditorController extends GetxController {
                   final user = users[index];
                   return ListTile(
                     leading: CircleAvatar(
-                      child: Text(user.displayName[0]),
+                      backgroundColor: const Color(0xFF1A237E).withValues(alpha: 0.1),
+                      child: Text(user.displayName[0].toUpperCase(), style: const TextStyle(color: Color(0xFF1A237E))),
                     ),
-                    title: Text(user.displayName),
-                    subtitle: Text(user.role.toUpperCase()),
+                    title: Text(user.displayName, style: const TextStyle(color: Color(0xFF263238), fontWeight: FontWeight.bold)),
+                    subtitle: Text(user.role, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
                     onTap: () {
                       Get.back();
                       assignStory(user);
@@ -434,7 +444,13 @@ class StoryEditorController extends GetxController {
             },
           ),
         ),
-      ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Close', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      )
     );
   }
 

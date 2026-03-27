@@ -69,7 +69,7 @@ class _BreakingNewsTickerState extends State<BreakingNewsTicker> {
                 });
                 loadBreakingNews();
               },
-              icon: const Icon(Icons.refresh, size: 14, color: Colors.white70),
+              icon: const Icon(Icons.refresh, size: 14, color: Colors.white),
               padding: EdgeInsets.zero,
               tooltip: 'Refresh Breaking News',
             ),
@@ -79,10 +79,12 @@ class _BreakingNewsTickerState extends State<BreakingNewsTicker> {
             child: Text(
               '...NO BREAKING NEWS',
               style: TextStyle(
-                color: Colors.white70,
+                color: Colors.white,
                 fontSize: 11,
-                fontStyle: FontStyle.italic,
+                fontWeight: FontWeight.bold,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -101,21 +103,20 @@ class _BreakingNewsTickerState extends State<BreakingNewsTicker> {
               });
               loadBreakingNews();
             },
-            icon: const Icon(Icons.refresh, size: 14, color: Colors.white70),
+            icon: const Icon(Icons.refresh, size: 14, color: Colors.white),
             padding: EdgeInsets.zero,
             tooltip: 'Refresh Breaking News',
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Container(
+          child: SizedBox(
             height: 30,
-            alignment: Alignment.centerLeft,
             child: Marquee(
-              text: breakingStories.join("   🚨   "),
+              text: breakingStories.map((s) => s.replaceAll(RegExp(r'[\n\r]+'), ' ').trim()).join("   🚨   "),
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
               velocity: 50,
