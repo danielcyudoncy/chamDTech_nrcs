@@ -189,6 +189,10 @@ class AuthController extends GetxController {
                         value: AppConstants.roleAnchor,
                         child: Text('Anchor'),
                       ),
+                      DropdownMenuItem(
+                        value: AppConstants.roleDirector,
+                        child: Text('Director'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) {

@@ -17,6 +17,7 @@ import 'package:chamdtech_nrcs/features/dashboard/views/shells/producer_app_shel
 import 'package:chamdtech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
 import 'package:chamdtech_nrcs/features/notifications/views/notification_screen.dart';
+import 'package:chamdtech_nrcs/features/newsroom/views/newsroom_director_screen.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class AppRoutes {
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String storyEditor = '/story/editor';
   static const String rundownList = '/rundowns';
   static const String rundownBuilder = '/rundown/builder';
+  static const String newsroomDirector = '/newsroom-director';
   static const String settings = '/settings';
   static const String profile = '/profile';
   static const String adminDashboard = '/admin';
@@ -64,6 +66,8 @@ class AppRoutes {
         return producerDashboard;
       case AppConstants.roleAnchor:
         return anchorDashboard;
+      case AppConstants.roleDirector:
+        return producerDashboard;
       default:
         // Fallback for unknown roles (use stories as generic workspace for now)
         return storyList;
@@ -98,6 +102,10 @@ class AppRoutes {
     GetPage(
       name: rundownBuilder,
       page: () => const RundownBuilderScreen(),
+    ),
+    GetPage(
+      name: newsroomDirector,
+      page: () => const NewsroomDirectorScreen(),
     ),
     GetPage(
       name: profile,

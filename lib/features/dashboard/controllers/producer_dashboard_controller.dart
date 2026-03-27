@@ -41,11 +41,10 @@ class ProducerDashboardController extends GetxController {
       isLoading.value = false;
     });
 
-    // Listen to all stories, filter for ready-to-air locally to avoid complex index requirements initially
+    // Listen to all stories, filter out archived stories to show a broader pool
     _storyService.getStories().listen((stories) {
       readyToAirStories.value = stories.where((s) => 
-        s.status == AppConstants.statusApproved || 
-        s.stage == AppConstants.stageVerified
+        s.status != AppConstants.statusArchived
       ).toList();
     });
   }

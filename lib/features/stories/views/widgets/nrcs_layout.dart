@@ -209,6 +209,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Reporter Dashboard': AppRoutes.reporterDashboard,
       'Editor Dashboard': AppRoutes.editorDashboard,
       'Producer Dashboard': AppRoutes.producerDashboard,
+      'Operational Dashboard': AppRoutes.producerDashboard,
       'Anchor Dashboard': AppRoutes.anchorDashboard,
       'Admin Dashboard': AppRoutes.adminDashboard,
       'My Stories': '/stories', // Could filter stories logically by current user later
@@ -238,6 +239,8 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       tabs = ['Admin Dashboard', 'Users', 'Privileges', 'Desks', 'Story States', 'Archive', 'Audit Logs', 'Configurations'];
     } else if (role == AppConstants.roleAnchor) {
        tabs = ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
+    } else if (role == AppConstants.roleDirector) {
+       tabs = ['Operational Dashboard', 'Rundowns', 'Story Pool', 'Archive', 'Reports', 'Notifications'];
     } else {
        tabs = ['Workspace', 'Archive', 'Settings'];
     }
