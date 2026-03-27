@@ -13,6 +13,8 @@ import 'package:chamdtech_nrcs/core/models/activity_log_model.dart';
 import 'package:chamdtech_nrcs/core/services/activity_log_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class StoryService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
@@ -20,6 +22,7 @@ class StoryService extends GetxService {
 
   final AuthService _authService = Get.find<AuthService>();
   final ActivityLogService _activityLogService = Get.put(ActivityLogService());
+  final NotificationService _notificationService = Get.find<NotificationService>();
   
   // Get stories by category
   Stream<List<StoryModel>> getStoriesByCategory(String category) {
@@ -237,6 +240,17 @@ class StoryService extends GetxService {
         ));
       }
       
+      // Broadcast notification
+      if (user != null) {
+        await _notificationService.broadcastNotification(
+          title: 'New Story Created',
+          message: '${user.displayName} created a new story: "${story.title}"',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=${docRef.id}',
+          data: {'storyId': docRef.id},
+        );
+      }
+
       return docRef.id;
     } catch (e) {
       Get.snackbar(
@@ -407,6 +421,15 @@ class StoryService extends GetxService {
           storyId: storyId,
           storyTitle: title,
         ));
+
+        // Broadcast notification
+        await _notificationService.broadcastNotification(
+          title: 'Story Approved',
+          message: '"$title" has been approved by ${user.displayName}',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+          data: {'storyId': storyId},
+        );
 
       
       return true;

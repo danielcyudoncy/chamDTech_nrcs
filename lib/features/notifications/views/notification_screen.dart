@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/widgets/notification_card.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({super.key});
@@ -15,37 +16,7 @@ class NotificationScreen extends StatelessWidget {
     final notificationService = Get.find<NotificationService>();
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back to Dashboard',
-          onPressed: () {
-            try {
-              if (Navigator.of(context).canPop()) {
-                Get.back();
-              } else {
-                final authService = Get.find<AuthService>();
-                final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
-                final homeRoute = AppRoutes.getRouteForRole(role);
-                Get.offAllNamed(homeRoute);
-              }
-            } catch (e) {
-              // Fail-safe: navigate to home if anything goes wrong
-              Get.offAllNamed('/');
-            }
-          },
-        ),
-        title: const Text('Notifications', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        actions: [
-          TextButton(
-            onPressed: () => notificationService.markAllAsRead(),
-            child: const Text('Mark all as read'),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: StreamBuilder<List<NotificationModel>>(
         stream: notificationService.getNotifications(),
         builder: (context, snapshot) {
@@ -59,110 +30,175 @@ class NotificationScreen extends StatelessWidget {
 
           final notifications = snapshot.data ?? [];
 
-          if (notifications.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No notifications yet', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
-          }
-
-          return ListView.separated(
-            itemCount: notifications.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
-              return _NotificationItem(notification: notification);
-            },
+          return CustomScrollView(
+            slivers: [
+              _buildSliverAppBar(context, notificationService, notifications),
+              if (notifications.isEmpty)
+                _buildEmptyState()
+              else
+                ..._buildNotificationGroups(notifications),
+            ],
           );
         },
       ),
     );
   }
-}
 
-class _NotificationItem extends StatelessWidget {
-  final NotificationModel notification;
+  Widget _buildSliverAppBar(BuildContext context, NotificationService service, List<NotificationModel> notifications) {
+    final hasUnread = notifications.any((n) => !n.isRead);
 
-  const _NotificationItem({required this.notification});
-
-  @override
-  Widget build(BuildContext context) {
-    final notificationService = Get.find<NotificationService>();
-
-    return ListTile(
-      tileColor: notification.isRead ? Colors.transparent : Colors.blue.withValues(alpha: 0.05),
-      leading: CircleAvatar(
-        backgroundColor: _getNotificationColor(notification.type).withValues(alpha: 0.2),
-        child: Icon(_getNotificationIcon(notification.type), color: _getNotificationColor(notification.type)),
-      ),
-      title: Text(
-        notification.title,
-        style: TextStyle(
-          fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(notification.message),
-          const SizedBox(height: 4),
-          Text(
-            timeago.format(notification.createdAt),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
-      ),
-      onTap: () {
-        notificationService.markAsRead(notification.id);
-        if (notification.actionUrl != null && notification.actionUrl!.isNotEmpty) {
-          Get.toNamed(notification.actionUrl!);
-        }
-      },
-      trailing: PopupMenuButton<String>(
-        onSelected: (value) {
-          if (value == 'delete') {
-            notificationService.deleteNotification(notification.id);
+    return SliverAppBar(
+      floating: true,
+      pinned: true,
+      snap: true,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: NRCSColors.topNavBlue),
+        onPressed: () {
+          try {
+            if (Navigator.of(context).canPop()) {
+              Get.back();
+            } else {
+              final authService = Get.find<AuthService>();
+              final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
+              final homeRoute = AppRoutes.getRouteForRole(role);
+              Get.offAllNamed(homeRoute);
+            }
+          } catch (e) {
+            Get.offAllNamed('/');
           }
         },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'delete',
-            child: Text('Delete'),
+      ),
+      title: const Text(
+        'Notifications',
+        style: TextStyle(
+          color: NRCSColors.textDark,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      ),
+      actions: [
+        if (hasUnread)
+          TextButton(
+            onPressed: () => service.markAllAsRead(),
+            child: const Text('Mark all as read'),
           ),
-        ],
+        const SizedBox(width: 8),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          color: Colors.grey.shade200,
+          height: 1,
+        ),
       ),
     );
   }
 
-  IconData _getNotificationIcon(String type) {
-    switch (type) {
-      case 'story_update':
-        return Icons.article_outlined;
-      case 'rundown_change':
-        return Icons.view_list_outlined;
-      case 'mention':
-        return Icons.alternate_email;
-      default:
-        return Icons.notifications;
-    }
+  Widget _buildEmptyState() {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.notifications_off_outlined,
+                size: 64,
+                color: Colors.grey.shade300,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No notifications yet',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'We\'ll notify you when something important happens.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  Color _getNotificationColor(String type) {
-    switch (type) {
-      case 'story_update':
-        return Colors.blue;
-      case 'rundown_change':
-        return Colors.orange;
-      case 'mention':
-        return Colors.green;
-      default:
-        return Colors.grey;
+  List<Widget> _buildNotificationGroups(List<NotificationModel> notifications) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final groups = <String, List<NotificationModel>>{
+      'Today': [],
+      'Yesterday': [],
+      'Earlier': [],
+    };
+
+    for (final notification in notifications) {
+      final date = DateTime(
+        notification.createdAt.year,
+        notification.createdAt.month,
+        notification.createdAt.day,
+      );
+
+      if (date == today) {
+        groups['Today']!.add(notification);
+      } else if (date == yesterday) {
+        groups['Yesterday']!.add(notification);
+      } else {
+        groups['Earlier']!.add(notification);
+      }
     }
+
+    final slivers = <Widget>[];
+
+    groups.forEach((title, items) {
+      if (items.isNotEmpty) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey.shade500,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        slivers.add(
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => NotificationCard(notification: items[index]),
+              childCount: items.length,
+            ),
+          ),
+        );
+      }
+    });
+
+    return slivers;
   }
 }

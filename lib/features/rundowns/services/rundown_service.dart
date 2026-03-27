@@ -2,10 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class RundownService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   static const String collectionName = 'rundowns';
+  final NotificationService _notificationService = Get.find<NotificationService>();
+  final AuthService _authService = Get.find<AuthService>();
 
   // Get active rundowns (today or future)
   Stream<List<RundownModel>> getActiveRundowns() {
@@ -42,6 +47,19 @@ class RundownService extends GetxService {
     try {
       final docRef = await _firestore.collection(collectionName).add(rundown.toJson());
       await docRef.update({'id': docRef.id});
+
+      // Broadcast new rundown creation
+      final user = _authService.currentUser.value;
+      if (user != null) {
+        await _notificationService.broadcastNotification(
+          title: 'New Rundown Created',
+          message: '${user.displayName} created a new rundown: "${rundown.name}"',
+          type: 'rundown_change',
+          actionUrl: '/rundowns', // Or specific rundown view if available
+          data: {'rundownId': docRef.id},
+        );
+      }
+
       return docRef.id;
     } catch (e) {
       Get.log('Error creating rundown: $e');
@@ -57,6 +75,19 @@ class RundownService extends GetxService {
           .collection(collectionName)
           .doc(rundown.id)
           .update(rundown.toJson());
+
+      // Broadcast status changes if significant
+      if (rundown.status == 'locked' || rundown.status == 'on-air') {
+        final user = _authService.currentUser.value;
+        await _notificationService.broadcastNotification(
+          title: rundown.status == 'on-air' ? 'Rundown Live!' : 'Rundown Locked',
+          message: 'The rundown "${rundown.name}" is now ${rundown.status}${user != null ? " by ${user.displayName}" : "."}',
+          type: 'rundown_change',
+          actionUrl: '/rundowns',
+          data: {'rundownId': rundown.id},
+        );
+      }
+
       return true;
     } catch (e) {
       Get.log('Error updating rundown: $e');
