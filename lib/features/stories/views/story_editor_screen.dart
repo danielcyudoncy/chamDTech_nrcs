@@ -33,7 +33,7 @@ class StoryEditorScreen extends StatelessWidget {
                   child: _buildSplittedEditor(
                     context,
                     controller,
-                    title: 'Notes',
+                    title: 'Story',
                     titleColor: const Color(0xFF1976D2),
                     quillController: controller.notesQuillController,
                     placeholder: 'Production notes, instructions...',
@@ -47,10 +47,10 @@ class StoryEditorScreen extends StatelessWidget {
                   child: _buildSplittedEditor(
                     context,
                     controller,
-                    title: 'Anchor',
+                    title: 'Report Intros',
                     titleColor: const Color(0xFF1976D2),
                     quillController: controller.anchorQuillController,
-                    placeholder: 'Anchor script goes here...',
+                    placeholder: 'Report intros goes here...',
                   ),
                 ),
               ],
