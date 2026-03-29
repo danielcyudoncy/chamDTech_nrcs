@@ -1,3 +1,4 @@
+// features/newsroom/views/widgets/active_story_panel.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -50,7 +51,7 @@ class ActiveStoryPanel extends StatelessWidget {
                     border: Border.all(color: Colors.white24, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha:0.5),
                         blurRadius: 20,
                         spreadRadius: 5,
                       ),

@@ -1,3 +1,4 @@
+// features/newsroom/controllers/newsroom_controller.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -174,7 +175,7 @@ class NewsroomController extends GetxController {
         'Auto-Progression', 
         'Moving to Next Story', 
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.blue.withOpacity(0.8),
+        backgroundColor: Colors.blue.withValues(alpha:0.8),
         colorText: Colors.white,
         duration: const Duration(seconds: 2),
       );

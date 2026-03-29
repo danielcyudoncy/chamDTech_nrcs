@@ -249,8 +249,8 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F3F4),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF1F3F4),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.auto_stories_outlined, size: 64, color: Color(0xFF90A4AE)),

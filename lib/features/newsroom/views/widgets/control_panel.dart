@@ -1,3 +1,4 @@
+// features/newsroom/views/widgets/control_panel.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/newsroom/controllers/newsroom_controller.dart';
@@ -91,7 +92,7 @@ class _ControlPanelState extends State<ControlPanel> with SingleTickerProviderSt
                 color: isUrgent ? Colors.red[900] : Colors.black,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: isUrgent ? Colors.redAccent : Colors.white10, width: 2),
-                boxShadow: isUrgent ? [BoxShadow(color: Colors.red.withOpacity(0.5), blurRadius: 20, spreadRadius: 5)] : [],
+                boxShadow: isUrgent ? [BoxShadow(color: Colors.red.withValues(alpha:0.5), blurRadius: 20, spreadRadius: 5)] : [],
               ),
               child: timerText,
             ),
@@ -124,9 +125,9 @@ class _ControlPanelState extends State<ControlPanel> with SingleTickerProviderSt
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: color.withOpacity(0.5)),
+                border: Border.all(color: color.withValues(alpha:0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -217,7 +218,7 @@ class _ControlPanelState extends State<ControlPanel> with SingleTickerProviderSt
         onChanged: (val) => widget.controller.toggleAutoProgression(val),
         dense: true,
         contentPadding: EdgeInsets.zero,
-        activeColor: Colors.greenAccent,
+        activeThumbColor: Colors.greenAccent,
       )),
     );
   }

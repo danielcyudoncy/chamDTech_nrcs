@@ -102,4 +102,4 @@ flutter:
           style: italic
     
 dependency_overrides:
-  intl: 0.20.2
+  intl: 0.20.2

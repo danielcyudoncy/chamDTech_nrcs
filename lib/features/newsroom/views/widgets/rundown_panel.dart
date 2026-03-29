@@ -1,7 +1,7 @@
+// features/newsroom/views/widgets/rundown_panel.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/newsroom/controllers/newsroom_controller.dart';
-import 'package:chamdtech_nrcs/features/newsroom/models/newsroom_state.dart';
 
 class RundownPanel extends StatelessWidget {
   final NewsroomController controller;
@@ -14,7 +14,7 @@ class RundownPanel extends StatelessWidget {
       width: 300,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        border: Border(right: BorderSide(color: Colors.white10)),
+        border: const Border(right: BorderSide(color: Colors.white10)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -51,11 +51,11 @@ class RundownPanel extends StatelessWidget {
                     margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: isActive 
-                          ? Colors.blue.withOpacity(0.15) 
-                          : (isDone ? Colors.white.withOpacity(0.02) : Colors.transparent),
+                          ? Colors.blue.withValues(alpha:0.15) 
+                          : (isDone ? Colors.white.withValues(alpha:0.02) : Colors.transparent),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isActive ? Colors.blue.withOpacity(0.3) : Colors.transparent,
+                        color: isActive ? Colors.blue.withValues(alpha:0.3) : Colors.transparent,
                         width: 1,
                       ),
                     ),
