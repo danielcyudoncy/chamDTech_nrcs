@@ -114,6 +114,7 @@ class AuthController extends GetxController {
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: nameCtrl,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Full Name',
                       prefixIcon: Icon(Icons.person_outlined),
@@ -129,6 +130,7 @@ class AuthController extends GetxController {
                   TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       prefixIcon: Icon(Icons.email_outlined),
@@ -147,6 +149,17 @@ class AuthController extends GetxController {
                   TextFormField(
                     controller: passwordCtrl,
                     obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) {
+                      if (formKey.currentState!.validate()) {
+                        signUp(
+                          email: emailCtrl.text.trim(),
+                          password: passwordCtrl.text,
+                          displayName: nameCtrl.text.trim(),
+                          role: selectedRole.value,
+                        );
+                      }
+                    },
                     decoration: const InputDecoration(
                       labelText: 'Password',
                       prefixIcon: Icon(Icons.lock_outlined),

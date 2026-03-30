@@ -10,8 +10,9 @@ class ProducerDashboardScreen extends StatelessWidget {
     return NRCSAppShell(
       title: 'Producer Dashboard',
       toolbar: const NRCSToolbar(),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SelectionArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -59,7 +60,7 @@ class ProducerDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 

@@ -16,8 +16,9 @@ class EditorDashboardScreen extends StatelessWidget {
     return NRCSAppShell(
       title: 'Editor Dashboard',
       toolbar: const NRCSToolbar(),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
+      body: SelectionArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -63,7 +64,7 @@ class EditorDashboardScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 

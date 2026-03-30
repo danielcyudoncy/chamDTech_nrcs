@@ -18,9 +18,10 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
     return NRCSAppShell(
       title: 'Reporter Dashboard',
       toolbar: const NRCSToolbar(),
-      body: Container(
-        color: const Color(0xFFF8F9FA),
-        child: SingleChildScrollView(
+      body: SelectionArea(
+        child: Container(
+          color: const Color(0xFFF8F9FA),
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(32.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,7 +59,7 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 
@@ -347,9 +348,10 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 800,
-          height: 600,
+        child: SelectionArea(
+          child: Container(
+            width: 800,
+            height: 600,
           padding: const EdgeInsets.all(40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +436,7 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 

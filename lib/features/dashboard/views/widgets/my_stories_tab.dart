@@ -8,6 +8,7 @@ import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Widget
@@ -296,58 +297,60 @@ class _StoryDetailView extends StatelessWidget {
         ),
         // Content Area
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title Area
-                Text(
-                  story.title.isEmpty ? 'Untitled Story' : story.title,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A237E),
-                    height: 1.2,
+          child: SelectionArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Area
+                  Text(
+                    story.title.isEmpty ? 'Untitled Story' : story.title,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A237E),
+                      height: 1.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // Metadata Bar
-                Wrap(
-                  spacing: 24,
-                  runSpacing: 8,
-                  children: [
-                    _DetailMeta(label: 'AUTHOR', value: story.authorName),
-                    _DetailMeta(label: 'FORMAT', value: story.format),
-                    _DetailMeta(label: 'DURATION', value: durationStr),
-                    _DetailMeta(label: 'DESK', value: story.deskId ?? 'None'),
-                    _DetailMeta(label: 'VERSION', value: 'v${story.version}'),
-                    _DetailMeta(label: 'WORDS', value: '$wordCount'),
-                  ],
+                  const SizedBox(height: 16),
+                  // Metadata Bar
+                  Wrap(
+                    spacing: 24,
+                    runSpacing: 8,
+                    children: [
+                      _DetailMeta(label: 'AUTHOR', value: story.authorName),
+                      _DetailMeta(label: 'FORMAT', value: story.format),
+                      _DetailMeta(label: 'DURATION', value: durationStr),
+                      _DetailMeta(label: 'DESK', value: story.deskId ?? 'None'),
+                      _DetailMeta(label: 'VERSION', value: 'v${story.version}'),
+                      _DetailMeta(label: 'WORDS', value: '$wordCount'),
+                    ],
 
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Last updated $dateFormat',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
-                ),
-                const SizedBox(height: 32),
-                const Divider(),
-                const SizedBox(height: 32),
-                // Story Body (The Content)
-                Text(
-                  plainText.trim().isEmpty ? 'The content of this story is empty.' : plainText,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    height: 1.6,
-                    color: NRCSColors.textDark,
-                    letterSpacing: 0.2,
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Last updated $dateFormat',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+                  ),
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 32),
+                  // Story Body (The Content)
+                  Text(
+                    plainText.trim().isEmpty ? 'The content of this story is empty.' : plainText,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      height: 1.6,
+                      color: NRCSColors.textDark,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
 
 
-                const SizedBox(height: 60), // Extra space at bottom
-              ],
+                  const SizedBox(height: 60), // Extra space at bottom
+                ],
+              ),
             ),
           ),
         ),
@@ -358,14 +361,9 @@ class _StoryDetailView extends StatelessWidget {
   String _getPlainText(String jsonContent) {
     if (jsonContent.isEmpty) return '';
     try {
-      final dynamic decoded = jsonDecode(jsonContent);
-      if (decoded is List) {
-        return decoded.map((op) => op['insert']?.toString() ?? '').join();
-      } else if (decoded is Map && decoded.containsKey('ops')) {
-        final ops = decoded['ops'] as List;
-        return ops.map((op) => op['insert']?.toString() ?? '').join();
-      }
-      return jsonContent;
+      final isJson = jsonContent.trim().startsWith('{') || jsonContent.trim().startsWith('[');
+      if (!isJson) return jsonContent;
+      return Get.find<StoryService>().getPlainTextFromQuill(jsonContent);
     } catch (_) {
       // If it's not JSON, it might be already plain text
       return jsonContent;

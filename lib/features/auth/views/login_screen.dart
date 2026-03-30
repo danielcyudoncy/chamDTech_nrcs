@@ -80,6 +80,7 @@ class LoginScreen extends StatelessWidget {
                             TextFormField(
                               controller: authController.emailController,
                               keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
                               decoration: const InputDecoration(
                                 labelText: 'Email',
                                 prefixIcon: Icon(Icons.email_outlined),
@@ -99,6 +100,12 @@ class LoginScreen extends StatelessWidget {
                             Obx(() => TextFormField(
                               controller: authController.passwordController,
                               obscureText: authController.isPasswordHidden.value,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) {
+                                if (formKey.currentState!.validate()) {
+                                  authController.login();
+                                }
+                              },
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outlined),

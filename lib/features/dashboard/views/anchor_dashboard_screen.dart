@@ -40,8 +40,9 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
             shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
           ) : null,
           drawer: isMobile ? _buildDrawer(controller) : null,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          body: SelectionArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (!isMobile) ...[
                 const NRCSTopNav(),
@@ -78,6 +79,7 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
               ),
             ],
           ),
+        ),
         );
       }
     );

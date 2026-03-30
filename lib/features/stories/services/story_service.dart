@@ -448,13 +448,26 @@ class StoryService extends GetxService {
     try {
       final decoded = jsonDecode(jsonStr);
       // Try to extract from 'anchor' if it's our split format
-      if (decoded is Map && decoded.containsKey('anchor')) {
-        final doc = quill.Document.fromJson(decoded['anchor']);
-        return doc.toPlainText();
+      if (decoded is Map && (decoded.containsKey('anchor') || decoded.containsKey('notes'))) {
+        String combined = '';
+        if (decoded.containsKey('anchor') && decoded['anchor'] is List) {
+          final doc = quill.Document.fromJson(decoded['anchor']);
+          final text = doc.toPlainText().trim();
+          if (text.isNotEmpty) combined += 'REPORT INTRO / ANCHOR:\n$text\n\n';
+        }
+        if (decoded.containsKey('notes') && decoded['notes'] is List) {
+          final doc = quill.Document.fromJson(decoded['notes']);
+          final text = doc.toPlainText().trim();
+          if (text.isNotEmpty) combined += 'PRODUCTION NOTES / CONTENT:\n$text\n\n';
+        }
+        if (combined.isNotEmpty) return combined.trim();
       }
       // Otherwise assume it's a standard Quill Delta list
-      final doc = quill.Document.fromJson(decoded);
-      return doc.toPlainText();
+      if (decoded is List || (decoded is Map && decoded.containsKey('ops'))) {
+        final doc = quill.Document.fromJson(decoded);
+        return doc.toPlainText();
+      }
+      return jsonStr;
     } catch (e) {
       return jsonStr;
     }
