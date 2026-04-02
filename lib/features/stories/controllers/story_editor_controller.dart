@@ -530,6 +530,33 @@ class StoryEditorController extends GetxController {
     }
   }
 
+  Future<void> submitStory() async {
+    if (existingStory == null) {
+      Get.snackbar('Error', 'Please save the story as a draft first before submitting.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      // Auto-save any changes before submitting
+      await saveStory(isAutoSave: true);
+      
+      final success = await _storyService.submitStory(existingStory!.id);
+      if (success) {
+        // Refresh local state
+        final updatedStory = await _storyService.getStoryById(existingStory!.id);
+        if (updatedStory != null) {
+          existingStory = updatedStory;
+        }
+        Get.back(); // exit editor or just refresh? Usually NRCS exit after submission
+      }
+    } catch (e) {
+      // Error handled by service
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   @override
   void onClose() {
     _autoSaveTimer?.cancel();

@@ -356,4 +356,18 @@ class AuthService extends GetxService {
           .toList();
     });
   }
+
+  // Get user IDs by role
+  Future<List<String>> getUserIdsByRole(String role) async {
+    try {
+      final snapshot = await _firestore
+          .collection(AppConstants.usersCollection)
+          .where('role', isEqualTo: role)
+          .get();
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      Get.log('Error getting user IDs by role: $e');
+      return [];
+    }
+  }
 }

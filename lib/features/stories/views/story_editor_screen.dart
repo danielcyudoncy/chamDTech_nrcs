@@ -77,8 +77,17 @@ class StoryEditorScreen extends StatelessWidget {
             _ToolbarButton(icon: Icons.add_box_outlined, label: 'New', onTap: () => controller.handleNew()),
             _ToolbarButton(icon: Icons.save_outlined, label: 'Save', onTap: () => controller.saveStory()),
             
-            // Approve button (only for authorized users)
-            if (PermissionHelpers.canApproveStory(controller.currentUser))
+            // Submit button (only for drafts)
+            if (controller.existingStory?.status == AppConstants.statusDraft)
+              _ToolbarButton(
+                icon: Icons.send_outlined, 
+                label: 'Submit', 
+                onTap: () => controller.submitStory(),
+              ),
+
+            // Approve button (only for authorized users when story is pending)
+            if (PermissionHelpers.canApproveStory(controller.currentUser) && 
+                controller.existingStory?.status == AppConstants.statusPending)
               _ToolbarButton(icon: Icons.check_circle_outline, label: 'Approve', onTap: () {
                 controller.approveStory();
               }),

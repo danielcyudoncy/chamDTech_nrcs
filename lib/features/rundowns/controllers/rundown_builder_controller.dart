@@ -3,6 +3,7 @@ import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 
 class RundownBuilderController extends GetxController {
   final RundownService _rundownService = Get.find<RundownService>();
@@ -10,6 +11,8 @@ class RundownBuilderController extends GetxController {
   
   final String rundownId;
   RundownBuilderController({required this.rundownId});
+
+  final NotificationService _notificationService = Get.find<NotificationService>();
 
   final rundown = Rx<RundownModel?>(null);
   final stories = <StoryModel>[].obs;
@@ -111,6 +114,15 @@ class RundownBuilderController extends GetxController {
 
     final newOrder = List<String>.from(currentRundown.storyIds)..add(story.id);
     _rundownService.updateRundown(currentRundown.copyWith(storyIds: newOrder));
+
+    // Send broadcast notification
+    _notificationService.broadcastNotification(
+      title: 'Story Lined Up',
+      message: 'Story "${story.title}" has been lined up for broadcast in "${currentRundown.name}"',
+      type: 'rundown_change',
+      actionUrl: '/rundown/builder?id=${currentRundown.id}',
+      data: {'rundownId': currentRundown.id, 'storyId': story.id},
+    );
   }
 
   void changeStatus(String newStatus) {

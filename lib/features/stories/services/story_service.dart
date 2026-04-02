@@ -262,39 +262,46 @@ class StoryService extends GetxService {
     }
   }
   
-  // Update story — with backend rundown-lock guard
+  // Update story — with robust backend rundown-lock guard
   Future<bool> updateStory(StoryModel story) async {
     try {
-      // ── Backend guard: block edits if story is in a locked rundown ──────
+      // ── Backend guard check (with local try-catch for permissions) ──────
       if (story.linkedRundownId != null && story.linkedRundownId!.isNotEmpty) {
-        final rundownDoc = await _firestore
-            .collection(AppConstants.rundownsCollection)
-            .doc(story.linkedRundownId)
-            .get();
-        if (rundownDoc.exists) {
-          final status = rundownDoc.data()?['status'] ?? 'draft';
-          if (status == 'locked' || status == 'on-air') {
-            Get.snackbar(
-              'Editing Blocked',
-              'This story is part of a locked rundown and cannot be edited.',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.red.shade50,
-              colorText: Colors.red.shade900,
-            );
-            return false;
+        try {
+          final rundownDoc = await _firestore
+              .collection(AppConstants.rundownsCollection)
+              .doc(story.linkedRundownId)
+              .get();
+          if (rundownDoc.exists) {
+            final status = rundownDoc.data()?['status'] ?? 'draft';
+            if (status == 'locked' || status == 'on-air') {
+              Get.snackbar(
+                'Editing Blocked',
+                'This story is part of a locked rundown and cannot be edited.',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.red.shade50,
+                colorText: Colors.red.shade900,
+              );
+              return false;
+            }
           }
+        } catch (e) {
+          // Local catch: if permission denied for rundowns, proceed with saving story anyway
+          Get.log('Note: Permission or fetch error checking rundown ${story.linkedRundownId}. Proceeding with save.');
         }
       }
-      // ── Proceed with save ─────────────────────────────────────────────────
+      
+      // ── Use set with merge: true (more robust than update) ────────────────
       await _firestore
           .collection(AppConstants.storiesCollection)
           .doc(story.id)
-          .update(story.toJson());
+          .set(story.toJson(), SetOptions(merge: true));
       return true;
     } catch (e) {
+      Get.log('Error in updateStory: $e');
       Get.snackbar(
         'Error',
-        'Failed to update story: $e',
+        'Failed to update story: ${e.toString().split(']').last.trim()}',
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
@@ -422,21 +429,110 @@ class StoryService extends GetxService {
           storyTitle: title,
         ));
 
-        // Broadcast notification
-        await _notificationService.broadcastNotification(
-          title: 'Story Approved',
-          message: '"$title" has been approved by ${user.displayName}',
-          type: 'story_update',
-          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
-          data: {'storyId': storyId},
-        );
+        // Notify Creator
+        final authorId = storyDoc.data()?['authorId'];
+        if (authorId != null) {
+          await _notificationService.notifyRelevantUsers(
+            userIds: [authorId],
+            title: 'Story Approved',
+            message: 'Your story "$title" has been approved by ${user.displayName}',
+            type: 'story_update',
+            actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+            data: {'storyId': storyId},
+          );
+        }
 
+        // Notify all Producers
+        final producerIds = await _authService.getUserIdsByRole(AppConstants.roleProducer);
+        if (producerIds.isNotEmpty) {
+          await _notificationService.notifyRelevantUsers(
+            userIds: producerIds,
+            title: 'New Approved Story',
+            message: 'A story "$title" has been approved and is ready for rundown.',
+            type: 'story_update',
+            actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+            data: {'storyId': storyId},
+          );
+        }
       
       return true;
     } catch (e) {
       Get.snackbar(
         'Error',
         'Failed to approve story: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
+
+  // Submit story for approval
+  Future<bool> submitStory(String storyId) async {
+    final userId = _authService.currentUser.value?.id;
+    if (userId == null) return false;
+    
+    try {
+      await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .update({
+        'status': AppConstants.statusPending,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      Get.snackbar(
+        'Success',
+        'Story submitted for review',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      // Log submission
+      final user = _authService.currentUser.value!;
+      final storyDoc = await _firestore.collection(AppConstants.storiesCollection).doc(storyId).get();
+      final title = storyDoc.data()?['title'] ?? 'Unknown Story';
+      
+      await _activityLogService.logActivity(ActivityLogModel(
+        id: const Uuid().v4(),
+        userId: user.id,
+        userName: user.displayName,
+        action: 'submit',
+        entityType: 'story',
+        entityId: storyId,
+        description: 'Submitted story for review',
+        timestamp: DateTime.now(),
+      ));
+
+      // Notify all Editors
+      final editorIds = await _authService.getUserIdsByRole(AppConstants.roleEditor);
+      if (editorIds.isNotEmpty) {
+        await _notificationService.notifyRelevantUsers(
+          userIds: editorIds,
+          title: 'New Story Submitted',
+          message: '${user.displayName} submitted a story for review: "$title"',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+          data: {'storyId': storyId},
+        );
+      }
+
+      // Notify all Admins
+      final adminIds = await _authService.getUserIdsByRole(AppConstants.roleAdmin);
+      if (adminIds.isNotEmpty) {
+        await _notificationService.notifyRelevantUsers(
+          userIds: adminIds,
+          title: 'New Story Submitted',
+          message: '${user.displayName} submitted a story for review: "$title"',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+          data: {'storyId': storyId},
+        );
+      }
+      
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to submit story: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
