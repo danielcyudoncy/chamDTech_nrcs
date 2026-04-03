@@ -8,6 +8,7 @@ import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/anchor_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/story_pool_widget.dart';
 
 class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
   const AnchorDashboardScreen({super.key});
@@ -206,18 +207,52 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
                const SizedBox(height: 24),
             ],
             Expanded(
-              child: controller.isLoading.value
-                  ? const Center(child: CircularProgressIndicator())
-                  : controller.stories.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.separated(
-                          itemCount: controller.stories.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 16),
-                          itemBuilder: (context, index) {
-                            final story = controller.stories[index];
-                            return _ModernStoryCard(story: story, isMobile: isMobile);
-                          },
-                        ),
+              child: isMobile 
+                ? Column(
+                    children: [
+                      Expanded(
+                        child: controller.isLoading.value
+                            ? const Center(child: CircularProgressIndicator())
+                            : controller.stories.isEmpty
+                                ? _buildEmptyState()
+                                : ListView.separated(
+                                    itemCount: controller.stories.length,
+                                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                                    itemBuilder: (context, index) {
+                                      final story = controller.stories[index];
+                                      return _ModernStoryCard(story: story, isMobile: isMobile);
+                                    },
+                                  ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Expanded(child: StoryPoolWidget()),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: controller.isLoading.value
+                            ? const Center(child: CircularProgressIndicator())
+                            : controller.stories.isEmpty
+                                ? _buildEmptyState()
+                                : ListView.separated(
+                                    itemCount: controller.stories.length,
+                                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                                    itemBuilder: (context, index) {
+                                      final story = controller.stories[index];
+                                      return _ModernStoryCard(story: story, isMobile: isMobile);
+                                    },
+                                  ),
+                      ),
+                      const SizedBox(width: 32),
+                      const Expanded(
+                        flex: 1,
+                        child: StoryPoolWidget(),
+                      ),
+                    ],
+                  ),
             ),
           ],
         ),

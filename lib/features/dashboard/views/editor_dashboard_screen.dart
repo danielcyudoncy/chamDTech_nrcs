@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/story_pool_widget.dart';
 
 class EditorDashboardScreen extends StatelessWidget {
   const EditorDashboardScreen({super.key});
@@ -57,6 +58,10 @@ class EditorDashboardScreen extends StatelessWidget {
                         icon: Icons.edit_document,
                         stories: controller.copyEditStories,
                       ),
+                    ),
+                    const SizedBox(width: 24),
+                    const Expanded(
+                      child: StoryPoolWidget(),
                     ),
                   ],
                 );

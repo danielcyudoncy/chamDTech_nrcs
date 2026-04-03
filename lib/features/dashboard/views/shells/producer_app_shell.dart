@@ -8,6 +8,7 @@ import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/story_pool_widget.dart';
 
 class ProducerAppShell extends StatefulWidget {
   const ProducerAppShell({super.key});
@@ -27,6 +28,20 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
     'Reports',
     'Notifications'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Read tab argument from top nav navigation
+    final args = Get.arguments;
+    if (args is Map && args['tab'] != null) {
+      final tabName = args['tab'] as String;
+      final idx = _tabs.indexOf(tabName);
+      if (idx != -1) {
+        _selectedIndex = idx;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -606,24 +621,29 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
   Widget _buildStoryPoolViewer(ProducerDashboardController controller, bool isMobile) {
     return Container(
       color: const Color(0xFFF8F9FA),
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Story Pool Explorer',
-              style: TextStyle(
-                fontSize: isMobile ? 24 : 32,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF1A237E),
-                letterSpacing: -0.5,
-              ),
+      padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Story Pool Explorer',
+            style: TextStyle(
+              fontSize: isMobile ? 24 : 32,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF1A237E),
+              letterSpacing: -0.5,
             ),
-            const SizedBox(height: 32),
-            _buildMiniStoryPoolSection(controller, isMobile),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'All available stories ready for broadcast.',
+            style: TextStyle(fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 24),
+          const Expanded(
+            child: StoryPoolWidget(),
+          ),
+        ],
       ),
     );
   }
