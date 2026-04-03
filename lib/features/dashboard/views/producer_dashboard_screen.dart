@@ -1,6 +1,7 @@
 // features/dashboard/views/producer_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/story_pool_widget.dart';
 
 class ProducerDashboardScreen extends StatelessWidget {
   const ProducerDashboardScreen({super.key});
@@ -49,12 +50,9 @@ class ProducerDashboardScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 24),
-                Expanded(
+                const Expanded(
                   flex: 1,
-                  child: _buildSection(
-                    title: 'Ready-to-Air Pool',
-                    icon: Icons.pool,
-                  ),
+                  child: StoryPoolWidget(),
                 ),
               ],
             ),

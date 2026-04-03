@@ -80,20 +80,22 @@ class _TopStoriesTickerState extends State<TopStoriesTicker> {
         Expanded(
           child: SizedBox(
             height: 30,
-            child: Marquee(
-              text: stories.map((s) => s.replaceAll(RegExp(r'[\n\r]+'), ' ').trim()).join("   🔴   "),
-              style: const TextStyle(
-                color: NRCSColors.topNavBlue,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            child: SelectionContainer.disabled(
+              child: Marquee(
+                text: stories.map((s) => s.replaceAll(RegExp(r'[\n\r]+'), ' ').trim()).join("   🔴   "),
+                style: const TextStyle(
+                  color: NRCSColors.topNavBlue,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                velocity: 40,
+                blankSpace: 100,
+                pauseAfterRound: const Duration(seconds: 1),
+                accelerationDuration: const Duration(seconds: 1),
+                accelerationCurve: Curves.linear,
+                decelerationDuration: const Duration(milliseconds: 500),
+                decelerationCurve: Curves.easeOut,
               ),
-              velocity: 40,
-              blankSpace: 100,
-              pauseAfterRound: const Duration(seconds: 1),
-              accelerationDuration: const Duration(seconds: 1),
-              accelerationCurve: Curves.linear,
-              decelerationDuration: const Duration(milliseconds: 500),
-              decelerationCurve: Curves.easeOut,
             ),
           ),
         ),

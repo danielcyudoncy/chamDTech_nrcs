@@ -224,6 +224,8 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Audit Logs': AppRoutes.adminAuditTrail,
       'Configurations': AppRoutes.adminConfigurations,
       'Settings': '/settings',
+      'Reports': AppRoutes.producerDashboard,
+      'Story Pool': AppRoutes.producerDashboard,
       'Notifications': AppRoutes.notifications,
     };
 
@@ -307,7 +309,10 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
 
                       if (route != null) {
                         if (currentRoute != route) {
-                          Get.offAllNamed(route);
+                          Get.offAllNamed(route, arguments: {'tab': tab});
+                        } else {
+                          // Already on the same route - pass the tab argument to switch
+                          Get.offAllNamed(route, arguments: {'tab': tab});
                         }
                       } else {
                         Get.snackbar(
