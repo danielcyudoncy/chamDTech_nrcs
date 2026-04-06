@@ -65,9 +65,9 @@ class StoryEditorScreen extends StatelessWidget {
 
   Widget _buildActionToolbar(BuildContext context, StoryEditorController controller) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+      decoration: const BoxDecoration(
+        color: NRCSColors.topNavBlue,
+        border: Border(bottom: BorderSide(color: Colors.white24, width: 0.5)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: SingleChildScrollView(
@@ -139,7 +139,7 @@ class StoryEditorScreen extends StatelessWidget {
 
   Widget _buildMetadataBar(BuildContext context, StoryEditorController controller) {
     return Container(
-      color: const Color(0xFFF5F5F5),
+      color: NRCSColors.topNavBlue,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -147,14 +147,14 @@ class StoryEditorScreen extends StatelessWidget {
             flex: 2,
             child: TextField(
               controller: controller.titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Enter Story Title...',
                 isDense: true,
                 border: InputBorder.none,
                 fillColor: Colors.transparent,
-                hintStyle: TextStyle(fontSize: 18, color: Colors.grey),
+                hintStyle: TextStyle(fontSize: 18, color: Colors.white.withValues(alpha: 0.6)),
               ),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
           ),
           const SizedBox(width: 16),
@@ -229,22 +229,15 @@ class StoryEditorScreen extends StatelessWidget {
             );
           }),
           // ──────────────────────────────────────────────────────────
-          const SizedBox(width: 16),
+          const SizedBox(width: 6),
           Obx(() => _MetadataField(label: 'MASTER:', value: controller.versionText.value, icon: Icons.check_box)),
           const SizedBox(width: 16),
-          Obx(() => _MetadataField(label: 'WORDS:', value: '${controller.anchorWordCount.value} ANC | ${controller.notesWordCount.value} NTS', icon: Icons.text_fields)),
+          Obx(() => _MetadataField(label: 'WORD COUNT:', value: '${controller.anchorWordCount.value} ANC | ${controller.notesWordCount.value} NTS', icon: Icons.text_fields)),
           const SizedBox(width: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFFCFD8DC),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Obx(() => Text(
-              controller.formattedDuration.value,
-              style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 13),
-            )),
-          ),
+          Obx(() => Text(
+                controller.formattedDuration.value,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+              )),
         ],
       ),
     );
@@ -337,7 +330,7 @@ class StoryEditorScreen extends StatelessWidget {
           ),
         ),
         Container(
-          color: Colors.white,
+          color: NRCSColors.topNavBlue,
           child: quill.QuillSimpleToolbar(
             configurations: quill.QuillSimpleToolbarConfigurations(
               controller: quillController,
@@ -348,12 +341,18 @@ class StoryEditorScreen extends StatelessWidget {
                 base: quill.QuillToolbarBaseButtonOptions(
                   iconTheme: quill.QuillIconTheme(
                     iconButtonSelectedData: quill.IconButtonData(
-                      color: Color(0xFF1A237E),
+                      color: Colors.white,
                     ),
                     iconButtonUnselectedData: quill.IconButtonData(
-                      color: Color(0xFF263238),
+                      color: Colors.white70,
                     ),
                   ),
+                ),
+                fontFamily: quill.QuillToolbarFontFamilyButtonOptions(
+                  style: TextStyle(fontSize: 12, color: Colors.white),
+                ),
+                fontSize: quill.QuillToolbarFontSizeButtonOptions(
+                  style: TextStyle(fontSize: 12, color: Colors.white),
                 ),
               ),
             ),
@@ -485,8 +484,8 @@ class _ToolbarButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: Colors.blue[800]),
-            Text(label, style: TextStyle(fontSize: 10, color: Colors.blue[900])),
+            Icon(icon, size: 18, color: Colors.white),
+            Text(label, style: const TextStyle(fontSize: 10, color: Colors.white70)),
           ],
         ),
       ),
@@ -505,11 +504,11 @@ class _MetadataField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87)),
+        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white70)),
         const SizedBox(width: 4),
-        Icon(icon, size: 14, color: NRCSColors.topNavBlue),
+        Icon(icon, size: 14, color: Colors.white),
         const SizedBox(width: 2),
-        Text(value, style: const TextStyle(fontSize: 12, color: Colors.black)),
+        Text(value, style: const TextStyle(fontSize: 12, color: Colors.white)),
       ],
     );
   }
