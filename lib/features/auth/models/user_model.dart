@@ -4,8 +4,8 @@ class UserModel {
   final String id;
   final String email;
   final String displayName;
-  final String role;
-  final String? privilegeSetId;
+  final String role; // System role (admin, reporter, etc.)
+  final String? roleId; // Link to Role model for granular permissions
   final Map<String, bool> permissions;
   final String? photoUrl;
   final bool isOnline;
@@ -17,7 +17,7 @@ class UserModel {
     required this.email,
     required this.displayName,
     required this.role,
-    this.privilegeSetId,
+    this.roleId,
     this.permissions = const {},
     this.photoUrl,
     this.isOnline = false,
@@ -32,7 +32,7 @@ class UserModel {
       'email': email,
       'displayName': displayName,
       'role': role,
-      'privilegeSetId': privilegeSetId,
+      'roleId': roleId,
       'permissions': permissions,
       'photoUrl': photoUrl,
       'isOnline': isOnline,
@@ -56,7 +56,7 @@ class UserModel {
       email: json['email'] ?? '',
       displayName: json['displayName'] ?? '',
       role: json['role'] ?? 'reporter',
-      privilegeSetId: json['privilegeSetId'],
+      roleId: json['roleId'] ?? json['privilegeSetId'], // Backward compatibility
       permissions: Map<String, bool>.from(json['permissions'] ?? {}),
       photoUrl: json['photoUrl'],
       isOnline: json['isOnline'] ?? false,
@@ -73,7 +73,7 @@ class UserModel {
     String? email,
     String? displayName,
     String? role,
-    String? privilegeSetId,
+    String? roleId,
     Map<String, bool>? permissions,
     String? photoUrl,
     bool? isOnline,
@@ -85,7 +85,7 @@ class UserModel {
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
       role: role ?? this.role,
-      privilegeSetId: privilegeSetId ?? this.privilegeSetId,
+      roleId: roleId ?? this.roleId,
       permissions: permissions ?? this.permissions,
       photoUrl: photoUrl ?? this.photoUrl,
       isOnline: isOnline ?? this.isOnline,

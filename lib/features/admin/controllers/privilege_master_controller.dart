@@ -1,183 +1,264 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:uuid/uuid.dart';
 
 class PrivilegeMasterController extends GetxController {
   final PrivilegeService _service = Get.put(PrivilegeService());
 
-  var privilegeSets = <PrivilegeSet>[].obs;
-  var selectedSet = Rxn<PrivilegeSet>();
+  var roles = <Role>[].obs;
+  var selectedRole = Rxn<Role>();
   var isEditing = false.obs;
   var nameController = TextEditingController();
+  var descriptionController = TextEditingController();
+  var parentRoleId = Rxn<String>();
   var searchQuery = ''.obs;
+  var selectedCategory = 'Content Management'.obs;
 
-  // Reactive map for checkboxes: Group -> Item -> Boolean
-  var activePrivileges = <String, Map<String, bool>>{}.obs;
+  // Reactive map for checkboxes: Category -> Group -> Permission -> Boolean
+  // Structure: { category: { group: { permission: value } } }
+  var permissionsState = <String, Map<String, Map<String, bool>>>{}.obs;
+
+  final List<String> categories = [
+    'Content Management',
+    'Rundown Operations',
+    'System Administration',
+    'Reporting & Analytics',
+    'Technical Operations',
+  ];
 
   @override
   void onInit() {
     super.onInit();
-    privilegeSets.bindStream(_service.getPrivilegeSets());
-    
-    // Initialize default structure
-    resetPrivileges();
+    roles.bindStream(_service.getRoles());
+    resetPermissions();
   }
 
-  void resetPrivileges() {
-    activePrivileges.value = {
-      'Wire': {'Comments': false},
-      'Rundown': {
-        'Rundown View': false,
-        'Rundown Create': false,
-        'Rundown Edit': false,
-        'Rundown Delete': false,
-        'Story Create': false,
-        'Story Edit': false,
-        'Story Delete': false,
-        'Story Skip': false,
-        'Story Move': false,
-        'Story Copy': false,
-        'Story Link': false,
-        'Onair/Offair': false,
-        'MOS Sync': false,
-        'Lock/Unlock': false,
-        'Story Reorder': false,
-        'Master': false,
-        'Download Script': false,
-        'Print Story': false,
+  void resetPermissions() {
+    permissionsState.value = {
+      'Content Management': {
+        'Story Operations': {
+          'Create': false,
+          'Edit': false,
+          'Delete': false,
+          'Move': false,
+          'Copy': false,
+          'Link': false,
+          'Archive': false,
+        },
+        'Comments': {
+          'View': false,
+          'Add': false,
+          'Delete': false,
+        },
+        'Metadata': {
+          'Edit Tags': false,
+          'Change State': false,
+        },
       },
-      'Script': {
-        'Script Edit': false,
-        'Attach/Order Clips': false,
-        'Attach/Order CG': false,
-        'Script Verify': false,
-        'Story Take over': false,
-        'Story Rating': false,
+      'Rundown Operations': {
+        'Rundown Basics': {
+          'View': false,
+          'Create': false,
+          'Edit': false,
+          'Delete': false,
+        },
+        'Morning Shift': {
+          'View': false, 'New': false, 'Delete': false, 'Copy': false, 'Move': false, 'Link': false, 'Edit': false,
+        },
+        'Afternoon Shift': {
+          'View': false, 'New': false, 'Delete': false, 'Copy': false, 'Move': false, 'Link': false, 'Edit': false,
+        },
+        'Evening Shift': {
+          'View': false, 'New': false, 'Delete': false, 'Copy': false, 'Move': false, 'Link': false, 'Edit': false,
+        },
       },
-      'Miscellaneous': {
-        'Media': false,
-        'Trash': false,
-        'Breaking': false,
-        'Breaking -> Producer': false,
-        'Breaking -> Anchor': false,
+      'System Administration': {
+        'User Management': {
+          'View Users': false,
+          'Create Users': false,
+          'Edit Users': false,
+          'Delete Users': false,
+          'Assign Roles': false,
+        },
+        'System Sync': {
+          'MOS Devices': false,
+          'Device Control': false,
+          'System Configurations': false,
+        },
       },
-      'Social': {
-        'Twitter': false,
-        'Facebook': false,
+      'Reporting & Analytics': {
+        'Reports': {
+          'Rundown Reports': false,
+          'User Activity': false,
+          'Story Ratings': false,
+          'Stringer Payments': false,
+        },
       },
-      'Reports': {
-        'Rundowns Reports': false,
-        'User Reports': false,
-        'Stringer Reports': false,
-        'Story Ratings Reports': false,
-      },
-      'Settings': {
-        'Users': false,
-        'Audit Trail': false,
-        'Privileges Master': false,
-        'Desks': false,
-        'Wires': false,
-        'Story State': false,
-        'Show Template': false,
-        'Show Master': false,
-        'MOS Devices': false,
-        'Locations': false,
-        'Stringers': false,
-        'Designations': false,
-        'Format': false,
-        'Sub Format': false,
-        'Configurations': false,
-        'System Configurations': false,
-        'Modify': false,
-      },
-      'Desk': {
-        'View': false,
-        'New': false,
-        'Delete': false,
-        'Copy': false,
-        'Move': false,
-        'Link': false,
-        'Edit': false,
+      'Technical Operations': {
+        'Workflow': {
+          'Script Editing': false,
+          'Device Management': false,
+          'Locations': false,
+          'Designations': false,
+          'Format Management': false,
+          'Sub Format': false,
+          'Modify Permissions': false,
+        },
+        'Social Integration': {
+          'Twitter': false,
+          'Facebook': false,
+        },
       }
     };
   }
 
-  void selectSet(PrivilegeSet? set) {
-    selectedSet.value = set;
-    if (set != null) {
-      nameController.text = set.name;
-      // Merge set privileges into activePrivileges
-      final newPrivs = Map<String, Map<String, bool>>.from(activePrivileges);
-      set.privileges.forEach((group, items) {
-        if (newPrivs.containsKey(group)) {
-          final castedItems = Map<String, dynamic>.from(items);
-          castedItems.forEach((key, value) {
-            if (newPrivs[group]!.containsKey(key)) {
-              newPrivs[group]![key] = value as bool;
+  void selectRole(Role? role) {
+    selectedRole.value = role;
+    if (role != null) {
+      nameController.text = role.name;
+      descriptionController.text = role.description ?? '';
+      parentRoleId.value = role.parentId;
+      
+      // Reset first then merge
+      resetPermissions();
+      var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
+      
+      role.permissions.forEach((category, groups) {
+        if (newState.containsKey(category)) {
+          groups.forEach((group, perms) {
+            if (newState[category]!.containsKey(group)) {
+              newState[category]![group]!.addAll(perms);
+            } else {
+              newState[category]![group] = Map<String, bool>.from(perms);
             }
           });
         }
       });
-      activePrivileges.value = newPrivs;
+      permissionsState.value = newState;
       isEditing.value = true;
     } else {
-      createNewSet();
+      createNewRole();
     }
   }
 
-  void createNewSet() {
-    selectedSet.value = null;
+  void onParentRoleChanged(String? newParentId) {
+    if (newParentId == selectedRole.value?.id) return; // Prevent self-inheritance
+
+    parentRoleId.value = newParentId;
+    if (newParentId != null) {
+      final parentRole = roles.firstWhereOrNull((r) => r.id == newParentId);
+      if (parentRole != null) {
+        _mergeParentPermissions(parentRole);
+      }
+    }
+  }
+
+  void _mergeParentPermissions(Role parentRole) {
+    var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
+    
+    parentRole.permissions.forEach((category, groups) {
+      if (newState.containsKey(category)) {
+        groups.forEach((group, perms) {
+          if (newState[category]!.containsKey(group)) {
+            // Only override if child currently has 'false' (inheritance)
+            // or just merge everything from parent as a base
+            perms.forEach((key, value) {
+                if (value == true) {
+                  newState[category]![group]![key] = true;
+                }
+            });
+          }
+        });
+      }
+    });
+    permissionsState.value = newState;
+  }
+
+  void createNewRole() {
+    selectedRole.value = null;
     nameController.clear();
-    resetPrivileges();
+    descriptionController.clear();
+    parentRoleId.value = null;
+    resetPermissions();
     isEditing.value = true;
   }
 
-  void togglePrivilege(String group, String item) {
-    var newMap = Map<String, Map<String, bool>>.from(activePrivileges);
-    newMap[group]![item] = !(newMap[group]![item] ?? false);
-    activePrivileges.value = newMap;
+  void togglePermission(String category, String group, String permission) {
+    var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
+    bool current = newState[category]![group]![permission] ?? false;
+    newState[category]![group]![permission] = !current;
+    
+    // Dependency logic: If 'Edit', 'Create', or 'Delete' is enabled, 'View' should be enabled
+    if (!current && (permission == 'Edit' || permission == 'Create' || permission == 'Delete' || permission == 'Assign Roles' || permission == 'Move' || permission == 'Add')) {
+      if (newState[category]![group]!.containsKey('View')) {
+        newState[category]![group]!['View'] = true;
+      }
+      if (newState[category]![group]!.containsKey('View Users')) {
+        newState[category]![group]!['View Users'] = true;
+      }
+    }
+
+    permissionsState.value = newState;
   }
 
-  void toggleGroup(String group) {
-    var newMap = Map<String, Map<String, bool>>.from(activePrivileges);
-    bool allSelected = newMap[group]!.values.every((v) => v);
-    newMap[group]!.updateAll((key, value) => !allSelected);
-    activePrivileges.value = newMap;
+  void toggleGroup(String category, String group) {
+    var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
+    bool allSelected = newState[category]![group]!.values.every((v) => v);
+    newState[category]![group]!.updateAll((key, value) => !allSelected);
+    permissionsState.value = newState;
+  }
+
+  void toggleCategory(String category) {
+    var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
+    bool allSelected = newState[category]!.values.every((group) => group.values.every((v) => v));
+    newState[category]!.forEach((groupName, perms) {
+      perms.updateAll((key, value) => !allSelected);
+    });
+    permissionsState.value = newState;
   }
 
   Future<void> save() async {
     if (nameController.text.isEmpty) {
-      Get.snackbar('Error', 'Please provide a name for the privilege set');
+      Get.snackbar('Error', 'Please provide a role name');
       return;
     }
 
     try {
-      final set = PrivilegeSet(
-        id: selectedSet.value?.id ?? const Uuid().v4(),
+      final role = Role(
+        id: selectedRole.value?.id ?? const Uuid().v4(),
         name: nameController.text.trim(),
-        privileges: activePrivileges,
+        description: descriptionController.text.trim(),
+        parentId: parentRoleId.value,
+        permissions: Map<String, Map<String, Map<String, bool>>>.from(permissionsState),
         updatedAt: DateTime.now(),
-        createdAt: selectedSet.value?.createdAt ?? DateTime.now(),
+        createdAt: selectedRole.value?.createdAt ?? DateTime.now(),
+        updatedBy: 'Admin', // In a real app, get current user ID
       );
 
-      await _service.savePrivilegeSet(set);
-      Get.snackbar('Success', 'Privilege set saved successfully');
+      await _service.saveRole(
+        role, 
+        adminId: 'current-admin-id', 
+        adminName: 'Admin', 
+        prevRole: selectedRole.value
+      );
+      
+      Get.snackbar('Success', 'Role saved successfully');
       isEditing.value = false;
     } catch (e) {
       Get.snackbar('Error', 'Failed to save: $e');
     }
   }
 
-  Future<void> deleteSet(String id) async {
+  Future<void> deleteRole(String id, String name) async {
     try {
-      await _service.deletePrivilegeSet(id);
-      if (selectedSet.value?.id == id) {
-        createNewSet();
+      await _service.deleteRole(id, adminId: 'current-admin-id', adminName: 'Admin', roleName: name);
+      if (selectedRole.value?.id == id) {
+        createNewRole();
         isEditing.value = false;
       }
-      Get.snackbar('Success', 'Set deleted');
+      Get.snackbar('Success', 'Role deleted');
     } catch (e) {
       Get.snackbar('Error', 'Delete failed: $e');
     }
