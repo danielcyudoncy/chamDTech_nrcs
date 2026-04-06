@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
-import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
@@ -191,9 +191,9 @@ class UserManagementScreen extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           _Badge(label: user.role.replaceAll('_', ' ').toUpperCase(), color: Colors.blue[50]!, textColor: Colors.blue[900]!),
-          if (user.privilegeSetId != null) ...[
+          if (user.roleId != null) ...[
             const SizedBox(width: 8),
-            _Badge(label: 'SET: ${user.privilegeSetId!.substring(0, 4)}', color: Colors.purple[50]!, textColor: Colors.purple[900]!),
+            _Badge(label: 'ROLE: ${user.roleId!.substring(0, 4)}', color: Colors.purple[50]!, textColor: Colors.purple[900]!),
           ],
         ],
       ),
@@ -238,7 +238,7 @@ class UserManagementScreen extends StatelessWidget {
   void _showEditUserDialog(BuildContext context, UserModel user) {
     final PrivilegeService privService = Get.put(PrivilegeService());
     final selectedRole = user.role.obs;
-    final selectedPrivilegeSet = user.privilegeSetId.obs;
+    final selectedRoleId = user.roleId.obs;
 
     Get.dialog(
       AlertDialog(
@@ -248,7 +248,6 @@ class UserManagementScreen extends StatelessWidget {
           children: [
             Obx(() => DropdownButtonFormField<String>(
                   initialValue: selectedRole.value,
-                
                   decoration: const InputDecoration(labelText: 'System Role'),
                   items: const [
                     DropdownMenuItem(value: 'admin', child: Text('Admin')),
@@ -261,19 +260,19 @@ class UserManagementScreen extends StatelessWidget {
                   onChanged: (v) => selectedRole.value = v!,
                 )),
             const SizedBox(height: 16),
-            StreamBuilder<List<PrivilegeSet>>(
-              stream: privService.getPrivilegeSets(),
+            StreamBuilder<List<Role>>(
+              stream: privService.getRoles(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) return const CircularProgressIndicator();
-                final sets = snapshot.data!;
+                final roles = snapshot.data!;
                 return Obx(() => DropdownButtonFormField<String?>(
-                      initialValue: selectedPrivilegeSet.value,
-                      decoration: const InputDecoration(labelText: 'Privilege Master Set'),
+                      initialValue: selectedRoleId.value,
+                      decoration: const InputDecoration(labelText: 'Granular Role (Privileges)'),
                       items: [
                         const DropdownMenuItem(value: null, child: Text('None (Use Default)')),
-                        ...sets.map((s) => DropdownMenuItem(value: s.id, child: Text(s.name))),
+                        ...roles.map((r) => DropdownMenuItem(value: r.id, child: Text(r.name))),
                       ],
-                      onChanged: (v) => selectedPrivilegeSet.value = v,
+                      onChanged: (v) => selectedRoleId.value = v,
                     ));
               },
             ),
@@ -286,7 +285,7 @@ class UserManagementScreen extends StatelessWidget {
               // Update user in Firestore
               Get.find<AuthService>().updateUserData(user.id, {
                 'role': selectedRole.value,
-                'privilegeSetId': selectedPrivilegeSet.value,
+                'roleId': selectedRoleId.value,
               });
               Get.back();
               Get.snackbar('Success', 'User updated');

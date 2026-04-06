@@ -7,7 +7,7 @@ import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 
-import 'package:chamdtech_nrcs/features/admin/models/privilege_set_model.dart';
+import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
@@ -166,23 +166,21 @@ class AuthService extends GetxService {
       if (doc.exists) {
         var user = UserModel.fromJson(doc.data()!);
         
-        // If user has a privilege set, fetch it and update localized permissions
-        if (user.privilegeSetId != null) {
+        // If user has a role, fetch it and update localized permissions
+        if (user.roleId != null) {
           try {
-            final privDoc = await _firestore
-                .collection(PrivilegeService.collectionPath)
-                .doc(user.privilegeSetId)
+            final roleDoc = await _firestore
+                .collection(PrivilegeService.rolesCollection)
+                .doc(user.roleId)
                 .get();
-            if (privDoc.exists) {
-              final privSet = PrivilegeSet.fromJson(privDoc.data()!);
-              // For simplicity in checking, we'll store them as nested maps in the user model
-              // or flatten them. Let's keep them nested to match the PrivilegeMaster structure.
+            if (roleDoc.exists) {
+              final roleModel = Role.fromJson(roleDoc.data()!);
               user = user.copyWith(
-                permissions: _flattenPrivileges(privSet.privileges),
+                permissions: _flattenPrivileges(roleModel.permissions),
               );
             }
           } catch (e) {
-            Get.log('Error loading privilege set: $e');
+            Get.log('Error loading role permissions: $e');
           }
         }
         
@@ -196,14 +194,14 @@ class AuthService extends GetxService {
     }
   }
 
-  Map<String, bool> _flattenPrivileges(Map<String, dynamic> grouped) {
+  Map<String, bool> _flattenPrivileges(Map<String, Map<String, Map<String, bool>>> nested) {
     final Map<String, bool> flat = {};
-    grouped.forEach((group, items) {
-      if (items is Map) {
-        items.forEach((key, value) {
-          flat['$group->$key'] = value == true;
+    nested.forEach((category, groups) {
+      groups.forEach((group, perms) {
+        perms.forEach((permName, value) {
+          flat['$category->$group->$permName'] = value;
         });
-      }
+      });
     });
     return flat;
   }
