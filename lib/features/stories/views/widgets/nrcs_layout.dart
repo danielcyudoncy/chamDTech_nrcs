@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:async';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
@@ -16,12 +17,11 @@ class NRCSColors {
   static const Color topNavBlue = Color(0xFF2B439B);
   static const Color primaryBlue = Color(0xFF4F6FD2);
   static const Color subNavGray = Color(0xFFF5F5F5);
-  static const Color activeOrange = Color(0xFFFF9800); 
+  static const Color activeOrange = Color(0xFFFF9800);
   static const Color borderGray = Color(0xFFD1D1D1);
   static const Color textDark = Color(0xFF313131);
   static const Color breakingRed = Color(0xFFB61F24);
 }
-
 
 class NRCSAppShell extends StatelessWidget {
   final Widget? sidebar;
@@ -39,116 +39,124 @@ class NRCSAppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 1100;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isMobile = constraints.maxWidth < 1100;
 
-        return Scaffold(
-          key: GlobalKey<ScaffoldState>(),
-          backgroundColor: Colors.white,
-          appBar: isMobile ? AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
-              onPressed: () {
-                if (Get.previousRoute.isNotEmpty) {
-                  Get.back();
-                } else {
-                  final authService = Get.find<AuthService>();
-                  final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
-                  Get.offAllNamed(_getRoleDashboard(role));
-                }
-              },
-            ),
-            title: Text(
-              title?.toUpperCase() ?? 'NRCS',
-              style: const TextStyle(
-                color: Color(0xFF1A237E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 1.1,
-              ),
-            ),
-            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
-            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-          ) : null,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!isMobile) ...[
-                const NRCSTopNav(),
-                const NRCSSubNav(),
-                // Sub-header with back button and title
-                Container(
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, size: 20, color: NRCSColors.topNavBlue),
-                        onPressed: () {
-                          if (Get.previousRoute.isNotEmpty) {
-                            Get.back();
-                          } else {
-                            final authService = Get.find<AuthService>();
-                            final role = authService.currentUser.value?.role ?? AppConstants.roleReporter;
-                            Get.offAllNamed(_getRoleDashboard(role));
-                          }
-                        },
-                        tooltip: 'Go Back',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      if (title != null) ...[
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            title!.toUpperCase(),
-                            style: const TextStyle(
-                              color: NRCSColors.textDark,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              letterSpacing: 1.1,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                      ],
-                    ],
+      return Scaffold(
+        key: GlobalKey<ScaffoldState>(),
+        backgroundColor: Colors.white,
+        appBar: isMobile
+            ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
+                  onPressed: () {
+                    if (Get.previousRoute.isNotEmpty) {
+                      Get.back();
+                    } else {
+                      final authService = Get.find<AuthService>();
+                      final role = authService.currentUser.value?.role ??
+                          AppConstants.roleReporter;
+                      Get.offAllNamed(_getRoleDashboard(role));
+                    }
+                  },
+                ),
+                title: Text(
+                  title?.toUpperCase() ?? 'NRCS',
+                  style: const TextStyle(
+                    color: Color(0xFF1A237E),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 1.1,
                   ),
                 ),
-              ],
-              if (toolbar != null) toolbar!,
-              Expanded(
+                iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+                shape: const Border(
+                    bottom:
+                        BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+              )
+            : null,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!isMobile) ...[
+              const NRCSTopNav(),
+              const NRCSSubNav(),
+              // Sub-header with back button and title
+              Container(
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                      bottom:
+                          BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (sidebar != null && !isMobile)
-                      Container(
-                        width: 300,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            right: BorderSide(color: NRCSColors.borderGray, width: 8),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back,
+                          size: 20, color: NRCSColors.topNavBlue),
+                      onPressed: () {
+                        if (Get.previousRoute.isNotEmpty) {
+                          Get.back();
+                        } else {
+                          final authService = Get.find<AuthService>();
+                          final role = authService.currentUser.value?.role ??
+                              AppConstants.roleReporter;
+                          Get.offAllNamed(_getRoleDashboard(role));
+                        }
+                      },
+                      tooltip: 'Go Back',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    if (title != null) ...[
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          title!.toUpperCase(),
+                          style: const TextStyle(
+                            color: NRCSColors.textDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            letterSpacing: 1.1,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        child: sidebar!,
                       ),
-                    if (body != null) Expanded(child: body!),
+                    ],
                   ],
                 ),
               ),
             ],
-          ),
-        );
-      }
-    );
+            if (toolbar != null) toolbar!,
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (sidebar != null && !isMobile)
+                    Container(
+                      width: 300,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                              color: NRCSColors.borderGray, width: 8),
+                        ),
+                      ),
+                      child: sidebar!,
+                    ),
+                  if (body != null) Expanded(child: body!),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   static String _getRoleDashboard(String role) {
@@ -212,7 +220,8 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Operational Dashboard': AppRoutes.producerDashboard,
       'Anchor Dashboard': AppRoutes.anchorDashboard,
       'Admin Dashboard': AppRoutes.adminDashboard,
-      'My Stories': '/stories', // Could filter stories logically by current user later
+      'My Stories':
+          '/stories', // Could filter stories logically by current user later
       'Archive': '/stories', // Will use filter
       'Create Story': AppRoutes.storyEditor,
       'Review Queue': '/stories', // Could filter logically later
@@ -232,19 +241,53 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
     // Calculate dynamic tabs based on active role permissions
     List<String> tabs = [];
     if (role == AppConstants.roleReporter) {
-      tabs = ['Reporter Dashboard', 'My Stories', 'Create Story', 'Archive', 'Notifications'];
+      tabs = [
+        'Reporter Dashboard',
+        'My Stories',
+        'Create Story',
+        'Archive',
+        'Notifications'
+      ];
     } else if (role == AppConstants.roleEditor) {
-      tabs = ['Editor Dashboard', 'Review Queue', 'Desks', 'Archive', 'Notifications'];
+      tabs = [
+        'Editor Dashboard',
+        'Review Queue',
+        'Desks',
+        'Archive',
+        'Notifications'
+      ];
     } else if (role == AppConstants.roleProducer) {
-      tabs = ['Producer Dashboard', 'Rundowns', 'Story Pool', 'Archive', 'Reports'];
+      tabs = [
+        'Producer Dashboard',
+        'Rundowns',
+        'Story Pool',
+        'Archive',
+        'Reports'
+      ];
     } else if (role == AppConstants.roleAdmin) {
-      tabs = ['Admin Dashboard', 'Users', 'Privileges', 'Desks', 'Story States', 'Archive', 'Audit Logs', 'Configurations'];
+      tabs = [
+        'Admin Dashboard',
+        'Users',
+        'Privileges',
+        'Desks',
+        'Story States',
+        'Archive',
+        'Audit Logs',
+        'Configurations'
+      ];
     } else if (role == AppConstants.roleAnchor) {
-       tabs = ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
+      tabs = ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
     } else if (role == AppConstants.roleDirector) {
-       tabs = ['Operational Dashboard', 'Rundowns', 'Story Pool', 'Archive', 'Reports', 'Notifications'];
+      tabs = [
+        'Operational Dashboard',
+        'Rundowns',
+        'Story Pool',
+        'Archive',
+        'Reports',
+        'Notifications'
+      ];
     } else {
-       tabs = ['Workspace', 'Archive', 'Settings'];
+      tabs = ['Workspace', 'Archive', 'Settings'];
     }
 
     final currentRoute = Get.currentRoute;
@@ -261,15 +304,38 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                 children: tabs.map((tab) {
                   final route = routeMapping[tab];
                   bool isActive = false;
-                  
+
+                  // Special-case tabs that share the same route '/stories' (e.g. 'My Stories' and 'Archive').
+                  // Use StoryController.showArchived to determine which of those should be active.
                   if (route != null) {
-                    isActive = currentRoute == route;
+                    if (route == '/stories' &&
+                        (tab == 'Archive' ||
+                            tab == 'My Stories' ||
+                            tab == 'Workspace' ||
+                            tab == 'Reporter Dashboard')) {
+                      try {
+                        final sc = Get.find<StoryController>();
+                        if (tab == 'Archive') {
+                          isActive = currentRoute == route &&
+                              sc.showArchived.value == true;
+                        } else {
+                          isActive = currentRoute == route &&
+                              sc.showArchived.value == false;
+                        }
+                      } catch (e) {
+                        // If StoryController isn't available yet, default to marking 'My Stories' as active
+                        // when on the stories route to avoid both tabs showing active simultaneously.
+                        isActive = currentRoute == route && tab == 'My Stories';
+                      }
+                    } else {
+                      isActive = currentRoute == route;
+                    }
                   } else if (tab == 'Workspace' && currentRoute == '/') {
                     isActive = true; // Splash/Initial
                   }
 
                   return _NavButton(
-                    label: tab, 
+                    label: tab,
                     isActive: isActive,
                     onTap: () {
                       if (tab == 'Create Story') {
@@ -297,7 +363,9 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                         return;
                       }
 
-                      if (tab == 'My Stories' || tab == 'Workspace' || tab == 'Reporter Dashboard') {
+                      if (tab == 'My Stories' ||
+                          tab == 'Workspace' ||
+                          tab == 'Reporter Dashboard') {
                         try {
                           final controller = Get.find<StoryController>();
                           controller.showArchived.value = false;
@@ -316,7 +384,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                         }
                       } else {
                         Get.snackbar(
-                          'Coming Soon', 
+                          'Coming Soon',
                           '$tab module is currently under development.',
                           snackPosition: SnackPosition.BOTTOM,
                           backgroundColor: Colors.white,
@@ -342,7 +410,7 @@ class _NavButton extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NavButton({
-    required this.label, 
+    required this.label,
     required this.onTap,
     this.isActive = false,
   });
@@ -350,7 +418,8 @@ class _NavButton extends StatelessWidget {
   void _showWorkspaceMenu(BuildContext context, Offset position) {
     if (label != 'Workspace') return;
 
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
 
     showMenu(
       context: context,
@@ -413,11 +482,11 @@ class _NavButton extends StatelessWidget {
       elevation: 8.0,
     ).then((value) {
       if (value == null) return;
-      
+
       switch (value) {
         case 'mystories':
           Get.snackbar(
-            'MyStories', 
+            'MyStories',
             'Personal space for maturing stories. Coming Soon.',
             snackPosition: SnackPosition.BOTTOM,
           );
@@ -426,13 +495,15 @@ class _NavButton extends StatelessWidget {
           Get.toNamed('/users');
           break;
         case 'events':
-          Get.snackbar('Events', 'Events calendar - Coming Soon', snackPosition: SnackPosition.BOTTOM);
+          Get.snackbar('Events', 'Events calendar - Coming Soon',
+              snackPosition: SnackPosition.BOTTOM);
           break;
         case 'preferences':
           Get.toNamed('/settings');
           break;
         case 'help':
-          Get.snackbar('Help', 'Support and Documentation - Coming Soon', snackPosition: SnackPosition.BOTTOM);
+          Get.snackbar('Help', 'Support and Documentation - Coming Soon',
+              snackPosition: SnackPosition.BOTTOM);
           break;
       }
     });
@@ -441,7 +512,8 @@ class _NavButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onSecondaryTapDown: (details) => _showWorkspaceMenu(context, details.globalPosition),
+      onSecondaryTapDown: (details) =>
+          _showWorkspaceMenu(context, details.globalPosition),
       child: InkWell(
         onTap: onTap,
         child: Container(
@@ -476,7 +548,7 @@ class _UserSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = Get.find<AuthService>();
     final notificationService = Get.find<NotificationService>();
-    
+
     return Obx(() {
       final user = authService.currentUser.value;
       final displayName = user?.displayName ?? 'Admin';
@@ -486,9 +558,9 @@ class _UserSection extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           color: NRCSColors.topNavBlue.withValues(alpha: 0.9),
-          border: const Border(left: BorderSide(color: Colors.white24, width: 1)),
+          border:
+              const Border(left: BorderSide(color: Colors.white24, width: 1)),
         ),
-
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -502,7 +574,6 @@ class _UserSection extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
-
               ),
             ),
             // Divider
@@ -514,7 +585,6 @@ class _UserSection extends StatelessWidget {
                 color: NRCSColors.breakingRed,
                 borderRadius: BorderRadius.circular(2),
               ),
-
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -525,7 +595,10 @@ class _UserSection extends StatelessWidget {
                   ),
                   Text(
                     'NRCS',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12),
                   ),
                 ],
               ),
@@ -536,9 +609,11 @@ class _UserSection extends StatelessWidget {
             StreamBuilder<List<NotificationModel>>(
               stream: notificationService.getNotifications(),
               builder: (context, snapshot) {
-                final List<NotificationModel> notifications = snapshot.data ?? [];
-                final unreadCount = notifications.where((n) => !n.isRead).length;
-                
+                final List<NotificationModel> notifications =
+                    snapshot.data ?? [];
+                final unreadCount =
+                    notifications.where((n) => !n.isRead).length;
+
                 return InkWell(
                   onTap: () => Get.toNamed(AppRoutes.notifications),
                   child: Padding(
@@ -546,7 +621,8 @@ class _UserSection extends StatelessWidget {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const Icon(Icons.notifications_none, color: Colors.white, size: 20),
+                        const Icon(Icons.notifications_none,
+                            color: Colors.white, size: 20),
                         if (unreadCount > 0)
                           Positioned(
                             right: 0,
@@ -591,9 +667,12 @@ class _UserSection extends StatelessWidget {
                     CircleAvatar(
                       radius: 14,
                       backgroundColor: Colors.white24,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null 
-                          ? const Icon(Icons.person, size: 18, color: Colors.white)
+                      backgroundImage: photoUrl != null
+                          ? CachedNetworkImageProvider(photoUrl)
+                          : null,
+                      child: photoUrl == null
+                          ? const Icon(Icons.person,
+                              size: 18, color: Colors.white)
                           : null,
                     ),
                     const SizedBox(width: 8),
@@ -606,14 +685,19 @@ class _UserSection extends StatelessWidget {
                         children: [
                           Text(
                             displayName,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (user != null)
                             Text(
                               user.isOnline ? 'Online' : 'Offline',
                               style: TextStyle(
-                                color: user.isOnline ? Colors.greenAccent : Colors.grey,
+                                color: user.isOnline
+                                    ? Colors.greenAccent
+                                    : Colors.grey,
                                 fontSize: 10,
                               ),
                             ),
@@ -663,7 +747,10 @@ class NRCSSubNav extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'BREAKING NEWS',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11),
                 ),
                 SizedBox(width: 16),
                 Expanded(child: BreakingNewsTicker()),
@@ -681,7 +768,10 @@ class NRCSSubNav extends StatelessWidget {
                 SizedBox(width: 8),
                 Text(
                   'TRENDING STORIES',
-                  style: TextStyle(color: NRCSColors.topNavBlue, fontWeight: FontWeight.bold, fontSize: 11),
+                  style: TextStyle(
+                      color: NRCSColors.topNavBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11),
                 ),
                 SizedBox(width: 16),
                 Expanded(child: TopStoriesTicker()),
@@ -693,7 +783,6 @@ class NRCSSubNav extends StatelessWidget {
     );
   }
 }
-
 
 class NRCSToolbar extends StatelessWidget {
   final VoidCallback? onRefresh;
@@ -738,19 +827,32 @@ class NRCSToolbar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(width: 8),
-            _ToolbarActionButton(label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
-            _ToolbarActionButton(label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
-            _ToolbarActionButton(label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
-            _ToolbarActionButton(label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
-            _ToolbarActionButton(label: 'Move', onTap: onMove, icon: Icons.move_to_inbox_outlined),
-            _ToolbarActionButton(label: 'Link', onTap: onLink, icon: Icons.link),
-            _ToolbarActionButton(label: 'Assign', onTap: onAssign, icon: Icons.assignment_ind_outlined),
-            _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
-            _ToolbarActionButton(label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
+            _ToolbarActionButton(
+                label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
+            _ToolbarActionButton(
+                label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
+            _ToolbarActionButton(
+                label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
+            _ToolbarActionButton(
+                label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
+            _ToolbarActionButton(
+                label: 'Move',
+                onTap: onMove,
+                icon: Icons.move_to_inbox_outlined),
+            _ToolbarActionButton(
+                label: 'Link', onTap: onLink, icon: Icons.link),
+            _ToolbarActionButton(
+                label: 'Assign',
+                onTap: onAssign,
+                icon: Icons.assignment_ind_outlined),
+            _ToolbarActionButton(
+                label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
+            _ToolbarActionButton(
+                label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
             const SizedBox(width: 8),
             _ToolbarActionButton(
-              label: 'Powerview', 
-              isBordered: true, 
+              label: 'Powerview',
+              isBordered: true,
               borderColor: NRCSColors.activeOrange,
               onTap: onPowerview,
               icon: Icons.remove_red_eye_outlined,
@@ -789,7 +891,11 @@ class CategoryToolbar extends StatelessWidget {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final cat = categories[index];
-          final isActive = (cat == 'All' && (selectedCategory == null || selectedCategory == 'all' || selectedCategory == 'All')) || selectedCategory == cat;
+          final isActive = (cat == 'All' &&
+                  (selectedCategory == null ||
+                      selectedCategory == 'all' ||
+                      selectedCategory == 'All')) ||
+              selectedCategory == cat;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: _ModernCategoryChip(
@@ -841,7 +947,8 @@ class _ModernCategoryChip extends StatelessWidget {
                 if (isActive)
                   const Padding(
                     padding: EdgeInsets.only(right: 6),
-                    child: Icon(Icons.check_circle, size: 14, color: Colors.white),
+                    child:
+                        Icon(Icons.check_circle, size: 14, color: Colors.white),
                   ),
                 Text(
                   label,
@@ -861,18 +968,30 @@ class _ModernCategoryChip extends StatelessWidget {
 
   Color _getCategoryColor(String categoryStr) {
     switch (categoryStr) {
-      case 'All':                       return Colors.blueGrey.shade700;
-      case 'Local News':                return Colors.blue.shade700;
-      case 'Politics':                  return Colors.purple.shade700;
-      case 'Sports':                    return Colors.green.shade700;
-      case 'Foreign':                   return Colors.orange.shade700;
-      case 'Business & Finance':        return Colors.teal.shade700;
-      case 'Breaking News':             return Colors.red.shade700;
-      case 'Technology':                return Colors.indigo.shade700;
-      case 'Environment':               return Colors.green.shade900;
-      case 'Health':                    return Colors.pink.shade700;
-      case 'Entertainment & Lifestyle': return Colors.amber.shade800;
-      default:                          return Colors.grey.shade700;
+      case 'All':
+        return Colors.blueGrey.shade700;
+      case 'Local News':
+        return Colors.blue.shade700;
+      case 'Politics':
+        return Colors.purple.shade700;
+      case 'Sports':
+        return Colors.green.shade700;
+      case 'Foreign':
+        return Colors.orange.shade700;
+      case 'Business & Finance':
+        return Colors.teal.shade700;
+      case 'Breaking News':
+        return Colors.red.shade700;
+      case 'Technology':
+        return Colors.indigo.shade700;
+      case 'Environment':
+        return Colors.green.shade900;
+      case 'Health':
+        return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle':
+        return Colors.amber.shade800;
+      default:
+        return Colors.grey.shade700;
     }
   }
 }
@@ -885,7 +1004,7 @@ class _ToolbarActionButton extends StatelessWidget {
   final IconData? icon;
 
   const _ToolbarActionButton({
-    required this.label, 
+    required this.label,
     this.isBordered = false,
     this.borderColor,
     this.onTap,
@@ -914,20 +1033,21 @@ class _ToolbarActionButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                Icon(
-                  icon, 
-                  size: 16, 
-                  color: isBordered ? (borderColor ?? NRCSColors.primaryBlue) : NRCSColors.primaryBlue
-                ),
+                Icon(icon,
+                    size: 16,
+                    color: isBordered
+                        ? (borderColor ?? NRCSColors.primaryBlue)
+                        : NRCSColors.primaryBlue),
                 const SizedBox(width: 6),
               ],
               Text(
                 label,
                 style: TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 12, 
-                  color: isBordered ? (borderColor ?? NRCSColors.primaryBlue) : NRCSColors.textDark
-                ),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: isBordered
+                        ? (borderColor ?? NRCSColors.primaryBlue)
+                        : NRCSColors.textDark),
               ),
             ],
           ),
@@ -968,7 +1088,9 @@ class NRCSStoryListItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? NRCSColors.topNavBlue.withValues(alpha: 0.05) : Colors.white,
+          color: isSelected
+              ? NRCSColors.topNavBlue.withValues(alpha: 0.05)
+              : Colors.white,
           border: Border(
             bottom: const BorderSide(color: NRCSColors.borderGray),
             left: BorderSide(
@@ -992,15 +1114,19 @@ class NRCSStoryListItem extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: isSelected ? NRCSColors.topNavBlue : NRCSColors.textDark,
+                          color: isSelected
+                              ? NRCSColors.topNavBlue
+                              : NRCSColors.textDark,
                         ),
                       ),
                       if (category != null && category!.isNotEmpty) ...[
                         const SizedBox(height: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _getCategoryColor(category!).withValues(alpha: 0.1),
+                            color: _getCategoryColor(category!)
+                                .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -1018,63 +1144,57 @@ class NRCSStoryListItem extends StatelessWidget {
                 ),
                 if (onDelete != null)
                   IconButton(
-                    icon: Icon(
-                      Icons.delete_outline, 
-                      size: 18, 
-                      color: Colors.red.shade400
-                    ),
+                    icon: Icon(Icons.delete_outline,
+                        size: 18, color: Colors.red.shade400),
                     onPressed: onDelete,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: 'Archive Story',
                   )
                 else
-                  Icon(
-                    Icons.videocam_outlined, 
-                    size: 18, 
-                    color: isSelected ? NRCSColors.topNavBlue : Colors.grey.shade400
-                  ),
+                  Icon(Icons.videocam_outlined,
+                      size: 18,
+                      color: isSelected
+                          ? NRCSColors.topNavBlue
+                          : Colors.grey.shade400),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                Icon(Icons.person_outline,
+                    size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
-                Text(
-                  author, 
-                  style: TextStyle(
-                    fontSize: 11, 
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  )
-                ),
+                Text(author,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    )),
                 const Spacer(),
-                Icon(Icons.timer_outlined, size: 14, color: Colors.grey.shade500),
+                Icon(Icons.timer_outlined,
+                    size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
-                Text(
-                  duration, 
-                  style: TextStyle(
-                    fontSize: 11, 
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  )
-                ),
+                Text(duration,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    )),
               ],
             ),
             const SizedBox(height: 6),
             Row(
               children: [
-                Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade500),
+                Icon(Icons.calendar_today_outlined,
+                    size: 14, color: Colors.grey.shade500),
                 const SizedBox(width: 4),
-                Text(
-                  '$time $date', 
-                  style: TextStyle(
-                    fontSize: 11, 
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  )
-                ),
+                Text('$time $date',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    )),
                 const Spacer(),
                 Icon(Icons.more_horiz, size: 14, color: Colors.grey.shade400),
               ],
@@ -1087,17 +1207,28 @@ class NRCSStoryListItem extends StatelessWidget {
 
   Color _getCategoryColor(String categoryStr) {
     switch (categoryStr) {
-      case 'Local News':                return Colors.blue.shade700;
-      case 'Politics':                  return Colors.purple.shade700;
-      case 'Sports':                    return Colors.green.shade700;
-      case 'Foreign':                   return Colors.orange.shade800;
-      case 'Business & Finance':        return Colors.teal.shade700;
-      case 'Breaking News':             return Colors.red.shade700;
-      case 'Technology':                return Colors.indigo.shade700;
-      case 'Environment':               return Colors.green.shade900;
-      case 'Health':                    return Colors.pink.shade700;
-      case 'Entertainment & Lifestyle': return Colors.amber.shade900;
-      default:                          return Colors.grey.shade700;
+      case 'Local News':
+        return Colors.blue.shade700;
+      case 'Politics':
+        return Colors.purple.shade700;
+      case 'Sports':
+        return Colors.green.shade700;
+      case 'Foreign':
+        return Colors.orange.shade800;
+      case 'Business & Finance':
+        return Colors.teal.shade700;
+      case 'Breaking News':
+        return Colors.red.shade700;
+      case 'Technology':
+        return Colors.indigo.shade700;
+      case 'Environment':
+        return Colors.green.shade900;
+      case 'Health':
+        return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle':
+        return Colors.amber.shade900;
+      default:
+        return Colors.grey.shade700;
     }
   }
 }

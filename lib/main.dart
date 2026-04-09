@@ -13,20 +13,21 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_quill/translations.dart';
 
-import 'package:chamdtech_nrcs/core/utils/context_menu_suppressor.dart';
+// Note: we intentionally avoid globally suppressing the browser context menu
+// so that users can select and copy text like a normal webpage.
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Load environment variables
   await dotenv.load(fileName: ".env");
-  
+
   // Initialize Firebase
   await Get.putAsync(() => FirebaseService().init());
-  
+
   // Initialize Auth Service
   Get.put(AuthService());
-  
+
   // Initialize Notification Service
   Get.put(NotificationService());
 
@@ -34,9 +35,12 @@ void main() async {
   Get.put(StoryService());
   Get.put(RundownService());
 
-  // Disable browser context menu to allow custom app menus to take precedence
-  disableBrowserContextMenu();
+  // Previously we suppressed the browser context menu which interfered
+  // with normal text selection and copying on web. Leave the browser
+  // default behavior enabled so users can select/copy text.
 
+  // Run the app normally; `SelectionArea` must be inside the Material app
+  // so MaterialLocalizations are available.
   runApp(const MyApp());
 }
 
@@ -47,11 +51,22 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'chamDTech NRCS',
+      // Place SelectionArea inside the app via the builder so it has access
+      // to MaterialLocalizations provided by the MaterialApp internals.
+      // Wrap with an Overlay to ensure SelectionArea has an Overlay ancestor
+      // (some platforms may build Navigator/Overlay later).
+      builder: (context, child) => Overlay(
+        initialEntries: [
+          OverlayEntry(
+              builder: (_) => SelectionArea(child: child ?? const SizedBox())),
+        ],
+      ),
 
       debugShowCheckedModeBanner: false,
       theme: ThemeConfig.lightTheme,
       darkTheme: ThemeConfig.darkTheme,
-      themeMode: ThemeMode.system, // Respect system setting or use Get.changeThemeMode
+      themeMode:
+          ThemeMode.system, // Respect system setting or use Get.changeThemeMode
       initialRoute: AppRoutes.splash,
       getPages: AppRoutes.routes,
       localizationsDelegates: const [

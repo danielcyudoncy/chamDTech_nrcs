@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/features/profile/controllers/profile_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
@@ -30,12 +31,12 @@ class ProfileScreen extends StatelessWidget {
                   ImageProvider? backgroundImage;
                   if (pickedFile != null) {
                     if (kIsWeb) {
-                      backgroundImage = NetworkImage(pickedFile.path);
+                      backgroundImage = CachedNetworkImageProvider(pickedFile.path);
                     } else {
                       backgroundImage = FileImage(File(pickedFile.path));
                     }
                   } else if (currentPhotoUrl != null) {
-                    backgroundImage = NetworkImage(currentPhotoUrl);
+                    backgroundImage = CachedNetworkImageProvider(currentPhotoUrl);
                   }
 
                   return CircleAvatar(

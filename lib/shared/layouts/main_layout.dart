@@ -1,6 +1,7 @@
 // shared/layouts/main_layout.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chamdtech_nrcs/app/config/theme_config.dart';
 import 'package:chamdtech_nrcs/shared/layouts/responsive_layout.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
@@ -185,7 +186,7 @@ class MainLayout extends StatelessWidget {
               radius: 18,
               backgroundColor: ThemeConfig.primaryColor,
               backgroundImage: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) 
-                  ? NetworkImage(user.photoUrl!) 
+                  ? CachedNetworkImageProvider(user.photoUrl!) 
                   : null,
               child: (user?.photoUrl == null || user!.photoUrl!.isEmpty)
                   ? Text(

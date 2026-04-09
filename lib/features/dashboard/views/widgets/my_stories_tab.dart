@@ -1,3 +1,4 @@
+// features/dashboard/views/widgets/my_stories_tab.dart
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -41,7 +42,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
           width: 400,
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(right: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+            border: Border(
+                right: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
           ),
           child: Column(
             children: [
@@ -49,7 +51,9 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                  border: Border(
+                      bottom:
+                          BorderSide(color: NRCSColors.borderGray, width: 0.5)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +70,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.add_circle, color: NRCSColors.topNavBlue),
+                          icon: const Icon(Icons.add_circle,
+                              color: NRCSColors.topNavBlue),
                           onPressed: () => c.createNewStory(),
                           tooltip: 'New Story',
                         ),
@@ -76,6 +81,7 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                     TextField(
                       controller: _searchController,
                       onChanged: (v) => _searchQuery.value = v,
+                      style: const TextStyle(color: Colors.black),
                       decoration: InputDecoration(
                         hintText: 'Search stories...',
                         prefixIcon: const Icon(Icons.search, size: 20),
@@ -101,24 +107,26 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                   final filteredStories = c.allMyStories.where((s) {
                     final query = _searchQuery.value.toLowerCase();
                     return s.title.toLowerCase().contains(query) ||
-                           s.content.toLowerCase().contains(query);
+                        s.content.toLowerCase().contains(query);
                   }).toList();
-
 
                   if (filteredStories.isEmpty) {
                     return const Center(
-                      child: Text('No stories found', style: TextStyle(color: Colors.grey)),
+                      child: Text('No stories found',
+                          style: TextStyle(color: Colors.grey)),
                     );
                   }
 
                   return ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: filteredStories.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1, indent: 16, endIndent: 16),
                     itemBuilder: (context, index) {
                       final story = filteredStories[index];
                       return Obx(() {
-                        final isSelected = c.selectedStory.value?.id == story.id;
+                        final isSelected =
+                            c.selectedStory.value?.id == story.id;
                         return _CompactStoryTile(
                           story: story,
                           isSelected: isSelected,
@@ -141,11 +149,13 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.description_outlined, size: 64, color: Colors.grey.shade300),
+                    Icon(Icons.description_outlined,
+                        size: 64, color: Colors.grey.shade300),
                     const SizedBox(height: 16),
                     Text(
                       'Select a story to view its content',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+                      style:
+                          TextStyle(color: Colors.grey.shade500, fontSize: 16),
                     ),
                   ],
                 ),
@@ -158,7 +168,6 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
     );
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Compact Story Tile for Sidebar
@@ -182,7 +191,9 @@ class _CompactStoryTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? NRCSColors.primaryBlue.withValues(alpha: 0.05) : Colors.transparent,
+          color: isSelected
+              ? NRCSColors.primaryBlue.withValues(alpha: 0.05)
+              : Colors.transparent,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,9 +204,12 @@ class _CompactStoryTile extends StatelessWidget {
                   child: Text(
                     story.title.isEmpty ? 'Untitled' : story.title,
                     style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w600,
                       fontSize: 14,
-                      color: isSelected ? NRCSColors.primaryBlue : NRCSColors.textDark,
+                      color: isSelected
+                          ? NRCSColors.primaryBlue
+                          : NRCSColors.textDark,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -220,7 +234,9 @@ class _CompactStoryTile extends StatelessWidget {
                 Icon(
                   Icons.chevron_right,
                   size: 16,
-                  color: isSelected ? NRCSColors.primaryBlue : Colors.grey.shade300,
+                  color: isSelected
+                      ? NRCSColors.primaryBlue
+                      : Colors.grey.shade300,
                 ),
               ],
             ),
@@ -243,20 +259,21 @@ class _StoryDetailView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEEE, MMMM dd, yyyy · HH:mm');
-    final durationStr = '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}';
-    
+    final durationStr =
+        '${(story.duration ~/ 60).toString().padLeft(2, '0')}:${(story.duration % 60).toString().padLeft(2, '0')}';
+
     final plainText = _getPlainText(story.content);
     final wordCount = _calculateWordCount(plainText);
 
     return Column(
-
       children: [
         // Action Bar
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+            border: Border(
+                bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
           ),
           child: Row(
             children: [
@@ -274,7 +291,8 @@ class _StoryDetailView extends StatelessWidget {
                 onTap: () => controller.performAction('Story Log'),
               ),
               const Spacer(),
-              if (story.status == AppConstants.statusDraft || story.status == AppConstants.statusRejected)
+              if (story.status == AppConstants.statusDraft ||
+                  story.status == AppConstants.statusRejected)
                 ElevatedButton(
                   onPressed: () {
                     if (story.status == AppConstants.statusRejected) {
@@ -288,7 +306,9 @@ class _StoryDetailView extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                   ),
-                  child: Text(story.status == AppConstants.statusRejected ? 'Resubmit' : 'Submit for Review'),
+                  child: Text(story.status == AppConstants.statusRejected
+                      ? 'Resubmit'
+                      : 'Submit for Review'),
                 ),
             ],
           ),
@@ -302,7 +322,7 @@ class _StoryDetailView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title Area
-                  Text(
+                  SelectableText(
                     story.title.isEmpty ? 'Untitled Story' : story.title,
                     style: const TextStyle(
                       fontSize: 32,
@@ -324,19 +344,20 @@ class _StoryDetailView extends StatelessWidget {
                       _DetailMeta(label: 'VERSION', value: 'v${story.version}'),
                       _DetailMeta(label: 'WORDS', value: '$wordCount'),
                     ],
-
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Last updated $dateFormat',
+                    'Last updated ${dateFormat.format(story.updatedAt)}',
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                   ),
                   const SizedBox(height: 32),
                   const Divider(),
                   const SizedBox(height: 32),
                   // Story Body (The Content)
-                  Text(
-                    plainText.trim().isEmpty ? 'The content of this story is empty.' : plainText,
+                  SelectableText(
+                    plainText.trim().isEmpty
+                        ? 'The content of this story is empty.'
+                        : plainText,
                     style: const TextStyle(
                       fontSize: 18,
                       height: 1.6,
@@ -344,7 +365,6 @@ class _StoryDetailView extends StatelessWidget {
                       letterSpacing: 0.2,
                     ),
                   ),
-
 
                   const SizedBox(height: 60), // Extra space at bottom
                 ],
@@ -359,7 +379,8 @@ class _StoryDetailView extends StatelessWidget {
   String _getPlainText(String jsonContent) {
     if (jsonContent.isEmpty) return '';
     try {
-      final isJson = jsonContent.trim().startsWith('{') || jsonContent.trim().startsWith('[');
+      final isJson = jsonContent.trim().startsWith('{') ||
+          jsonContent.trim().startsWith('[');
       if (!isJson) return jsonContent;
       return Get.find<StoryService>().getPlainTextFromQuill(jsonContent);
     } catch (_) {
@@ -373,7 +394,6 @@ class _StoryDetailView extends StatelessWidget {
     return text.trim().split(RegExp(r'\s+')).length;
   }
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-components & Helpers
@@ -391,12 +411,19 @@ class _DetailMeta extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1.2),
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade500,
+              letterSpacing: 1.2),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: NRCSColors.textDark),
+          style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: NRCSColors.textDark),
         ),
       ],
     );
@@ -411,11 +438,20 @@ class _StatusIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     Color color;
     switch (status) {
-      case AppConstants.statusDraft:    color = Colors.grey.shade600; break;
-      case AppConstants.statusPending:  color = Colors.orange.shade700; break;
-      case AppConstants.statusApproved: color = Colors.green.shade700; break;
-      case AppConstants.statusRejected: color = Colors.red.shade700; break;
-      default:                          color = Colors.grey.shade400;
+      case AppConstants.statusDraft:
+        color = Colors.grey.shade600;
+        break;
+      case AppConstants.statusPending:
+        color = Colors.orange.shade700;
+        break;
+      case AppConstants.statusApproved:
+        color = Colors.green.shade700;
+        break;
+      case AppConstants.statusRejected:
+        color = Colors.red.shade700;
+        break;
+      default:
+        color = Colors.grey.shade400;
     }
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -428,7 +464,8 @@ class _StatusIndicator extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           status.toUpperCase(),
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color),
+          style: TextStyle(
+              fontSize: 10, fontWeight: FontWeight.bold, color: color),
         ),
       ],
     );
@@ -441,7 +478,11 @@ class _ActionButton extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _ActionButton({required this.label, required this.icon, required this.color, required this.onTap});
+  const _ActionButton(
+      {required this.label,
+      required this.icon,
+      required this.color,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -457,11 +498,14 @@ class _ActionButton extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: color),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: NRCSColors.textDark)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: NRCSColors.textDark)),
           ],
         ),
       ),
     );
   }
 }
-

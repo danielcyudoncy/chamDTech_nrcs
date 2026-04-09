@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart'; 
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/app/config/theme_config.dart';
 
 class RundownBuilderScreen extends StatelessWidget {
   const RundownBuilderScreen({super.key});
@@ -21,18 +22,14 @@ class RundownBuilderScreen extends StatelessWidget {
         ? Get.find<ProducerDashboardController>() 
         : null;
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return Theme(
+      data: ThemeConfig.lightTheme,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
         title: const Text('Rundown Builder'),
         backgroundColor: NRCSColors.topNavBlue,
         foregroundColor: Colors.white,
-        /*
-       ### 6. Rundown Builder Dependency Fix
-Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerDashboardController`. This controller is now optional, allowing Anchors and other roles to open rundowns for viewing without errors.
-
-## Verification Results
-        */
         actions: [
           Obx(() {
             final rundown = controller.rundown.value;
@@ -103,7 +100,7 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
                     ),
                   ),
                   const Spacer(),
-                  _buildDurationMonitor(controller),
+                  _buildDurationMonitor(context, controller),
                 ],
               ),
             ),
@@ -231,10 +228,11 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
           ],
         );
       }),
+      ),
     );
   }
 
-  Widget _buildDurationMonitor(RundownBuilderController controller) {
+  Widget _buildDurationMonitor(BuildContext context, RundownBuilderController controller) {
     final rundown = controller.rundown.value!;
     final current = controller.currentDurationSeconds.value;
     final target = rundown.targetDuration;
@@ -244,11 +242,11 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
 
     return Row(
       children: [
-        _buildDurationBox('Current', controller.formatDuration(current), Colors.blueGrey),
+        _buildDurationBox(context, 'Current', controller.formatDuration(current), Colors.blueGrey),
         const SizedBox(width: 16),
-        _buildDurationBox('Target', controller.formatDuration(target), Colors.black87),
+        _buildDurationBox(context, 'Target', controller.formatDuration(target), Colors.black87),
         const SizedBox(width: 16),
-        _buildDurationBox(
+        _buildDurationBox(context, 
           isOverrun ? 'Overrun' : 'Remaining',
           controller.formatDuration(difference.abs()),
           isOverrun ? Colors.red : (difference < 120 ? Colors.orange : Colors.green),
@@ -257,7 +255,7 @@ Resolved a crash in `RundownBuilderScreen` where it strictly required `ProducerD
     );
   }
 
-  Widget _buildDurationBox(String label, String value, Color color) {
+  Widget _buildDurationBox(BuildContext context, String label, String value, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [

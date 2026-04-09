@@ -22,8 +22,9 @@ class StoryService extends GetxService {
 
   final AuthService _authService = Get.find<AuthService>();
   final ActivityLogService _activityLogService = Get.put(ActivityLogService());
-  final NotificationService _notificationService = Get.find<NotificationService>();
-  
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
+
   // Get stories by category
   Stream<List<StoryModel>> getStoriesByCategory(String category) {
     return _firestore
@@ -31,14 +32,13 @@ class StoryService extends GetxService {
         .where('category', isEqualTo: category)
         .snapshots()
         .map((snapshot) {
-          final docs = snapshot.docs
-              .map((doc) => StoryModel.fromJson(doc.data()))
-              .toList();
-          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          return docs;
-        });
+      final docs =
+          snapshot.docs.map((doc) => StoryModel.fromJson(doc.data())).toList();
+      docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return docs;
+    });
   }
-  
+
   // Get all stories
   Stream<List<StoryModel>> getStories() {
     return _firestore
@@ -49,7 +49,7 @@ class StoryService extends GetxService {
             .map((doc) => StoryModel.fromJson(doc.data()))
             .toList());
   }
-  
+
   // Lock a story for editing
   Future<bool> lockStory(String storyId) async {
     final user = _authService.currentUser.value;
@@ -65,7 +65,7 @@ class StoryService extends GetxService {
 
         // Potential takeover check
         // This is handled via takeoverStory specifically
-        return false; 
+        return false;
       }
 
       await lockRef.set({
@@ -76,7 +76,10 @@ class StoryService extends GetxService {
       });
 
       // Also update Firestore for persistent state
-      await _firestore.collection(AppConstants.storiesCollection).doc(storyId).update({
+      await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .update({
         'lockedBy': user.id,
         'lockedAt': FieldValue.serverTimestamp(),
       });
@@ -103,7 +106,10 @@ class StoryService extends GetxService {
         final lockData = Map<String, dynamic>.from(snapshot.value as Map);
         if (lockData['userId'] == user.id) {
           await lockRef.remove();
-          await _firestore.collection(AppConstants.storiesCollection).doc(storyId).update({
+          await _firestore
+              .collection(AppConstants.storiesCollection)
+              .doc(storyId)
+              .update({
             'lockedBy': null,
             'lockedAt': null,
           });
@@ -125,10 +131,10 @@ class StoryService extends GetxService {
 
       if (snapshot.exists) {
         final lockData = Map<String, dynamic>.from(snapshot.value as Map);
-        
+
         // Fetch current owner's role from Firestore or use the one in lockData
         final ownerRole = lockData['role'] ?? 'reporter';
-        
+
         // Use a temp user model to compare hierarchy
         final ownerTemp = UserModel(
           id: lockData['userId'],
@@ -147,7 +153,10 @@ class StoryService extends GetxService {
             'lockedAt': ServerValue.timestamp,
           });
 
-          await _firestore.collection(AppConstants.storiesCollection).doc(storyId).update({
+          await _firestore
+              .collection(AppConstants.storiesCollection)
+              .doc(storyId)
+              .update({
             'lockedBy': currentUser.id,
             'lockedAt': FieldValue.serverTimestamp(),
           });
@@ -168,32 +177,30 @@ class StoryService extends GetxService {
         .where('deskId', isEqualTo: deskId)
         .snapshots()
         .map((snapshot) {
-          final docs = snapshot.docs
-              .map((doc) => StoryModel.fromJson(doc.data()))
-              .toList();
-          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          return docs;
-        });
+      final docs =
+          snapshot.docs.map((doc) => StoryModel.fromJson(doc.data())).toList();
+      docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return docs;
+    });
   }
-  
+
   // Get my stories
   Stream<List<StoryModel>> getMyStories() {
     final userId = _authService.currentUser.value?.id;
     if (userId == null) return Stream.value([]);
-    
+
     return _firestore
         .collection(AppConstants.storiesCollection)
         .where('authorId', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-          final docs = snapshot.docs
-              .map((doc) => StoryModel.fromJson(doc.data()))
-              .toList();
-          docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-          return docs;
-        });
+      final docs =
+          snapshot.docs.map((doc) => StoryModel.fromJson(doc.data())).toList();
+      docs.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      return docs;
+    });
   }
-  
+
   // Get story by ID
   Future<StoryModel?> getStoryById(String storyId) async {
     try {
@@ -201,7 +208,7 @@ class StoryService extends GetxService {
           .collection(AppConstants.storiesCollection)
           .doc(storyId)
           .get();
-      
+
       if (doc.exists) {
         return StoryModel.fromJson(doc.data()!);
       }
@@ -211,23 +218,23 @@ class StoryService extends GetxService {
       return null;
     }
   }
-  
+
   // Create story
   Future<String?> createStory(StoryModel story) async {
     try {
       final docRef = await _firestore
           .collection(AppConstants.storiesCollection)
           .add(story.toJson());
-      
+
       // Update with document ID
       await docRef.update({'id': docRef.id});
-      
+
       Get.snackbar(
         'Success',
         'Story created successfully',
         snackPosition: SnackPosition.BOTTOM,
       );
-      
+
       // Log creation
       final user = _authService.currentUser.value;
       if (user != null) {
@@ -239,7 +246,7 @@ class StoryService extends GetxService {
           storyTitle: story.title,
         ));
       }
-      
+
       // Broadcast notification
       if (user != null) {
         await _notificationService.broadcastNotification(
@@ -261,7 +268,7 @@ class StoryService extends GetxService {
       return null;
     }
   }
-  
+
   // Update story — with robust backend rundown-lock guard
   Future<bool> updateStory(StoryModel story) async {
     try {
@@ -287,10 +294,11 @@ class StoryService extends GetxService {
           }
         } catch (e) {
           // Local catch: if permission denied for rundowns, proceed with saving story anyway
-          Get.log('Note: Permission or fetch error checking rundown ${story.linkedRundownId}. Proceeding with save.');
+          Get.log(
+              'Note: Permission or fetch error checking rundown ${story.linkedRundownId}. Proceeding with save.');
         }
       }
-      
+
       // ── Use set with merge: true (more robust than update) ────────────────
       await _firestore
           .collection(AppConstants.storiesCollection)
@@ -307,7 +315,7 @@ class StoryService extends GetxService {
       return false;
     }
   }
-  
+
   // Archive story (soft delete)
   Future<bool> archiveStory(String storyId) async {
     try {
@@ -318,13 +326,13 @@ class StoryService extends GetxService {
         'status': AppConstants.statusArchived,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       Get.snackbar(
         'Success',
         'Story moved to archive',
         snackPosition: SnackPosition.BOTTOM,
       );
-      
+
       // Log archiving
       final user = _authService.currentUser.value;
       if (user != null) {
@@ -339,7 +347,7 @@ class StoryService extends GetxService {
           timestamp: DateTime.now(),
         ));
       }
-      
+
       return true;
     } catch (e) {
       Get.snackbar(
@@ -358,13 +366,13 @@ class StoryService extends GetxService {
           .collection(AppConstants.storiesCollection)
           .doc(storyId)
           .delete();
-      
+
       Get.snackbar(
         'Success',
         'Story deleted successfully',
         snackPosition: SnackPosition.BOTTOM,
       );
-      
+
       // Log deletion
       final user = _authService.currentUser.value;
       if (user != null) {
@@ -379,7 +387,7 @@ class StoryService extends GetxService {
           timestamp: DateTime.now(),
         ));
       }
-      
+
       return true;
     } catch (e) {
       Get.snackbar(
@@ -390,12 +398,12 @@ class StoryService extends GetxService {
       return false;
     }
   }
-  
+
   // Approve story
   Future<bool> approveStory(String storyId) async {
     final userId = _authService.currentUser.value?.id;
     if (userId == null) return false;
-    
+
     try {
       await _firestore
           .collection(AppConstants.storiesCollection)
@@ -407,54 +415,60 @@ class StoryService extends GetxService {
         'approvedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       Get.snackbar(
         'Success',
         'Story approved',
         snackPosition: SnackPosition.BOTTOM,
       );
-      
+
       // Log approval
       final user = _authService.currentUser.value!;
-      
+
       // Fetch title for log if needed, or just log ID
-        final storyDoc = await _firestore.collection(AppConstants.storiesCollection).doc(storyId).get();
-        final title = storyDoc.data()?['title'] ?? 'Unknown Story';
-        
-        await _activityLogService.logActivity(ActivityLogModel.storyApproved(
-          id: const Uuid().v4(),
-          userId: user.id,
-          userName: user.displayName,
-          storyId: storyId,
-          storyTitle: title,
-        ));
+      final storyDoc = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .get();
+      final title = storyDoc.data()?['title'] ?? 'Unknown Story';
 
-        // Notify Creator
-        final authorId = storyDoc.data()?['authorId'];
-        if (authorId != null) {
-          await _notificationService.notifyRelevantUsers(
-            userIds: [authorId],
-            title: 'Story Approved',
-            message: 'Your story "$title" has been approved by ${user.displayName}',
-            type: 'story_update',
-            actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
-            data: {'storyId': storyId},
-          );
-        }
+      await _activityLogService.logActivity(ActivityLogModel.storyApproved(
+        id: const Uuid().v4(),
+        userId: user.id,
+        userName: user.displayName,
+        storyId: storyId,
+        storyTitle: title,
+      ));
 
-        // Notify all Producers
-        final producerIds = await _authService.getUserIdsByRole(AppConstants.roleProducer);
-        if (producerIds.isNotEmpty) {
-          await _notificationService.notifyRelevantUsers(
-            userIds: producerIds,
-            title: 'New Approved Story',
-            message: 'A story "$title" has been approved and is ready for rundown.',
-            type: 'story_update',
-            actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
-            data: {'storyId': storyId},
-          );
-        }
-      
+      // Notify Creator
+      final authorId = storyDoc.data()?['authorId'];
+      if (authorId != null) {
+        await _notificationService.notifyRelevantUsers(
+          userIds: [authorId],
+          title: 'Story Approved',
+          message:
+              'Your story "$title" has been approved by ${user.displayName}',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+          data: {'storyId': storyId},
+        );
+      }
+
+      // Notify all Producers
+      final producerIds =
+          await _authService.getUserIdsByRole(AppConstants.roleProducer);
+      if (producerIds.isNotEmpty) {
+        await _notificationService.notifyRelevantUsers(
+          userIds: producerIds,
+          title: 'New Approved Story',
+          message:
+              'A story "$title" has been approved and is ready for rundown.',
+          type: 'story_update',
+          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
+          data: {'storyId': storyId},
+        );
+      }
+
       return true;
     } catch (e) {
       Get.snackbar(
@@ -470,7 +484,7 @@ class StoryService extends GetxService {
   Future<bool> submitStory(String storyId) async {
     final userId = _authService.currentUser.value?.id;
     if (userId == null) return false;
-    
+
     try {
       await _firestore
           .collection(AppConstants.storiesCollection)
@@ -479,18 +493,21 @@ class StoryService extends GetxService {
         'status': AppConstants.statusPending,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       Get.snackbar(
         'Success',
         'Story submitted for review',
         snackPosition: SnackPosition.BOTTOM,
       );
-      
+
       // Log submission
       final user = _authService.currentUser.value!;
-      final storyDoc = await _firestore.collection(AppConstants.storiesCollection).doc(storyId).get();
+      final storyDoc = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .get();
       final title = storyDoc.data()?['title'] ?? 'Unknown Story';
-      
+
       await _activityLogService.logActivity(ActivityLogModel(
         id: const Uuid().v4(),
         userId: user.id,
@@ -503,7 +520,8 @@ class StoryService extends GetxService {
       ));
 
       // Notify all Editors
-      final editorIds = await _authService.getUserIdsByRole(AppConstants.roleEditor);
+      final editorIds =
+          await _authService.getUserIdsByRole(AppConstants.roleEditor);
       if (editorIds.isNotEmpty) {
         await _notificationService.notifyRelevantUsers(
           userIds: editorIds,
@@ -516,7 +534,8 @@ class StoryService extends GetxService {
       }
 
       // Notify all Admins
-      final adminIds = await _authService.getUserIdsByRole(AppConstants.roleAdmin);
+      final adminIds =
+          await _authService.getUserIdsByRole(AppConstants.roleAdmin);
       if (adminIds.isNotEmpty) {
         await _notificationService.notifyRelevantUsers(
           userIds: adminIds,
@@ -527,7 +546,7 @@ class StoryService extends GetxService {
           data: {'storyId': storyId},
         );
       }
-      
+
       return true;
     } catch (e) {
       Get.snackbar(
@@ -544,7 +563,8 @@ class StoryService extends GetxService {
     try {
       final decoded = jsonDecode(jsonStr);
       // Try to extract from 'anchor' if it's our split format
-      if (decoded is Map && (decoded.containsKey('anchor') || decoded.containsKey('notes'))) {
+      if (decoded is Map &&
+          (decoded.containsKey('anchor') || decoded.containsKey('notes'))) {
         String combined = '';
         if (decoded.containsKey('anchor') && decoded['anchor'] is List) {
           final doc = quill.Document.fromJson(decoded['anchor']);
@@ -554,7 +574,9 @@ class StoryService extends GetxService {
         if (decoded.containsKey('notes') && decoded['notes'] is List) {
           final doc = quill.Document.fromJson(decoded['notes']);
           final text = doc.toPlainText().trim();
-          if (text.isNotEmpty) combined += 'PRODUCTION NOTES / CONTENT:\n$text\n\n';
+          if (text.isNotEmpty) {
+            combined += 'PRODUCTION NOTES / CONTENT:\n$text\n\n';
+          }
         }
         if (combined.isNotEmpty) return combined.trim();
       }
@@ -565,7 +587,36 @@ class StoryService extends GetxService {
       }
       return jsonStr;
     } catch (e) {
-      return jsonStr;
+      // Fallback: try to extract any `insert` values from the JSON-like string
+      try {
+        final matches = RegExp('"insert"s*:s*"([^"]+)"')
+            .allMatches(jsonStr)
+            .map((m) => m.group(1))
+            .where((s) => s != null)
+            .cast<String>()
+            .toList();
+        if (matches.isNotEmpty) return matches.join('\n');
+
+        // Try more tolerant patterns (single quotes, unquoted values)
+        final matches2 = RegExp(
+                r"'insert'\s*:\s*'([^']+)'|insert\s*:\s*'([^']+)'|insert\s*:\s*([^,\n\}]+)",
+                multiLine: true,
+                caseSensitive: false)
+            .allMatches(jsonStr)
+            .map((m) => m.group(1) ?? m.group(2) ?? m.group(3))
+            .where((s) => s != null)
+            .cast<String>()
+            .toList();
+        if (matches2.isNotEmpty) return matches2.join('\n');
+
+        // Last resort: remove JSON punctuation to make it more readable
+        final stripped = jsonStr
+            .replaceAll(RegExp(r'[\{\}\[\]"]'), '')
+            .replaceAll(',', '\n');
+        return stripped;
+      } catch (_) {
+        return jsonStr;
+      }
     }
   }
 }

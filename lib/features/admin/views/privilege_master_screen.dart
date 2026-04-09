@@ -63,6 +63,7 @@ class PrivilegeMasterScreen extends StatelessWidget {
             width: 300,
             child: TextField(
               onChanged: (v) => controller.searchQuery.value = v,
+              style: const TextStyle(color: Colors.black),
               decoration: InputDecoration(
                 hintText: 'Search permissions...',
                 prefixIcon: const Icon(Icons.search, size: 18),

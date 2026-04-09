@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
+import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamdtech_nrcs/core/utils/date_utils.dart' as core_date_utils;
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
@@ -16,15 +17,15 @@ class StoryListScreen extends StatelessWidget {
     return NRCSAppShell(
       title: controller.showArchived.value ? 'Archive' : 'Workspace',
       toolbar: Obx(() => CategoryToolbar(
-        selectedCategory: controller.categoryFilter.value,
-        onCategorySelected: (cat) {
-          if (cat == 'All') {
-            controller.setCategoryFilter('all');
-          } else {
-            controller.setCategoryFilter(cat);
-          }
-        },
-      )),
+            selectedCategory: controller.categoryFilter.value,
+            onCategorySelected: (cat) {
+              if (cat == 'All') {
+                controller.setCategoryFilter('all');
+              } else {
+                controller.setCategoryFilter(cat);
+              }
+            },
+          )),
       sidebar: Obx(() {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
@@ -38,7 +39,8 @@ class StoryListScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+                  border:
+                      Border(bottom: BorderSide(color: Colors.grey.shade100)),
                 ),
                 child: Column(
                   children: [
@@ -46,7 +48,9 @@ class StoryListScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          controller.showArchived.value ? 'ARCHIVE LIST' : 'STORY LIST',
+                          controller.showArchived.value
+                              ? 'ARCHIVE LIST'
+                              : 'STORY LIST',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -74,18 +78,24 @@ class StoryListScreen extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final story = controller.stories[index];
                     return Obx(() => NRCSStoryListItem(
-                      title: story.title,
-                      author: story.authorName,
-                      time: core_date_utils.DateUtils.formatTime(story.updatedAt),
-                      date: core_date_utils.DateUtils.formatDate(story.updatedAt),
-                      duration: core_date_utils.DateUtils.formatDuration(story.duration),
-                      category: story.category,
-                      isSelected: controller.selectedStoryId.value == story.id,
-                      onTap: () {
-                        controller.selectedStoryId.value = story.id;
-                      },
-                      onDelete: controller.showArchived.value ? null : () => controller.archiveStory(story.id),
-                    ));
+                          title: story.title,
+                          author: story.authorName,
+                          time: core_date_utils.DateUtils.formatTime(
+                              story.updatedAt),
+                          date: core_date_utils.DateUtils.formatDate(
+                              story.updatedAt),
+                          duration: core_date_utils.DateUtils.formatDuration(
+                              story.duration),
+                          category: story.category,
+                          isSelected:
+                              controller.selectedStoryId.value == story.id,
+                          onTap: () {
+                            controller.selectedStoryId.value = story.id;
+                          },
+                          onDelete: controller.showArchived.value
+                              ? null
+                              : () => controller.archiveStory(story.id),
+                        ));
                   },
                 ),
               ),
@@ -100,11 +110,15 @@ class StoryListScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade200),
+                Icon(Icons.auto_stories_outlined,
+                    size: 64, color: Colors.grey.shade200),
                 const SizedBox(height: 16),
                 const Text(
                   'Select a story to view details',
-                  style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -148,12 +162,13 @@ class StoryListScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        selectedStory.content.isEmpty 
-                            ? 'No content for this story.' 
-                            : selectedStory.content,
+                      SelectableText(
+                        selectedStory.content.isEmpty
+                            ? 'No content for this story.'
+                            : Get.find<StoryService>()
+                                .getPlainTextFromQuill(selectedStory.content),
                         style: const TextStyle(
-                          fontSize: 17, 
+                          fontSize: 17,
                           height: 1.6,
                           color: Color(0xFF263238),
                         ),
@@ -184,7 +199,8 @@ class _DetailHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: _getCategoryColor(selectedStory.category).withValues(alpha: 0.1),
+                color: _getCategoryColor(selectedStory.category)
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -200,7 +216,8 @@ class _DetailHeader extends StatelessWidget {
             const Spacer(),
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              onPressed: () => Get.toNamed('/story/editor', arguments: selectedStory),
+              onPressed: () =>
+                  Get.toNamed('/story/editor', arguments: selectedStory),
               tooltip: 'Edit Story',
             ),
           ],
@@ -209,7 +226,7 @@ class _DetailHeader extends StatelessWidget {
         Text(
           selectedStory.title.isEmpty ? 'Untitled Story' : selectedStory.title,
           style: const TextStyle(
-            fontSize: 32, 
+            fontSize: 32,
             fontWeight: FontWeight.w800,
             color: Color(0xFF1A237E),
             letterSpacing: -0.5,
@@ -221,7 +238,7 @@ class _DetailHeader extends StatelessWidget {
             const Text(
               'MASTER:',
               style: TextStyle(
-                fontWeight: FontWeight.w800, 
+                fontWeight: FontWeight.w800,
                 color: Color(0xFF1A237E),
                 fontSize: 13,
                 letterSpacing: 0.5,
@@ -232,23 +249,24 @@ class _DetailHeader extends StatelessWidget {
               height: 24,
               width: 24,
               child: Checkbox(
-                value: true, 
+                value: true,
                 onChanged: (_) {},
                 activeColor: const Color(0xFF1A237E),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4)),
               ),
             ),
             const SizedBox(width: 8),
             const Text(
               'FIRST VERSION',
               style: TextStyle(
-                fontWeight: FontWeight.w600, 
+                fontWeight: FontWeight.w600,
                 color: Color(0xFF546E7A),
                 fontSize: 13,
               ),
             ),
             const Spacer(),
-           const _HeaderBadge(
+            const _HeaderBadge(
               label: 'Words',
               value: '250',
               icon: Icons.text_fields,
@@ -256,7 +274,8 @@ class _DetailHeader extends StatelessWidget {
             const SizedBox(width: 16),
             _HeaderBadge(
               label: 'Duration',
-              value: core_date_utils.DateUtils.formatDuration(selectedStory.duration),
+              value: core_date_utils.DateUtils.formatDuration(
+                  selectedStory.duration),
               icon: Icons.timer_outlined,
             ),
           ],
@@ -271,7 +290,8 @@ class _HeaderBadge extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _HeaderBadge({required this.label, required this.value, required this.icon});
+  const _HeaderBadge(
+      {required this.label, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -290,8 +310,16 @@ class _HeaderBadge extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label.toUpperCase(), style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Color(0xFF90A4AE))),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF1A237E))),
+              Text(label.toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF90A4AE))),
+              Text(value,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Color(0xFF1A237E))),
             ],
           ),
         ],
@@ -316,16 +344,20 @@ class _DetailMeta extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _ModernMetaItem(label: 'Author', value: selectedStory.authorName, icon: Icons.person_outline),
           _ModernMetaItem(
-            label: 'Status', 
-            value: selectedStory.status.toUpperCase(), 
+              label: 'Author',
+              value: selectedStory.authorName,
+              icon: Icons.person_outline),
+          _ModernMetaItem(
+            label: 'Status',
+            value: selectedStory.status.toUpperCase(),
             icon: Icons.info_outline,
             valueColor: _getStatusColor(selectedStory.status),
           ),
           _ModernMetaItem(
-            label: 'Updated', 
-            value: core_date_utils.DateUtils.formatDateTime(selectedStory.updatedAt),
+            label: 'Updated',
+            value: core_date_utils.DateUtils.formatDateTime(
+                selectedStory.updatedAt),
             icon: Icons.history,
           ),
         ],
@@ -335,10 +367,14 @@ class _DetailMeta extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'approved': return Colors.green.shade600;
-      case 'pending': return Colors.orange.shade700;
-      case 'rejected': return Colors.red.shade600;
-      default: return Colors.blueGrey.shade400;
+      case 'approved':
+        return Colors.green.shade600;
+      case 'pending':
+        return Colors.orange.shade700;
+      case 'rejected':
+        return Colors.red.shade600;
+      default:
+        return Colors.blueGrey.shade400;
     }
   }
 }
@@ -349,7 +385,11 @@ class _ModernMetaItem extends StatelessWidget {
   final IconData icon;
   final Color? valueColor;
 
-  const _ModernMetaItem({required this.label, required this.value, required this.icon, this.valueColor});
+  const _ModernMetaItem(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      this.valueColor});
 
   @override
   Widget build(BuildContext context) {
@@ -363,8 +403,8 @@ class _ModernMetaItem extends StatelessWidget {
             Text(
               label.toUpperCase(),
               style: const TextStyle(
-                fontSize: 10, 
-                color: Color(0xFF90A4AE), 
+                fontSize: 10,
+                color: Color(0xFF90A4AE),
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
               ),
@@ -375,7 +415,7 @@ class _ModernMetaItem extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontSize: 14, 
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: valueColor ?? const Color(0xFF263238),
           ),
@@ -387,16 +427,27 @@ class _ModernMetaItem extends StatelessWidget {
 
 Color _getCategoryColor(String category) {
   switch (category) {
-    case 'Local News':                return Colors.blue.shade700;
-    case 'Politics':                  return Colors.purple.shade700;
-    case 'Sports':                    return Colors.green.shade700;
-    case 'Foreign':                   return Colors.orange.shade700;
-    case 'Business & Finance':        return Colors.teal.shade700;
-    case 'Breaking News':             return Colors.red.shade700;
-    case 'Technology':                return Colors.indigo.shade700;
-    case 'Environment':               return Colors.green.shade900;
-    case 'Health':                    return Colors.pink.shade700;
-    case 'Entertainment & Lifestyle': return Colors.amber.shade800;
-    default:                          return Colors.grey.shade700;
+    case 'Local News':
+      return Colors.blue.shade700;
+    case 'Politics':
+      return Colors.purple.shade700;
+    case 'Sports':
+      return Colors.green.shade700;
+    case 'Foreign':
+      return Colors.orange.shade700;
+    case 'Business & Finance':
+      return Colors.teal.shade700;
+    case 'Breaking News':
+      return Colors.red.shade700;
+    case 'Technology':
+      return Colors.indigo.shade700;
+    case 'Environment':
+      return Colors.green.shade900;
+    case 'Health':
+      return Colors.pink.shade700;
+    case 'Entertainment & Lifestyle':
+      return Colors.amber.shade800;
+    default:
+      return Colors.grey.shade700;
   }
 }
