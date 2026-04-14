@@ -43,26 +43,28 @@ class NRCSAppShell extends StatelessWidget {
       final isMobile = constraints.maxWidth < 1100;
 
       return Scaffold(
-        key: GlobalKey<ScaffoldState>(),
         backgroundColor: Colors.white,
+        drawer: isMobile && sidebar != null ? Drawer(width: 300, child: sidebar!) : null,
         appBar: isMobile
             ? AppBar(
                 backgroundColor: Colors.white,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
-                  onPressed: () {
-                    if (Get.previousRoute.isNotEmpty) {
-                      Get.back();
-                    } else {
-                      final authService = Get.find<AuthService>();
-                      final role = authService.currentUser.value?.role ??
-                          AppConstants.roleReporter;
-                      Get.offAllNamed(_getRoleDashboard(role));
-                    }
-                  },
-                ),
+                leading: sidebar != null 
+                  ? null // Scaffold will automatically show the menu icon
+                  : IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
+                    onPressed: () {
+                      if (Get.previousRoute.isNotEmpty) {
+                        Get.back();
+                      } else {
+                        final authService = Get.find<AuthService>();
+                        final role = authService.currentUser.value?.role ??
+                            AppConstants.roleReporter;
+                        Get.offAllNamed(_getRoleDashboard(role));
+                      }
+                    },
+                  ),
                 title: Text(
                   title?.toUpperCase() ?? 'NRCS',
                   style: const TextStyle(

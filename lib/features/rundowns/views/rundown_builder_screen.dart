@@ -71,7 +71,8 @@ class RundownBuilderScreen extends StatelessWidget {
         final isDraft = rundown.status == 'draft';
         final showPool = isDraft && producerController != null;
 
-        return Column(
+        return SelectionArea(
+          child: Column(
           children: [
             // Status Header
             Container(
@@ -113,7 +114,7 @@ class RundownBuilderScreen extends StatelessWidget {
                   // Pool of available stories (Left side) - Only for producers in draft mode
                   if (showPool)
                     Container(
-                      width: 400,
+                      width: MediaQuery.of(context).size.width < 1200 ? 300 : 400,
                       decoration: const BoxDecoration(
                         border: Border(right: BorderSide(color: NRCSColors.borderGray)),
                       ),
@@ -226,10 +227,11 @@ class RundownBuilderScreen extends StatelessWidget {
               ),
             ),
           ],
-        );
-      }),
-      ),
-    );
+        ),
+      );
+    }),
+    ),
+  );
   }
 
   Widget _buildDurationMonitor(BuildContext context, RundownBuilderController controller) {

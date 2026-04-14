@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:async';
 
 class PrivilegeMasterController extends GetxController {
   final PrivilegeService _service = Get.put(PrivilegeService());
@@ -15,6 +17,9 @@ class PrivilegeMasterController extends GetxController {
   var parentRoleId = Rxn<String>();
   var searchQuery = ''.obs;
   var selectedCategory = 'Content Management'.obs;
+  var activeView = 'Permissions'.obs;
+  var usersInRole = <UserModel>[].obs;
+  StreamSubscription? _usersSubscription;
 
   // Reactive map for checkboxes: Category -> Group -> Permission -> Boolean
   // Structure: { category: { group: { permission: value } } }
@@ -23,6 +28,7 @@ class PrivilegeMasterController extends GetxController {
   final List<String> categories = [
     'Content Management',
     'Rundown Operations',
+    'Newsroom Director',
     'System Administration',
     'Reporting & Analytics',
     'Technical Operations',
@@ -74,6 +80,19 @@ class PrivilegeMasterController extends GetxController {
           'View': false, 'New': false, 'Delete': false, 'Copy': false, 'Move': false, 'Link': false, 'Edit': false,
         },
       },
+      'Newsroom Director': {
+        'Director Control': {
+          'On Air Control': false,
+          'Next Story Trigger': false,
+          'Camera Switching': false,
+          'MOS Control': false,
+        },
+        'Broadcast Settings': {
+          'Channel Config': false,
+          'Live Ticker Edit': false,
+          'Emergency Alert': false,
+        },
+      },
       'System Administration': {
         'User Management': {
           'View Users': false,
@@ -116,11 +135,19 @@ class PrivilegeMasterController extends GetxController {
 
   void selectRole(Role? role) {
     selectedRole.value = role;
+    _usersSubscription?.cancel();
+    usersInRole.clear();
+
     if (role != null) {
       nameController.text = role.name;
       descriptionController.text = role.description ?? '';
       parentRoleId.value = role.parentId;
       
+      // Load users
+      _usersSubscription = _service.getUsersInRole(role.id).listen((users) {
+        usersInRole.value = users;
+      });
+
       // Reset first then merge
       resetPermissions();
       var newState = Map<String, Map<String, Map<String, bool>>>.from(permissionsState);
@@ -141,6 +168,12 @@ class PrivilegeMasterController extends GetxController {
     } else {
       createNewRole();
     }
+  }
+
+  @override
+  void onClose() {
+    _usersSubscription?.cancel();
+    super.onClose();
   }
 
   void onParentRoleChanged(String? newParentId) {

@@ -3,12 +3,24 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/models/audit_log_model.dart';
+import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:uuid/uuid.dart';
 
 class PrivilegeService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   static const String rolesCollection = 'privilege_sets';
   static const String auditCollection = 'audit_logs';
+
+  Stream<List<UserModel>> getUsersInRole(String roleId) {
+    return _firestore
+        .collection(AppConstants.usersCollection)
+        .where('roleId', isEqualTo: roleId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => UserModel.fromJson(doc.data()))
+            .toList());
+  }
 
   Stream<List<Role>> getRoles() {
     return _firestore.collection(rolesCollection)

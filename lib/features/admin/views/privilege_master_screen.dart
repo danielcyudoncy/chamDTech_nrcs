@@ -171,7 +171,6 @@ class PrivilegeMasterScreen extends StatelessWidget {
       ],
     );
   }
-
   Widget _buildMainContent(PrivilegeMasterController controller, BuildContext context) {
     return Column(
       children: [
@@ -248,9 +247,37 @@ class PrivilegeMasterScreen extends StatelessWidget {
           ),
         ),
 
-        // Permissions Grid
+        // View Toggle
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ),
+          child: Obx(() => Row(
+            children: [
+              _buildTabButton(
+                label: 'PERMISSIONS',
+                isActive: controller.activeView.value == 'Permissions',
+                onTap: () => controller.activeView.value = 'Permissions',
+              ),
+              const SizedBox(width: 8),
+              _buildTabButton(
+                label: 'ASSOCIATED USERS (${controller.usersInRole.length})',
+                isActive: controller.activeView.value == 'Users',
+                onTap: () => controller.activeView.value = 'Users',
+              ),
+            ],
+          )),
+        ),
+
+        // Content Area
         Expanded(
           child: Obx(() {
+            if (controller.activeView.value == 'Users') {
+              return _buildUserListSection(controller);
+            }
+
             final category = controller.selectedCategory.value;
             final groups = controller.permissionsState[category] ?? {};
             final query = controller.searchQuery.value.toLowerCase();
@@ -275,6 +302,97 @@ class PrivilegeMasterScreen extends StatelessWidget {
           }),
         ),
       ],
+    );
+  }
+
+  Widget _buildTabButton({required String label, required bool isActive, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isActive ? NRCSColors.primaryBlue : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isActive ? NRCSColors.primaryBlue : Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserListSection(PrivilegeMasterController controller) {
+    final users = controller.usersInRole;
+
+    if (users.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person_off_outlined, size: 48, color: Colors.grey.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            const Text(
+              'No users currently assigned to this role',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      color: const Color(0xFFF9FAFB),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(24),
+        itemCount: users.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          final user = users[index];
+          return Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: NRCSColors.borderGray.withValues(alpha: 0.5)),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: NRCSColors.topNavBlue.withValues(alpha: 0.1),
+                child: Text(
+                  user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
+                  style: const TextStyle(color: NRCSColors.topNavBlue, fontWeight: FontWeight.bold),
+                ),
+              ),
+              title: Text(user.displayName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(user.email),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: user.isOnline ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  user.isOnline ? 'Online' : 'Offline',
+                  style: TextStyle(
+                    color: user.isOnline ? Colors.green : Colors.grey,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -367,6 +485,8 @@ class PrivilegeMasterScreen extends StatelessWidget {
         return const Icon(Icons.article_outlined, size: 18);
       case 'Rundown Operations':
         return const Icon(Icons.view_list_outlined, size: 18);
+      case 'Newsroom Director':
+        return const Icon(Icons.videocam_outlined, size: 18);
       case 'System Administration':
         return const Icon(Icons.settings_suggest_outlined, size: 18);
       case 'Reporting & Analytics':

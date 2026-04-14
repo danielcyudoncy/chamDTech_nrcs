@@ -51,17 +51,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'chamDTech NRCS',
-      // Place SelectionArea inside the app via the builder so it has access
-      // to MaterialLocalizations provided by the MaterialApp internals.
-      // Wrap with an Overlay to ensure SelectionArea has an Overlay ancestor
-      // (some platforms may build Navigator/Overlay later).
-      builder: (context, child) => Overlay(
-        initialEntries: [
-          OverlayEntry(
-              builder: (_) => SelectionArea(child: child ?? const SizedBox())),
-        ],
-      ),
-
       debugShowCheckedModeBanner: false,
       theme: ThemeConfig.lightTheme,
       darkTheme: ThemeConfig.darkTheme,
