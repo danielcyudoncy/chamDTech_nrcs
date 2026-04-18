@@ -340,7 +340,13 @@ class _StoryDetailView extends StatelessWidget {
                       _DetailMeta(label: 'AUTHOR', value: story.authorName),
                       _DetailMeta(label: 'FORMAT', value: story.format),
                       _DetailMeta(label: 'DURATION', value: durationStr),
-                      _DetailMeta(label: 'DESK', value: story.deskId ?? 'None'),
+                      _DetailMeta(
+                          label: 'DESK',
+                          value: story.deskId != null && story.deskId!.isNotEmpty
+                              ? story.deskId!
+                              : (story.category.isNotEmpty
+                                  ? story.category
+                                  : 'None')),
                       _DetailMeta(label: 'VERSION', value: 'v${story.version}'),
                       _DetailMeta(label: 'WORDS', value: '$wordCount'),
                     ],

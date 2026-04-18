@@ -222,12 +222,10 @@ class StoryService extends GetxService {
   // Create story
   Future<String?> createStory(StoryModel story) async {
     try {
-      final docRef = await _firestore
+      await _firestore
           .collection(AppConstants.storiesCollection)
-          .add(story.toJson());
-
-      // Update with document ID
-      await docRef.update({'id': docRef.id});
+          .doc(story.id)
+          .set(story.toJson());
 
       Get.snackbar(
         'Success',
@@ -242,7 +240,7 @@ class StoryService extends GetxService {
           id: const Uuid().v4(),
           userId: user.id,
           userName: user.displayName,
-          storyId: docRef.id,
+          storyId: story.id,
           storyTitle: story.title,
         ));
       }
@@ -253,12 +251,12 @@ class StoryService extends GetxService {
           title: 'New Story Created',
           message: '${user.displayName} created a new story: "${story.title}"',
           type: 'story_update',
-          actionUrl: '${AppRoutes.storyEditor}?id=${docRef.id}',
-          data: {'storyId': docRef.id},
+          actionUrl: '${AppRoutes.storyEditor}?id=${story.id}',
+          data: {'storyId': story.id},
         );
       }
 
-      return docRef.id;
+      return story.id;
     } catch (e) {
       Get.snackbar(
         'Error',

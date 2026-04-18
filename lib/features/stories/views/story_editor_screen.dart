@@ -362,11 +362,29 @@ class StoryEditorScreen extends StatelessWidget {
           child: Container(
             color: const Color(0xFFECEFF1),
             padding: const EdgeInsets.all(12),
-            child: quill.QuillEditor.basic(
-              configurations: quill.QuillEditorConfigurations(
-                controller: quillController,
-                placeholder: placeholder,
-                padding: EdgeInsets.zero,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                brightness: Brightness.light,
+              ),
+              child: quill.QuillEditor.basic(
+                configurations: quill.QuillEditorConfigurations(
+                  controller: quillController,
+                  placeholder: placeholder,
+                  padding: EdgeInsets.zero,
+                  customStyles: quill.DefaultStyles(
+                    paragraph: quill.DefaultListBlockStyle(
+                      const TextStyle(
+                        color: Colors.black,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      const quill.VerticalSpacing(0, 0),
+                      const quill.VerticalSpacing(0, 0),
+                      null,
+                      null,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

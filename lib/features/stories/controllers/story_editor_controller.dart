@@ -316,7 +316,9 @@ class StoryEditorController extends GetxController {
     isSaving.value = false;
     if (!isAutoSave) {
       isLoading.value = false;
-      // Removed Get.back() so the user can continue editing after a manual save
+      if (success) {
+        Get.back();
+      }
     }
   }
 

@@ -178,7 +178,11 @@ class RundownBuilderScreen extends StatelessWidget {
                                       child: ListTile(
                                         leading: const Icon(Icons.drag_handle),
                                         title: Text(story.title.isEmpty ? 'Untitled' : story.title),
-                                        subtitle: Text(story.deskId ?? 'Unknown Desk'),
+                                        subtitle: Text(story.deskId != null && story.deskId!.isNotEmpty
+                                            ? story.deskId!
+                                            : (story.category.isNotEmpty
+                                                ? story.category
+                                                : 'Unknown Desk')),
                                         trailing: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -210,7 +214,11 @@ class RundownBuilderScreen extends StatelessWidget {
                                           child: Text('${index + 1}', style: const TextStyle(color: Colors.white)),
                                         ),
                                         title: Text(story.title.isEmpty ? 'Untitled' : story.title),
-                                        subtitle: Text(story.deskId ?? 'Unknown Desk'),
+                                        subtitle: Text(story.deskId != null && story.deskId!.isNotEmpty
+                                            ? story.deskId!
+                                            : (story.category.isNotEmpty
+                                                ? story.category
+                                                : 'Unknown Desk')),
                                         trailing: Text(
                                           controller.formatDuration(story.duration),
                                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
