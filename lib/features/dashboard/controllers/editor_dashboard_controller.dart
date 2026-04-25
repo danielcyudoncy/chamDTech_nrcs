@@ -1,4 +1,4 @@
-// features/dashboard/controllers/editor_dashboard_controller.dart
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
@@ -9,41 +9,78 @@ import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:chamdtech_nrcs/features/stories/models/desk_model.dart';
+import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditorDashboardController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();
   final NotificationService _notificationService = Get.find<NotificationService>();
   final AuthService _authService = Get.find<AuthService>();
+  final FirebaseFirestore _firestore = FirebaseService.firestore;
   
-  final pendingStories = <StoryModel>[].obs;
-  final copyEditStories = <StoryModel>[].obs;
+  StreamSubscription<List<StoryModel>>? _storiesSubscription;
+  
+   final pendingStories = <StoryModel>[].obs;
+   final copyEditStories = <StoryModel>[].obs;
+   final allStories = <StoryModel>[].obs;
+  
   final isLoading = false.obs;
 
-  @override
+   @override
   void onInit() {
     super.onInit();
     loadEditorQueues();
   }
 
-  void loadEditorQueues() {
-    isLoading.value = true;
-    _storyService.getStories().listen((stories) {
-      // Pending review: submitted by reporter, wait for editor action
-      // We will consider pending and draft statuses for now, but specifically target those not verified/copy edited
-      // Depending on the exact workflow, let's assume 'pending' status indicates read for review.
-      // If reporter just leaves it draft, the editor might see it if they search, but 'pending' is key.
-      // Let's also include stage == AppConstants.stageNew
-      
+  @override
+  void onClose() {
+    _storiesSubscription?.cancel();
+    super.onClose();
+  }
+
+
+   void loadEditorQueues() {
+     isLoading.value = true;
+    _storiesSubscription?.cancel();
+    _storiesSubscription = _storyService.getStories().listen((stories) {
+      allStories.value = stories;
+
+      // 1. Identify which original stories have already been branched/re-edited
+      final originalIdsWithCopies = stories
+          .where((s) => s.parentStoryId != null)
+          .map((s) => s.parentStoryId)
+          .toSet();
+
+      // 2. Pending review: submitted by reporter, wait for editor action
       pendingStories.value = stories.where((s) {
+        if (s.parentStoryId == null && originalIdsWithCopies.contains(s.id)) {
+          return false;
+        }
         return s.status == AppConstants.statusPending || 
                (s.stage == AppConstants.stageNew && s.status != AppConstants.statusApproved);
       }).toList();
 
+      // 3. In Copy Edit
       copyEditStories.value = stories.where((s) {
         return s.stage == AppConstants.stageCopyEdited && s.status != AppConstants.statusApproved;
       }).toList();
 
+      Get.log('EditorDashboardController: Loaded ${stories.length} stories. Pending: ${pendingStories.length}, CopyEdit: ${copyEditStories.length}');
       isLoading.value = false;
+    }, onError: (error) {
+      Get.log('EditorDashboardController: Error in stories stream: $error');
+      isLoading.value = false;
+      // Optionally show a user-friendly message if it's a permission error
+      if (error.toString().contains('permission-denied')) {
+        Get.snackbar(
+          'Access Denied',
+          'You do not have permission to view the editorial queue.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.withValues(alpha: 0.1),
+          colorText: Colors.red.shade900,
+        );
+      }
     });
   }
 

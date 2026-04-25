@@ -48,7 +48,7 @@ class AdminController extends GetxController {
     _firestore.collection(AppConstants.usersCollection).snapshots().listen((snapshot) {
       allUsersList.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
       totalUsersCount.value = allUsersList.length;
-    });
+    }, onError: (e) => Get.log('AdminController: Error listening to users: $e'));
 
     // 2. Active Today (Users seen in the last 24 hours)
     _firestore
@@ -58,7 +58,7 @@ class AdminController extends GetxController {
         .listen((snapshot) {
       activeUsersList.value = snapshot.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
       activeTodayCount.value = activeUsersList.length;
-    });
+    }, onError: (e) => Get.log('AdminController: Error listening to active users: $e'));
 
     // 3. Stories Today
     _firestore
@@ -68,7 +68,7 @@ class AdminController extends GetxController {
         .listen((snapshot) {
       storiesTodayList.value = snapshot.docs.map((doc) => StoryModel.fromJson(doc.data())).toList();
       storiesTodayCount.value = storiesTodayList.length;
-    });
+    }, onError: (e) => Get.log('AdminController: Error listening to stories today: $e'));
 
     // 4. Active Rundowns (Status: On-Air)
     _firestore
@@ -78,7 +78,7 @@ class AdminController extends GetxController {
         .listen((snapshot) {
       activeRundownsList.value = snapshot.docs.map((doc) => RundownModel.fromJson(doc.data())).toList();
       activeRundownsCount.value = activeRundownsList.length;
-    });
+    }, onError: (e) => Get.log('AdminController: Error listening to active rundowns: $e'));
   }
 
 

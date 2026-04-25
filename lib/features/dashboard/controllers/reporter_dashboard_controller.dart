@@ -70,7 +70,7 @@ class ReporterDashboardController extends GetxController {
         ids.addAll(r.storyIds);
       }
       lockedStoryIds.assignAll(ids);
-    });
+    }, onError: (e) => Get.log('ReporterDashboardController: Error in rundown stream: $e'));
   }
 
   /// Returns true if this story is inside a locked/on-air rundown.
@@ -110,6 +110,9 @@ class ReporterDashboardController extends GetxController {
 
       isLoading.value = false;
 
+    }, onError: (e) {
+      Get.log('ReporterDashboardController: Error in story stream: $e');
+      isLoading.value = false;
     });
   }
 

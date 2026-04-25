@@ -267,10 +267,42 @@ class StoryService extends GetxService {
     }
   }
 
-  // Update story — with robust backend rundown-lock guard
-  Future<bool> updateStory(StoryModel story) async {
+  // Update story — with branched editing for editors to preserve original scripts
+  Future<String?> updateStory(StoryModel story) async {
+    final currentUser = _authService.currentUser.value;
+    if (currentUser == null) return null;
+
     try {
-      // ── Backend guard check (with local try-catch for permissions) ──────
+      // ── Branching Logic for Editors/Producers ────────────────────────────────
+      // We branch if:
+      // 1. Current user is an Editor, Admin, or Producer
+      // 2. They are NOT the author of the story
+      // 3. This is an ORIGINAL story (parentStoryId is null)
+      bool isStaff = currentUser.role == AppConstants.roleEditor ||
+          currentUser.role == AppConstants.roleAdmin ||
+          currentUser.role == AppConstants.roleProducer;
+      bool isNotAuthor = story.authorId != currentUser.id;
+
+      if (isStaff && isNotAuthor && story.parentStoryId == null) {
+        // Redirect the save to the re-edited copy instead of the original
+        // This ensures the original script remains exactly as sent by the reporter
+        Get.log(
+            'Branching save for story ${story.id} (Author: ${story.authorId}, User: ${currentUser.id})');
+        final copyId =
+            await _handleEditorApprovalCopy(story, isFinalApproval: false);
+        return copyId;
+      }
+      // ────────────────────────────────────────────────────────────────────────
+
+      // ── Standard Update Logic ───────────────────────────────────────────────
+      // Final safeguard: If we are somehow still trying to update an original story
+      // that isn't ours, block content updates.
+      if (isStaff && isNotAuthor && story.parentStoryId == null) {
+        Get.log('Blocking accidental original update for story ${story.id}');
+        return await _handleEditorApprovalCopy(story, isFinalApproval: false);
+      }
+
+      // Backend guard check (with local try-catch for permissions)
       if (story.linkedRundownId != null && story.linkedRundownId!.isNotEmpty) {
         try {
           final rundownDoc = await _firestore
@@ -287,22 +319,20 @@ class StoryService extends GetxService {
                 backgroundColor: Colors.red.shade50,
                 colorText: Colors.red.shade900,
               );
-              return false;
+              return null;
             }
           }
         } catch (e) {
-          // Local catch: if permission denied for rundowns, proceed with saving story anyway
           Get.log(
-              'Note: Permission or fetch error checking rundown ${story.linkedRundownId}. Proceeding with save.');
+              'Note: Permission error checking rundown ${story.linkedRundownId}.');
         }
       }
 
-      // ── Use set with merge: true (more robust than update) ────────────────
       await _firestore
           .collection(AppConstants.storiesCollection)
           .doc(story.id)
           .set(story.toJson(), SetOptions(merge: true));
-      return true;
+      return story.id;
     } catch (e) {
       Get.log('Error in updateStory: $e');
       Get.snackbar(
@@ -310,7 +340,7 @@ class StoryService extends GetxService {
         'Failed to update story: ${e.toString().split(']').last.trim()}',
         snackPosition: SnackPosition.BOTTOM,
       );
-      return false;
+      return null;
     }
   }
 
@@ -399,20 +429,53 @@ class StoryService extends GetxService {
 
   // Approve story
   Future<bool> approveStory(String storyId) async {
-    final userId = _authService.currentUser.value?.id;
-    if (userId == null) return false;
+    final currentUser = _authService.currentUser.value;
+    if (currentUser == null) return false;
 
     try {
+      // Fetch original story data first
+      final storyDoc = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .get();
+
+      if (!storyDoc.exists) return false;
+      final originalStory = StoryModel.fromJson(storyDoc.data()!);
+
       await _firestore
           .collection(AppConstants.storiesCollection)
           .doc(storyId)
           .update({
         'status': AppConstants.statusApproved,
         'stage': AppConstants.stageVerified,
-        'approvedBy': userId,
+        'approvedBy': currentUser.id,
         'approvedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      // If this is a re-edited copy, mark the original as archived so it leaves the editorial queue
+      if (originalStory.parentStoryId != null) {
+        await _firestore
+            .collection(AppConstants.storiesCollection)
+            .doc(originalStory.parentStoryId)
+            .update({
+          'status': AppConstants.statusArchived,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // ── "Re-edited" Copy Workflow ─────────────────────────────────────────
+      // If the approver is staff and NOT the original author
+      bool isStaff = currentUser.role == AppConstants.roleEditor ||
+          currentUser.role == AppConstants.roleAdmin ||
+          currentUser.role == AppConstants.roleProducer;
+
+      if (isStaff &&
+          originalStory.authorId != currentUser.id &&
+          originalStory.parentStoryId == null) {
+        await _handleEditorApprovalCopy(originalStory, isFinalApproval: true);
+      }
+      // ──────────────────────────────────────────────────────────────────────
 
       Get.snackbar(
         'Success',
@@ -421,31 +484,24 @@ class StoryService extends GetxService {
       );
 
       // Log approval
-      final user = _authService.currentUser.value!;
-
-      // Fetch title for log if needed, or just log ID
-      final storyDoc = await _firestore
-          .collection(AppConstants.storiesCollection)
-          .doc(storyId)
-          .get();
-      final title = storyDoc.data()?['title'] ?? 'Unknown Story';
+      final title = originalStory.title;
 
       await _activityLogService.logActivity(ActivityLogModel.storyApproved(
         id: const Uuid().v4(),
-        userId: user.id,
-        userName: user.displayName,
+        userId: currentUser.id,
+        userName: currentUser.displayName,
         storyId: storyId,
         storyTitle: title,
       ));
 
       // Notify Creator
-      final authorId = storyDoc.data()?['authorId'];
-      if (authorId != null) {
+      final authorId = originalStory.authorId;
+      if (authorId.isNotEmpty) {
         await _notificationService.notifyRelevantUsers(
           userIds: [authorId],
           title: 'Story Approved',
           message:
-              'Your story "$title" has been approved by ${user.displayName}',
+              'Your story "$title" has been approved by ${currentUser.displayName}',
           type: 'story_update',
           actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
           data: {'storyId': storyId},
@@ -475,6 +531,77 @@ class StoryService extends GetxService {
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
+    }
+  }
+
+  /// Handles creating or updating a "re-edited" copy for the original author
+  Future<String?> _handleEditorApprovalCopy(StoryModel originalStory,
+      {required bool isFinalApproval}) async {
+    try {
+      // 1. Check if a copy already exists for this original story
+      final existingCopies = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .where('parentStoryId', isEqualTo: originalStory.id)
+          .limit(1)
+          .get();
+
+      const String reEditedTag = "re-edited by the News editor";
+      const String titlePrefix = "[Re-edited] ";
+      final String newTitle = originalStory.title.startsWith(titlePrefix)
+          ? originalStory.title
+          : "$titlePrefix${originalStory.title}";
+
+      // Ensure the tag exists in the list
+      List<String> updatedTags = List<String>.from(originalStory.tags);
+      if (!updatedTags.contains(reEditedTag)) {
+        updatedTags.add(reEditedTag);
+      }
+
+      if (existingCopies.docs.isNotEmpty) {
+        // 2. Update existing copy
+        final copyId = existingCopies.docs.first.id;
+        await _firestore
+            .collection(AppConstants.storiesCollection)
+            .doc(copyId)
+            .update({
+          'title': newTitle,
+          'content': originalStory.content,
+          'tags': updatedTags,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'version': FieldValue.increment(1),
+          'status': isFinalApproval
+              ? AppConstants.statusApproved
+              : originalStory.status,
+          'category': originalStory.category,
+          'duration': originalStory.duration,
+          'attachments':
+              originalStory.attachments.map((e) => e.toJson()).toList(),
+        });
+        return copyId;
+      } else {
+        // 3. Create new copy
+        final newCopyId = const Uuid().v4();
+        final newCopy = originalStory.copyWith(
+          id: newCopyId,
+          title: newTitle,
+          parentStoryId: originalStory.id,
+          tags: updatedTags,
+          updatedAt: DateTime.now(),
+          createdAt: DateTime.now(),
+          status: isFinalApproval
+              ? AppConstants.statusApproved
+              : originalStory.status,
+        );
+
+        await _firestore
+            .collection(AppConstants.storiesCollection)
+            .doc(newCopy.id)
+            .set(newCopy.toJson());
+        return newCopyId;
+      }
+    } catch (e) {
+      Get.log('Error handling editor approval copy: $e');
+      return null;
     }
   }
 
@@ -553,6 +680,25 @@ class StoryService extends GetxService {
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
+    }
+  }
+
+  // Helper to find a re-edited copy of a story
+  Future<StoryModel?> findReEditedCopy(String originalStoryId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .where('parentStoryId', isEqualTo: originalStoryId)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return StoryModel.fromJson(snapshot.docs.first.data());
+      }
+      return null;
+    } catch (e) {
+      Get.log('Error finding re-edited copy: $e');
+      return null;
     }
   }
 

@@ -280,12 +280,26 @@ class StoryEditorController extends GetxController {
       assignedToName: existingStory?.assignedToName,
     );
 
-    final success = existingStory != null 
-        ? await _storyService.updateStory(story)
-        : await _storyService.createStory(story) != null;
+    String? updatedId;
+    if (existingStory != null) {
+      updatedId = await _storyService.updateStory(story);
+    } else {
+      updatedId = await _storyService.createStory(story);
+    }
+
+    final success = updatedId != null;
 
     if (success) {
-      existingStory = story;
+      // If the ID changed (branched edit), re-fetch the latest story model
+      if (existingStory == null || existingStory!.id != updatedId) {
+        final newStory = await _storyService.getStoryById(updatedId);
+        if (newStory != null) {
+          existingStory = newStory;
+        }
+      } else {
+        existingStory = story;
+      }
+      
       lastSaved.value = now;
       
       if (existingStory!.version > 1) {

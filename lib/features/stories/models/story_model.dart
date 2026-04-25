@@ -28,6 +28,7 @@ class StoryModel {
   final String category; // Story category (NEWS, POLITICS, SPORTS, FOREIGN, BUSINESS)
   final String? assignedToId;
   final String? assignedToName;
+  final String? parentStoryId; // ID of the original story this is a copy of
   
   StoryModel({
     required this.id,
@@ -56,6 +57,7 @@ class StoryModel {
     this.category = '',
     this.assignedToId,
     this.assignedToName,
+    this.parentStoryId,
   });
   
   Map<String, dynamic> toJson() {
@@ -86,6 +88,7 @@ class StoryModel {
       'category': category,
       'assignedToId': assignedToId,
       'assignedToName': assignedToName,
+      'parentStoryId': parentStoryId,
     };
   }
   
@@ -133,6 +136,7 @@ class StoryModel {
       category: json['category'] ?? '',
       assignedToId: json['assignedToId'],
       assignedToName: json['assignedToName'],
+      parentStoryId: json['parentStoryId'],
     );
   }
   
@@ -163,6 +167,7 @@ class StoryModel {
     String? category,
     String? assignedToId,
     String? assignedToName,
+    String? parentStoryId,
   }) {
     return StoryModel(
       id: id ?? this.id,
@@ -191,6 +196,7 @@ class StoryModel {
       category: category ?? this.category,
       assignedToId: assignedToId ?? this.assignedToId,
       assignedToName: assignedToName ?? this.assignedToName,
+      parentStoryId: parentStoryId ?? this.parentStoryId,
     );
   }
 }

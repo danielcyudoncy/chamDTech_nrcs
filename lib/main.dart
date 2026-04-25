@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // For FlutterQuillLocalizations
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_quill/translations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 // Note: we intentionally avoid globally suppressing the browser context menu
 // so that users can select and copy text like a normal webpage.
@@ -49,24 +50,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'chamDTech NRCS',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeConfig.lightTheme,
-      darkTheme: ThemeConfig.darkTheme,
-      themeMode:
-          ThemeMode.system, // Respect system setting or use Get.changeThemeMode
-      initialRoute: AppRoutes.splash,
-      getPages: AppRoutes.routes,
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        FlutterQuillLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('en', 'US'),
-      ],
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return GetMaterialApp(
+          title: 'chamDTech NRCS',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeConfig.lightTheme,
+          darkTheme: ThemeConfig.darkTheme,
+          themeMode: ThemeMode.system,
+          initialRoute: AppRoutes.splash,
+          getPages: AppRoutes.routes,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            FlutterQuillLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', 'US'),
+          ],
+        );
+      },
     );
   }
 }

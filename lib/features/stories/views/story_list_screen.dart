@@ -93,8 +93,13 @@ class StoryListScreen extends StatelessWidget {
                             controller.selectedStoryId.value = story.id;
                           },
                           onDelete: controller.showArchived.value
-                              ? null
+                              ? (controller.isAdmin 
+                                  ? () => controller.deleteStory(story.id)
+                                  : null)
                               : () => controller.archiveStory(story.id),
+                          deleteTooltip: controller.showArchived.value 
+                              ? 'Permanently Delete Story' 
+                              : 'Archive Story',
                         ));
                   },
                 ),
@@ -233,45 +238,51 @@ class _DetailHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        Row(
+        Wrap(
+          spacing: 16,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const Text(
-              'MASTER:',
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1A237E),
-                fontSize: 13,
-                letterSpacing: 0.5,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'MASTER:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E),
+                    fontSize: 13,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Checkbox(
+                    value: true,
+                    onChanged: (_) {},
+                    activeColor: const Color(0xFF1A237E),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  selectedStory.parentStoryId != null ? 'RE-EDITED VERSION' : 'ORIGINAL VERSION',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF546E7A),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            SizedBox(
-              height: 24,
-              width: 24,
-              child: Checkbox(
-                value: true,
-                onChanged: (_) {},
-                activeColor: const Color(0xFF1A237E),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4)),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'FIRST VERSION',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF546E7A),
-                fontSize: 13,
-              ),
-            ),
-            const Spacer(),
-            const _HeaderBadge(
+            _HeaderBadge(
               label: 'Words',
-              value: '250',
+              value: '${Get.find<StoryController>().calculateWordCount(selectedStory.content)}',
               icon: Icons.text_fields,
             ),
-            const SizedBox(width: 16),
             _HeaderBadge(
               label: 'Duration',
               value: core_date_utils.DateUtils.formatDuration(

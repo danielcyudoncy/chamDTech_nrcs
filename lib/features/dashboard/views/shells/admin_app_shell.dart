@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/desk_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/views/widgets/editorial_desks_view.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
@@ -32,6 +34,20 @@ class _AdminAppShellState extends State<AdminAppShell> {
     'Configurations',
     'Audit Logs',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Read tab argument from top nav navigation
+    final args = Get.arguments;
+    if (args is Map && args['tab'] != null) {
+      final tabName = args['tab'] as String;
+      final idx = _tabs.indexOf(tabName);
+      if (idx != -1) {
+        _selectedIndex = idx;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +172,15 @@ class _AdminAppShellState extends State<AdminAppShell> {
     } else if (tab == 'Privileges') {
       Get.toNamed(AppRoutes.adminPrivileges);
     } else if (tab == 'Desks') {
-      Get.toNamed(AppRoutes.adminDesks);
+      try {
+        final deskController = Get.find<DeskController>();
+        deskController.selectedDeskId.value = ''; // Show grid
+      } catch (e) {
+        // Not initialized
+      }
+      setState(() {
+        _selectedIndex = index;
+      });
     } else if (tab == 'Story States') {
       Get.toNamed(AppRoutes.adminStoryState);
     } else if (tab == 'Configurations') {
@@ -252,9 +276,29 @@ class _AdminAppShellState extends State<AdminAppShell> {
     switch (_selectedIndex) {
       case 0:
         return _buildAdminHome(controller, isMobile);
+      case 3: // Desks
+        return _buildAdminDesks(isMobile);
       default:
         return _buildAdminHome(controller, isMobile);
     }
+  }
+
+  Widget _buildAdminDesks(bool isMobile) {
+    return EditorialDesksView(
+      isMobile: isMobile,
+      headerActions: ElevatedButton.icon(
+        onPressed: () => Get.toNamed(AppRoutes.adminDesks),
+        icon: const Icon(Icons.settings, size: 18),
+        label: const Text('MANAGE DESKS'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A237E),
+          side: const BorderSide(color: Color(0xFF1A237E)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+        ),
+      ),
+    );
   }
 
   Widget _buildAdminHome(AdminController controller, bool isMobile) {

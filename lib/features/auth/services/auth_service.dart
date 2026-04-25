@@ -10,6 +10,8 @@ import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/desk_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
@@ -268,6 +270,11 @@ class AuthService extends GetxService {
       await _setUserOnlineStatus(false);
       await _auth.signOut();
       currentUser.value = null;
+      
+      // Clear session controllers to prevent stale data/permission errors
+      try { Get.delete<DeskController>(force: true); } catch (_) {}
+      try { Get.delete<EditorDashboardController>(force: true); } catch (_) {}
+      
       Get.offAllNamed(AppRoutes.login);
     } catch (e) {
       Get.log('Error signing out: $e');

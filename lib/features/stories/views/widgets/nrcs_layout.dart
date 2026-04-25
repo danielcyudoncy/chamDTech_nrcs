@@ -12,6 +12,7 @@ import 'package:chamdtech_nrcs/features/stories/views/widgets/top_stories_ticker
 import 'package:chamdtech_nrcs/features/stories/views/widgets/breaking_news_ticker.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class NRCSColors {
   static const Color topNavBlue = Color(0xFF2B439B);
@@ -329,6 +330,19 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                         // when on the stories route to avoid both tabs showing active simultaneously.
                         isActive = currentRoute == route && tab == 'My Stories';
                       }
+                    } else if (route == AppRoutes.editorDashboard || 
+                               route == AppRoutes.adminDashboard || 
+                               route == AppRoutes.producerDashboard) {
+                      final args = Get.arguments;
+                      if (args is Map && args['tab'] != null) {
+                        isActive = (currentRoute == route) && (args['tab'] == tab);
+                      } else {
+                        // If no tab arg, the primary dashboard button should be active
+                        isActive = (currentRoute == route) && 
+                                  (tab == 'Editor Dashboard' || 
+                                   tab == 'Admin Dashboard' || 
+                                   tab == 'Producer Dashboard');
+                      }
                     } else {
                       isActive = currentRoute == route;
                     }
@@ -378,6 +392,18 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
                       }
 
                       if (route != null) {
+                        // For dashboard-integrated tabs, if we are an Editor or Admin, we want to stay in the Dashboard
+                        // but tell it to open the specific tab.
+                        if (tab == 'Desks' || tab == 'Archive' || tab == 'Review Queue') {
+                          if (role == AppConstants.roleEditor) {
+                            Get.offAllNamed(AppRoutes.editorDashboard, arguments: {'tab': tab});
+                            return;
+                          } else if (role == AppConstants.roleAdmin) {
+                            Get.offAllNamed(AppRoutes.adminDashboard, arguments: {'tab': tab});
+                            return;
+                          }
+                        }
+
                         if (currentRoute != route) {
                           Get.offAllNamed(route, arguments: {'tab': tab});
                         } else {
@@ -816,8 +842,29 @@ class NRCSToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Get.width < 600;
+    
+    final buttons = [
+      _ToolbarActionButton(label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
+      _ToolbarActionButton(label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
+      _ToolbarActionButton(label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
+      _ToolbarActionButton(label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
+      _ToolbarActionButton(label: 'Move', onTap: onMove, icon: Icons.move_to_inbox_outlined),
+      _ToolbarActionButton(label: 'Link', onTap: onLink, icon: Icons.link),
+      _ToolbarActionButton(label: 'Assign', onTap: onAssign, icon: Icons.assignment_ind_outlined),
+      _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
+      _ToolbarActionButton(label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
+      _ToolbarActionButton(
+        label: 'Powerview',
+        isBordered: true,
+        borderColor: NRCSColors.activeOrange,
+        onTap: onPowerview,
+        icon: Icons.remove_red_eye_outlined,
+      ),
+    ];
+
     return Container(
-      height: 48,
+      height: isMobile ? 32.h : 48,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
@@ -829,37 +876,8 @@ class NRCSToolbar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(width: 8),
-            _ToolbarActionButton(
-                label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
-            _ToolbarActionButton(
-                label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
-            _ToolbarActionButton(
-                label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
-            _ToolbarActionButton(
-                label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
-            _ToolbarActionButton(
-                label: 'Move',
-                onTap: onMove,
-                icon: Icons.move_to_inbox_outlined),
-            _ToolbarActionButton(
-                label: 'Link', onTap: onLink, icon: Icons.link),
-            _ToolbarActionButton(
-                label: 'Assign',
-                onTap: onAssign,
-                icon: Icons.assignment_ind_outlined),
-            _ToolbarActionButton(
-                label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
-            _ToolbarActionButton(
-                label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
-            const SizedBox(width: 8),
-            _ToolbarActionButton(
-              label: 'Powerview',
-              isBordered: true,
-              borderColor: NRCSColors.activeOrange,
-              onTap: onPowerview,
-              icon: Icons.remove_red_eye_outlined,
-            ),
-            const SizedBox(width: 16),
+            ...buttons.map((b) => Padding(padding: const EdgeInsets.only(right: 4), child: b)),
+            const SizedBox(width: 12),
           ],
         ),
       ),
@@ -879,10 +897,11 @@ class CategoryToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Get.width < 600;
     final categories = ['All', ...AppConstants.storyCategories];
-
+    
     return Container(
-      height: 56,
+      height: isMobile ? 42.h : 56,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
@@ -925,19 +944,23 @@ class _ModernCategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Get.width < 600;
     final color = _getCategoryColor(label);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: Material(
         color: isActive ? color : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 20.r : 20),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isMobile ? 20.r : 20),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 10.w : 16, 
+              vertical: isMobile ? 4.h : 8
+            ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(isMobile ? 20.r : 20),
               border: Border.all(
                 color: isActive ? Colors.transparent : Colors.grey.shade300,
                 width: 1,
@@ -957,7 +980,7 @@ class _ModernCategoryChip extends StatelessWidget {
                   style: TextStyle(
                     color: isActive ? Colors.white : const Color(0xFF263238),
                     fontWeight: isActive ? FontWeight.w900 : FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: isMobile ? 11.sp : 13,
                   ),
                 ),
               ],
@@ -1015,16 +1038,17 @@ class _ToolbarActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = Get.width < 600;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 2.w : 4),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(isMobile ? 8.r : 8),
         child: Container(
-          height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          height: isMobile ? 26.h : 36,
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? 4.w : 12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(isMobile ? 8.r : 8),
             border: isBordered && borderColor != null
                 ? Border.all(color: borderColor!, width: 1.5)
                 : Border.all(color: Colors.transparent),
@@ -1036,17 +1060,17 @@ class _ToolbarActionButton extends StatelessWidget {
             children: [
               if (icon != null) ...[
                 Icon(icon,
-                    size: 16,
+                    size: isMobile ? 12.sp : 16,
                     color: isBordered
                         ? (borderColor ?? NRCSColors.primaryBlue)
                         : NRCSColors.primaryBlue),
-                const SizedBox(width: 6),
+                SizedBox(width: isMobile ? 2.sp : 6),
               ],
               Text(
                 label,
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: isMobile ? 8.sp : 12,
                     color: isBordered
                         ? (borderColor ?? NRCSColors.primaryBlue)
                         : NRCSColors.textDark),
@@ -1069,6 +1093,7 @@ class NRCSStoryListItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final String? deleteTooltip;
 
   const NRCSStoryListItem({
     super.key,
@@ -1081,6 +1106,7 @@ class NRCSStoryListItem extends StatelessWidget {
     required this.onTap,
     this.isSelected = false,
     this.onDelete,
+    this.deleteTooltip,
   });
 
   @override
@@ -1151,7 +1177,7 @@ class NRCSStoryListItem extends StatelessWidget {
                     onPressed: onDelete,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    tooltip: 'Archive Story',
+                    tooltip: deleteTooltip ?? 'Archive Story',
                   )
                 else
                   Icon(Icons.videocam_outlined,
