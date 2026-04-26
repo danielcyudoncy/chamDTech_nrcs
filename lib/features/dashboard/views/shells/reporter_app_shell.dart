@@ -650,7 +650,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -722,23 +723,19 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                 ),
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.all(isMobile ? 16 : 24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
-                      style: const TextStyle(
-                        fontSize: 16, 
-                        height: 1.6, 
-                        color: Color(0xFF263238) // Explicit dark charcoal
-                      ),
-                    ),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(isMobile ? 16 : 24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SelectableText(
+                  story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
+                  style: const TextStyle(
+                    fontSize: 16, 
+                    height: 1.6, 
+                    color: Color(0xFF263238) // Explicit dark charcoal
                   ),
                 ),
               ),
@@ -788,6 +785,7 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
             ],
           ),
         ),
+      ),
       ),
       barrierColor: Colors.black.withValues(alpha: 0.5), // Dim the background
     );

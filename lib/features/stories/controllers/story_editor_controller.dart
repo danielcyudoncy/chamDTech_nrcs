@@ -14,12 +14,14 @@ import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
 import 'package:uuid/uuid.dart';
 
 class StoryEditorController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();
   final AuthService _authService = Get.find<AuthService>();
   final NotificationService _notificationService = Get.find<NotificationService>();
+  final RundownService _rundownService = Get.find<RundownService>();
 
   final titleController = TextEditingController();
   final slugController = TextEditingController();
@@ -40,6 +42,7 @@ class StoryEditorController extends GetxController {
   final anchorWordCount = 0.obs;
   final notesWordCount = 0.obs;
   final formattedDuration = '00:00:00'.obs;
+  final isReadOnly = false.obs;
 
   StoryModel? existingStory;
   Timer? _autoSaveTimer;
@@ -116,6 +119,9 @@ class StoryEditorController extends GetxController {
       
       // Load content
       _loadContent(existingStory!.content);
+      
+      // Check if this story should be read-only
+      _checkReadOnlyState();
     } else {
       anchorQuillController = quill.QuillController.basic();
       notesQuillController = quill.QuillController.basic();
@@ -185,6 +191,21 @@ class StoryEditorController extends GetxController {
     }
   }
 
+  Future<void> _checkReadOnlyState() async {
+    if (existingStory == null) return;
+    
+    // Rule: If a script has been approved once and it has been added to rundown, 
+    // it can only be opened for read-only.
+    if (existingStory!.status == AppConstants.statusApproved) {
+      final rundowns = await _rundownService.getRundownsForStory(existingStory!.id);
+      if (rundowns.isNotEmpty) {
+        isReadOnly.value = true;
+        anchorQuillController.readOnly = true;
+        notesQuillController.readOnly = true;
+      }
+    }
+  }
+
   void _loadContent(String contentJson) {
     try {
       final decoded = jsonDecode(contentJson);
@@ -227,6 +248,10 @@ class StoryEditorController extends GetxController {
   }
 
   Future<void> saveStory({bool isAutoSave = false, String? nextStage}) async {
+    if (isReadOnly.value && !isAutoSave) {
+      Get.snackbar('Read Only', 'This story is in a rundown and cannot be modified.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
     if (titleController.text.isEmpty) return;
 
     // Validate category is selected (skip during auto-save to avoid spamming)
@@ -527,6 +552,10 @@ class StoryEditorController extends GetxController {
   }
 
   Future<void> approveStory() async {
+    if (isReadOnly.value) {
+      Get.snackbar('Read Only', 'This story is already approved and in a rundown.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
     if (existingStory == null) {
       Get.snackbar('Error', 'Cannot approve a new story. Please save first.', snackPosition: SnackPosition.BOTTOM);
       return;
@@ -547,6 +576,10 @@ class StoryEditorController extends GetxController {
   }
 
   Future<void> submitStory() async {
+    if (isReadOnly.value) {
+      Get.snackbar('Read Only', 'This story is already approved and in a rundown.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
     if (existingStory == null) {
       Get.snackbar('Error', 'Please save the story as a draft first before submitting.', snackPosition: SnackPosition.BOTTOM);
       return;

@@ -59,7 +59,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             ],
           ),
         ),
-      )),
+      ),
+    )),
     );
   }
 
@@ -353,7 +354,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             width: 800,
             height: 600,
           padding: const EdgeInsets.all(40),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
@@ -406,13 +408,9 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 1),
               ),
               const SizedBox(height: 16),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Text(
-                    story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
-                    style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF263238)),
-                  ),
-                ),
+              Text(
+                story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
+                style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF263238)),
               ),
               const SizedBox(height: 32),
               Row(
@@ -436,7 +434,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             ],
           ),
         ),
-      )),
+      ),
+    )),
     );
   }
 

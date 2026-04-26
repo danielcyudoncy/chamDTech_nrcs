@@ -106,6 +106,22 @@ class RundownService extends GetxService {
     }
   }
 
+  /// Returns all rundowns that contain [storyId].
+  Future<List<RundownModel>> getRundownsForStory(String storyId) async {
+    try {
+      final snapshot = await _firestore
+          .collection(collectionName)
+          .where('storyIds', arrayContains: storyId)
+          .get();
+      return snapshot.docs
+          .map((doc) => RundownModel.fromJson(doc.data()))
+          .toList();
+    } catch (e) {
+      Get.log('Error checking rundowns for story $storyId: $e');
+      return [];
+    }
+  }
+
   /// Returns locked/on-air rundowns that contain [storyId].
   /// Used to determine whether a reporter can edit an approved story.
   Future<List<RundownModel>> getLockedRundownsForStory(String storyId) async {

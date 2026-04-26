@@ -123,22 +123,23 @@ class StoryEditorScreen extends StatelessWidget {
                 icon: Icons.add_box_outlined,
                 label: 'New',
                 onTap: () => controller.handleNew()),
-            _ToolbarButton(
-                icon: Icons.save_outlined,
-                label: 'Save',
-                onTap: () => controller.saveStory()),
+            if (!controller.isReadOnly.value)
+              _ToolbarButton(
+                  icon: Icons.save_outlined,
+                  label: 'Save',
+                  onTap: () => controller.saveStory()),
 
-            // Submit button (only for drafts)
-            if (controller.existingStory?.status == AppConstants.statusDraft)
+            // Submit button (only for drafts and not read-only)
+            if (controller.existingStory?.status == AppConstants.statusDraft && !controller.isReadOnly.value)
               _ToolbarButton(
                 icon: Icons.send_outlined,
                 label: 'Submit',
                 onTap: () => controller.submitStory(),
               ),
 
-            // Approve button (only for authorized users when story is pending)
+            // Approve button (only for authorized users when story is pending and not read-only)
             if (PermissionHelpers.canApproveStory(controller.currentUser) &&
-                controller.existingStory?.status == AppConstants.statusPending)
+                controller.existingStory?.status == AppConstants.statusPending && !controller.isReadOnly.value)
               _ToolbarButton(
                   icon: Icons.check_circle_outline,
                   label: 'Approve',
@@ -235,6 +236,7 @@ class StoryEditorScreen extends StatelessWidget {
               controller: controller.titleController,
               maxLines: 2,
               minLines: 1,
+              enabled: !controller.isReadOnly.value,
               decoration: InputDecoration(
                 hintText: 'Enter Story Title...',
                 isDense: true,
@@ -292,6 +294,7 @@ class StoryEditorScreen extends StatelessWidget {
               width: 300,
               child: TextField(
                 controller: controller.titleController,
+                enabled: !controller.isReadOnly.value,
                 decoration: InputDecoration(
                   hintText: 'Enter Story Title...',
                   isDense: true,
@@ -388,8 +391,8 @@ class StoryEditorScreen extends StatelessWidget {
                     fontSize: 12),
               ),
               const Spacer(), // Pushes buttons to the right
-              // Action Buttons based on permissions
-              if (PermissionHelpers.canApproveStory(controller.currentUser))
+              // Action Buttons based on permissions (hide if read-only)
+              if (PermissionHelpers.canApproveStory(controller.currentUser) && !controller.isReadOnly.value)
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: ElevatedButton.icon(
@@ -417,13 +420,12 @@ class StoryEditorScreen extends StatelessWidget {
                           authorName: '',
                           status: 'draft',
                           createdAt: DateTime.now(),
-                          updatedAt: DateTime.now())))
+                          updatedAt: DateTime.now())) && !controller.isReadOnly.value)
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      // Delete logic
-                      Get.back();
+                      controller.handleDelete();
                     },
                     icon: const Icon(Icons.delete, size: 16),
                     label: const Text('Delete'),
@@ -436,35 +438,36 @@ class StoryEditorScreen extends StatelessWidget {
             ],
           ),
         ),
-        Container(
-          color: NRCSColors.topNavBlue,
-          child: quill.QuillSimpleToolbar(
-            configurations: quill.QuillSimpleToolbarConfigurations(
-              controller: quillController,
-              showAlignmentButtons: false,
-              showSmallButton: true,
-              multiRowsDisplay: false,
-              buttonOptions: const quill.QuillSimpleToolbarButtonOptions(
-                base: quill.QuillToolbarBaseButtonOptions(
-                  iconTheme: quill.QuillIconTheme(
-                    iconButtonSelectedData: quill.IconButtonData(
-                      color: Colors.white,
-                    ),
-                    iconButtonUnselectedData: quill.IconButtonData(
-                      color: Colors.white70,
+        if (!controller.isReadOnly.value)
+          Container(
+            color: NRCSColors.topNavBlue,
+            child: quill.QuillSimpleToolbar(
+              configurations: quill.QuillSimpleToolbarConfigurations(
+                controller: quillController,
+                showAlignmentButtons: false,
+                showSmallButton: true,
+                multiRowsDisplay: false,
+                buttonOptions: const quill.QuillSimpleToolbarButtonOptions(
+                  base: quill.QuillToolbarBaseButtonOptions(
+                    iconTheme: quill.QuillIconTheme(
+                      iconButtonSelectedData: quill.IconButtonData(
+                        color: Colors.white,
+                      ),
+                      iconButtonUnselectedData: quill.IconButtonData(
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
-                ),
-                fontFamily: quill.QuillToolbarFontFamilyButtonOptions(
-                  style: TextStyle(fontSize: 12, color: Colors.white),
-                ),
-                fontSize: quill.QuillToolbarFontSizeButtonOptions(
-                  style: TextStyle(fontSize: 12, color: Colors.white),
+                  fontFamily: quill.QuillToolbarFontFamilyButtonOptions(
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                  fontSize: quill.QuillToolbarFontSizeButtonOptions(
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         Expanded(
           child: Container(
             color: const Color(0xFFECEFF1),
@@ -658,11 +661,13 @@ class StoryEditorScreen extends StatelessWidget {
                 ),
               );
             }).toList(),
-            onChanged: (value) {
-              if (value != null) {
-                controller.selectedCategory.value = value;
-              }
-            },
+            onChanged: controller.isReadOnly.value 
+                ? null 
+                : (value) {
+                    if (value != null) {
+                      controller.selectedCategory.value = value;
+                    }
+                  },
           ),
         ),
       );

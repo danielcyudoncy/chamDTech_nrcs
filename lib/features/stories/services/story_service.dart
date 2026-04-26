@@ -15,6 +15,7 @@ import 'package:uuid/uuid.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
 
 class StoryService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
@@ -441,6 +442,17 @@ class StoryService extends GetxService {
 
       if (!storyDoc.exists) return false;
       final originalStory = StoryModel.fromJson(storyDoc.data()!);
+
+      // Rule: If a script has been approved once and it has been added to rundown,
+      // it cannot be approved again.
+      if (originalStory.status == AppConstants.statusApproved) {
+        final rundownService = Get.find<RundownService>();
+        final rundowns = await rundownService.getRundownsForStory(storyId);
+        if (rundowns.isNotEmpty) {
+          Get.snackbar('Approval Blocked', 'This story is already approved and in a rundown.');
+          return false;
+        }
+      }
 
       await _firestore
           .collection(AppConstants.storiesCollection)
