@@ -11,6 +11,7 @@ import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 import 'package:intl/intl.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
 
 
 
@@ -33,6 +34,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
     'Archive',
     'Configurations',
     'Audit Logs',
+    'Notifications',
   ];
 
   @override
@@ -134,6 +136,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
                               case 'Archive': icon = Icons.archive_outlined; break;
                               case 'Configurations': icon = Icons.settings_outlined; break;
                               case 'Audit Logs': icon = Icons.history; break;
+                              case 'Notifications': icon = Icons.notifications_none; break;
                               default: icon = Icons.folder_outlined;
                             }
                             return ListTile(
@@ -238,6 +241,7 @@ class _AdminAppShellState extends State<AdminAppShell> {
               case 'Story States': icon = Icons.low_priority; break;
               case 'Configurations': icon = Icons.settings_outlined; break;
               case 'Audit Logs': icon = Icons.history; break;
+              case 'Notifications': icon = Icons.notifications_none; break;
               default: icon = Icons.folder_outlined;
             }
 
@@ -278,6 +282,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
         return _buildAdminHome(controller, isMobile);
       case 3: // Desks
         return _buildAdminDesks(isMobile);
+      case 8: // Notifications
+        return const NotificationsTab();
       default:
         return _buildAdminHome(controller, isMobile);
     }

@@ -59,6 +59,20 @@ class StoryModel {
     this.assignedToName,
     this.parentStoryId,
   });
+
+  factory StoryModel.empty() {
+    return StoryModel(
+      id: '',
+      title: '',
+      slug: '',
+      content: '',
+      authorId: '',
+      authorName: '',
+      status: 'draft',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
   
   Map<String, dynamic> toJson() {
     return {

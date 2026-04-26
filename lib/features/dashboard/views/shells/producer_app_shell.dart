@@ -9,6 +9,7 @@ import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/widgets/story_pool_widget.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
 
 class ProducerAppShell extends StatefulWidget {
   const ProducerAppShell({super.key});
@@ -269,7 +270,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
       case 4: // Reports
         return const Center(child: Text('Operational Reports'));
       case 5: // Notifications
-        return const Center(child: Text('System Notifications'));
+        return const NotificationsTab();
       default:
         return _buildProducerHome(controller, isMobile);
     }

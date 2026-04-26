@@ -513,15 +513,12 @@ class StoryEditorController extends GetxController {
 
       // Send notification
       final currentUser = _authService.currentUser.value;
-      await _notificationService.sendNotification(NotificationModel(
+      await _notificationService.sendNotification(NotificationModel.storyUpdate(
         id: const Uuid().v4(),
         userId: user.id,
-        type: 'story_update',
-        title: 'Story Assigned',
-        message: '${currentUser?.displayName ?? "Someone"} assigned you the story: "${updatedStory.title}"',
-        createdAt: DateTime.now(),
-        actionUrl: '${AppRoutes.storyEditor}?id=${updatedStory.id}',
-        data: {'storyId': updatedStory.id},
+        storyTitle: updatedStory.title,
+        updatedBy: currentUser?.displayName ?? "Someone",
+        storyId: updatedStory.id,
       ));
 
       Get.snackbar('Assigned', 'Story assigned to ${user.displayName}');

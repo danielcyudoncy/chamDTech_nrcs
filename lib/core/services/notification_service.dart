@@ -4,6 +4,7 @@ import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 
 class NotificationService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -158,6 +159,42 @@ class NotificationService extends GetxService {
           .delete();
     } catch (e) {
       Get.log('Error deleting notification: $e');
+    }
+  }
+
+  // Delete all notifications for the current user
+  Future<void> deleteAllNotifications() async {
+    final user = _authService.currentUser.value;
+    if (user == null) return;
+
+    try {
+      final snapshot = await _firestore
+          .collection('notifications')
+          .where('userId', isEqualTo: user.id)
+          .get();
+
+      if (snapshot.docs.isEmpty) return;
+
+      final batch = _firestore.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      
+      Get.snackbar(
+        'Success',
+        'All notifications cleared',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: NRCSColors.topNavBlue.withValues(alpha: 0.1),
+        colorText: NRCSColors.topNavBlue,
+      );
+    } catch (e) {
+      Get.log('Error deleting all notifications: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to clear notifications',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 }

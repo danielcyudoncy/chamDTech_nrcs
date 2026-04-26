@@ -11,6 +11,7 @@ import 'package:chamdtech_nrcs/features/stories/models/desk_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
 
 class EditorAppShell extends StatefulWidget {
   const EditorAppShell({super.key});
@@ -291,7 +292,7 @@ class _EditorAppShellState extends State<EditorAppShell> {
       case 3: // Archive
         return _buildArchiveView(controller, isMobile);
       case 4: // Notifications
-        return const Center(child: Text('Notifications'));
+        return const NotificationsTab();
       default:
         return _buildEditorHome(controller, isMobile);
     }

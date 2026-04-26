@@ -274,35 +274,36 @@ class StoryService extends GetxService {
     if (currentUser == null) return null;
 
     try {
-      // ── Branching Logic for Editors/Producers ────────────────────────────────
-      // We branch if:
-      // 1. Current user is an Editor, Admin, or Producer
-      // 2. They are NOT the author of the story
-      // 3. This is an ORIGINAL story (parentStoryId is null)
+      // Fetch the existing document to compare content
+      final doc = await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(story.id)
+          .get();
+
       bool isStaff = currentUser.role == AppConstants.roleEditor ||
           currentUser.role == AppConstants.roleAdmin ||
           currentUser.role == AppConstants.roleProducer;
       bool isNotAuthor = story.authorId != currentUser.id;
+      bool isOriginal = story.parentStoryId == null;
 
-      if (isStaff && isNotAuthor && story.parentStoryId == null) {
-        // Redirect the save to the re-edited copy instead of the original
-        // This ensures the original script remains exactly as sent by the reporter
-        Get.log(
-            'Branching save for story ${story.id} (Author: ${story.authorId}, User: ${currentUser.id})');
-        final copyId =
-            await _handleEditorApprovalCopy(story, isFinalApproval: false);
-        return copyId;
+      if (doc.exists && isStaff && isNotAuthor && isOriginal) {
+        final originalData = StoryModel.fromJson(doc.data()!);
+        
+        // Check if the actual content or key metadata has changed
+        // We ignore 'stage' and 'status' changes for branching purposes
+        bool contentModified = originalData.content != story.content ||
+                               originalData.title != story.title ||
+                               originalData.category != story.category;
+
+        if (contentModified) {
+          Get.log('Content changed by editor. Branching story ${story.id} to [Re-edited] copy.');
+          return await _handleEditorApprovalCopy(story, isFinalApproval: false);
+        } else {
+          Get.log('Metadata-only change (stage/status) for story ${story.id}. Updating original.');
+        }
       }
-      // ────────────────────────────────────────────────────────────────────────
 
       // ── Standard Update Logic ───────────────────────────────────────────────
-      // Final safeguard: If we are somehow still trying to update an original story
-      // that isn't ours, block content updates.
-      if (isStaff && isNotAuthor && story.parentStoryId == null) {
-        Get.log('Blocking accidental original update for story ${story.id}');
-        return await _handleEditorApprovalCopy(story, isFinalApproval: false);
-      }
-
       // Backend guard check (with local try-catch for permissions)
       if (story.linkedRundownId != null && story.linkedRundownId!.isNotEmpty) {
         try {
@@ -475,19 +476,6 @@ class StoryService extends GetxService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
-
-      // ── "Re-edited" Copy Workflow ─────────────────────────────────────────
-      // If the approver is staff and NOT the original author
-      bool isStaff = currentUser.role == AppConstants.roleEditor ||
-          currentUser.role == AppConstants.roleAdmin ||
-          currentUser.role == AppConstants.roleProducer;
-
-      if (isStaff &&
-          originalStory.authorId != currentUser.id &&
-          originalStory.parentStoryId == null) {
-        await _handleEditorApprovalCopy(originalStory, isFinalApproval: true);
-      }
-      // ──────────────────────────────────────────────────────────────────────
 
       Get.snackbar(
         'Success',

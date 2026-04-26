@@ -10,6 +10,7 @@ import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/widgets/my_stories_tab.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
 
 class ReporterAppShell extends StatefulWidget {
   const ReporterAppShell({super.key});
@@ -251,16 +252,7 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
       case 1: // My Stories
         return MyStoriesTab(controller: controller);
       case 4: // Notifications
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.notifications_none, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text('Notifications will appear here', style: TextStyle(color: Colors.grey, fontSize: 16)),
-            ],
-          ),
-        );
+        return const NotificationsTab();
       default:
         return _buildReporterHome(controller, isMobile);
     }

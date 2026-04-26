@@ -80,6 +80,12 @@ class NotificationScreen extends StatelessWidget {
         ),
       ),
       actions: [
+        if (notifications.isNotEmpty)
+          TextButton.icon(
+            onPressed: () => _confirmClearAll(context, service),
+            icon: const Icon(Icons.delete_sweep_outlined, size: 18, color: Colors.red),
+            label: const Text('Clear All', style: TextStyle(color: Colors.red)),
+          ),
         if (hasUnread)
           TextButton(
             onPressed: () => service.markAllAsRead(),
@@ -200,5 +206,27 @@ class NotificationScreen extends StatelessWidget {
     });
 
     return slivers;
+  }
+
+  void _confirmClearAll(BuildContext context, NotificationService service) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Clear all notifications?'),
+        content: const Text('This will permanently delete all your notifications. This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              service.deleteAllNotifications();
+            },
+            child: const Text('Clear All', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 }

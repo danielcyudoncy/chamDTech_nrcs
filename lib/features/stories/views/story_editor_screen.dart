@@ -18,430 +18,227 @@ class StoryEditorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(StoryEditorController());
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final isMobile = constraints.maxWidth < 900;
+    return Obx(() {
+      // Accessing reactive variables at the top to ensure Obx listens to them
+      controller.isReadOnly.value;
+      controller.formattedDuration.value;
+      controller.anchorWordCount.value;
+      controller.notesWordCount.value;
 
-      return Obx(() => NRCSAppShell(
-            title: 'EDITOR WORKSPACE',
-        body: DefaultTabController(
-          length: 2,
-          child: Column(
-            children: [
-              _buildActionToolbar(context, controller),
-              _buildMetadataBar(context, controller, isMobile),
-              if (isMobile)
-                Container(
-                  color: NRCSColors.topNavBlue,
-                  child: const TabBar(
-                    indicatorColor: Colors.white,
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white70,
-                    tabs: [
-                      Tab(text: 'STORY'),
-                      Tab(text: 'REPORT INTROS'),
+      return NRCSAppShell(
+        title: 'STORY EDITOR',
+        body: LayoutBuilder(builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 900;
+          return Container(
+            color: const Color(0xFFF5F7FB),
+            child: Column(
+              children: [
+                _buildModernHeader(context, controller, isMobile),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: _buildMainWorkspace(context, controller, isMobile),
+                      ),
+                      if (!isMobile)
+                        Container(
+                          width: 280,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(left: BorderSide(color: Colors.grey.shade200)),
+                          ),
+                          child: _buildMetricsSidebar(context, controller),
+                        ),
                     ],
                   ),
                 ),
-              Expanded(
-                child: isMobile
-                    ? TabBarView(
-                        children: [
-                          _buildSplittedEditor(
-                            context,
-                            controller,
-                            title: 'Story',
-                            titleColor: const Color(0xFF1976D2),
-                            quillController: controller.notesQuillController,
-                            placeholder: 'Production notes, instructions...',
-                            isMobile: true,
-                          ),
-                          _buildSplittedEditor(
-                            context,
-                            controller,
-                            title: 'Report Intros',
-                            titleColor: const Color(0xFF1976D2),
-                            quillController: controller.anchorQuillController,
-                            placeholder: 'Report intros goes here...',
-                            isMobile: true,
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          // Notes Editor (Left)
-                          Expanded(
-                            flex: 2,
-                            child: _buildSplittedEditor(
-                              context,
-                              controller,
-                              title: 'Story',
-                              titleColor: const Color(0xFF1976D2),
-                              quillController: controller.notesQuillController,
-                              placeholder: 'Production notes, instructions...',
-                              isMobile: false,
-                            ),
-                          ),
-                          // Divider
-                          Container(width: 2, color: Colors.grey[400]),
-                          // Anchor Editor (Right)
-                          Expanded(
-                            flex: 3,
-                            child: _buildSplittedEditor(
-                              context,
-                              controller,
-                              title: 'Report Intros',
-                              titleColor: const Color(0xFF1976D2),
-                              quillController: controller.anchorQuillController,
-                              placeholder: 'Report intros goes here...',
-                              isMobile: false,
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-              _buildStatusFooter(context, controller),
-            ],
-          ),
-        ),
-      ));
+                _buildModernFooter(context, controller),
+              ],
+            ),
+          );
+        }),
+      );
     });
   }
 
-  Widget _buildActionToolbar(
-      BuildContext context, StoryEditorController controller) {
+  Widget _buildModernHeader(BuildContext context, StoryEditorController controller, bool isMobile) {
     return Container(
-      decoration: const BoxDecoration(
-        color: NRCSColors.topNavBlue,
-        border: Border(bottom: BorderSide(color: Colors.white24, width: 0.5)),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A237E), // Deep professional blue
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _ToolbarButton(
-                icon: Icons.add_box_outlined,
-                label: 'New',
-                onTap: () => controller.handleNew()),
-            if (!controller.isReadOnly.value)
-              _ToolbarButton(
-                  icon: Icons.save_outlined,
-                  label: 'Save',
-                  onTap: () => controller.saveStory()),
-
-            // Submit button (only for drafts and not read-only)
-            if (controller.existingStory?.status == AppConstants.statusDraft && !controller.isReadOnly.value)
-              _ToolbarButton(
-                icon: Icons.send_outlined,
-                label: 'Submit',
-                onTap: () => controller.submitStory(),
-              ),
-
-            // Approve button (only for authorized users when story is pending and not read-only)
-            if (PermissionHelpers.canApproveStory(controller.currentUser) &&
-                controller.existingStory?.status == AppConstants.statusPending && !controller.isReadOnly.value)
-              _ToolbarButton(
-                  icon: Icons.check_circle_outline,
-                  label: 'Approve',
-                  onTap: () {
-                    controller.approveStory();
-                  }),
-
-            _ToolbarButton(
-                icon: Icons.copy_outlined,
-                label: 'Copy',
-                onTap: () => controller.handleCopy()),
-
-            // Delete button (permission based)
-            if (PermissionHelpers.canDeleteStory(
-                controller.currentUser,
-                controller.existingStory ??
-                    StoryModel(
-                        id: '',
-                        title: controller.titleController.text,
-                        slug: '',
-                        content: '',
-                        authorId: controller.currentUser?.id ?? '',
-                        authorName: '',
-                        status: AppConstants.statusDraft,
-                        createdAt: DateTime.now(),
-                        updatedAt: DateTime.now())))
-              _ToolbarButton(
-                  icon: Icons.delete_outline,
-                  label: 'Delete',
-                  onTap: () => controller.handleDelete()),
-
-            _ToolbarButton(
-                icon: Icons.move_to_inbox_outlined,
-                label: 'Move',
-                onTap: () => controller.showComingSoon('Move')),
-            _ToolbarButton(
-                icon: Icons.link,
-                label: 'Link',
-                onTap: () => controller.showComingSoon('Link')),
-            _ToolbarButton(
-                icon: Icons.attach_file,
-                label: 'Attachments',
-                onTap: () => _showAttachmentsDialog(context, controller)),
-
-            // Assign button (permission based)
-            if (PermissionHelpers.canAssignStory(controller.currentUser))
-              _ToolbarButton(
-                  icon: Icons.assignment_ind_outlined,
-                  label: 'Assign',
-                  onTap: () => controller.showAssignDialog()),
-
-            _ToolbarButton(
-                icon: Icons.history,
-                label: 'Log',
-                onTap: () => controller.showComingSoon('Story Log')),
-            _ToolbarButton(
-                icon: Icons.print_outlined,
-                label: 'Print',
-                onTap: () => controller.showComingSoon('Print')),
-            const SizedBox(width: 16),
-            InkWell(
-              onTap: () => controller.showComingSoon('Powerview'),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.orange),
-                  borderRadius: BorderRadius.circular(4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: controller.titleController,
+                  enabled: !controller.isReadOnly.value,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                  decoration: const InputDecoration(
+                    hintText: 'Story Title...',
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: Colors.white70),
+                  ),
                 ),
-                child: const Text('Powerview',
-                    style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
               ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
+              const SizedBox(width: 16),
+              _buildStatusBadge(controller.existingStory?.status ?? 'draft', isDarkBackground: true),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _buildCategoryChip(controller, isDarkBackground: true),
+              const SizedBox(width: 12),
+              Container(width: 1, height: 24, color: Colors.white24),
+              const SizedBox(width: 12),
+              _buildModernActionButtons(context, controller, isMobile),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMetadataBar(
-      BuildContext context, StoryEditorController controller, bool isMobile) {
-    if (isMobile) {
-      return Container(
-        color: NRCSColors.topNavBlue,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: controller.titleController,
-              maxLines: 2,
-              minLines: 1,
-              enabled: !controller.isReadOnly.value,
-              decoration: InputDecoration(
-                hintText: 'Enter Story Title...',
-                isDense: true,
-                border: InputBorder.none,
-                fillColor: Colors.transparent,
-                hintStyle: TextStyle(
-                    fontSize: 15, color: Colors.white.withValues(alpha: 0.6)),
-              ),
-              style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildCategoryDropdown(controller),
-                  const SizedBox(width: 8),
-                  Obx(() => _MetadataField(
-                      label: 'V:',
-                      value: controller.versionText.value,
-                      icon: Icons.check_box)),
-                  const SizedBox(width: 12),
-                  Obx(() => _MetadataField(
-                      label: 'WORDS:',
-                      value:
-                          '${controller.anchorWordCount.value} | ${controller.notesWordCount.value}',
-                      icon: Icons.text_fields)),
-                  const SizedBox(width: 12),
-                  Obx(() => Text(
-                        controller.formattedDuration.value,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11),
-                      )),
+  Widget _buildMainWorkspace(BuildContext context, StoryEditorController controller, bool isMobile) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          if (isMobile)
+            Container(
+              color: Colors.white,
+              child: TabBar(
+                indicatorColor: const Color(0xFF1A237E),
+                labelColor: const Color(0xFF1A237E),
+                unselectedLabelColor: Colors.grey,
+                indicatorSize: TabBarIndicatorSize.label,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                tabs: const [
+                  Tab(text: 'STORY CONTENT'),
+                  Tab(text: 'REPORT INTROS'),
                 ],
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      color: NRCSColors.topNavBlue,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 300,
-              child: TextField(
-                controller: controller.titleController,
-                enabled: !controller.isReadOnly.value,
-                decoration: InputDecoration(
-                  hintText: 'Enter Story Title...',
-                  isDense: true,
-                  border: InputBorder.none,
-                  fillColor: Colors.transparent,
-                  hintStyle: TextStyle(
-                      fontSize: 18, color: Colors.white.withValues(alpha: 0.6)),
-                ),
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-            ),
-          const SizedBox(width: 16),
-          _buildCategoryDropdown(controller),
-          // ──────────────────────────────────────────────────────────
-          const SizedBox(width: 6),
-          Obx(() => _MetadataField(
-              label: 'MASTER:',
-              value: controller.versionText.value,
-              icon: Icons.check_box)),
-          const SizedBox(width: 16),
-          Obx(() => _MetadataField(
-              label: 'WORD COUNT:',
-              value:
-                  '${controller.anchorWordCount.value} ANC | ${controller.notesWordCount.value} NTS',
-              icon: Icons.text_fields)),
-          const SizedBox(width: 16),
-          Obx(() => Text(
-                controller.formattedDuration.value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13),
-              )),
-          ],
-        ),
+          Expanded(
+            child: isMobile
+                ? TabBarView(
+                    children: [
+                      _buildModernEditorPanel(
+                        context,
+                        controller,
+                        title: 'Story Content',
+                        icon: Icons.article_outlined,
+                        quillController: controller.notesQuillController,
+                        placeholder: 'Write your story content here...',
+                      ),
+                      _buildModernEditorPanel(
+                        context,
+                        controller,
+                        title: 'Report Intros',
+                        icon: Icons.mic_none,
+                        quillController: controller.anchorQuillController,
+                        placeholder: 'Write report intros here...',
+                      ),
+                    ],
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildModernEditorPanel(
+                            context,
+                            controller,
+                            title: 'Story Content',
+                            icon: Icons.article_outlined,
+                            quillController: controller.notesQuillController,
+                            placeholder: 'Write your story content here...',
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        Expanded(
+                          child: _buildModernEditorPanel(
+                            context,
+                            controller,
+                            title: 'Report Intros',
+                            icon: Icons.mic_none,
+                            quillController: controller.anchorQuillController,
+                            placeholder: 'Write report intros here...',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }
 
-  /// Returns a distinct color for each category.
-  static Color _categoryColor(String category) {
-    switch (category) {
-      case 'Local News':
-        return Colors.blue;
-      case 'Politics':
-        return Colors.purple;
-      case 'Sports':
-        return Colors.green;
-      case 'Foreign':
-        return Colors.orange;
-      case 'Business & Finance':
-        return Colors.teal;
-      case 'Breaking News':
-        return Colors.red;
-      case 'Technology':
-        return Colors.indigo;
-      case 'Environment':
-        return Colors.green.shade800;
-      case 'Health':
-        return Colors.pink;
-      case 'Entertainment & Lifestyle':
-        return Colors.amber;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildSplittedEditor(
+  Widget _buildModernEditorPanel(
     BuildContext context,
     StoryEditorController controller, {
     required String title,
-    required Color titleColor,
+    required IconData icon,
     required quill.QuillController quillController,
     required String placeholder,
-    required bool isMobile,
   }) {
-    return Column(
-      children: [
-        Container(
-          width: double.infinity,
-          color: titleColor,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: Row(
-            // Changed child to Row to accommodate multiple widgets
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12),
-              ),
-              const Spacer(), // Pushes buttons to the right
-              // Action Buttons based on permissions (hide if read-only)
-              if (PermissionHelpers.canApproveStory(controller.currentUser) && !controller.isReadOnly.value)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      controller.approveStory();
-                    },
-                    icon: const Icon(Icons.check, size: 16),
-                    label: const Text('Approve'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ),
-
-              if (PermissionHelpers.canDeleteStory(
-                  controller.currentUser,
-                  controller.existingStory ??
-                      StoryModel(
-                          id: '',
-                          title: '',
-                          slug: '',
-                          content: '',
-                          authorId: controller.currentUser?.id ?? '',
-                          authorName: '',
-                          status: 'draft',
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now())) && !controller.isReadOnly.value)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      controller.handleDelete();
-                    },
-                    icon: const Icon(Icons.delete, size: 16),
-                    label: const Text('Delete'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                    ),
-                  ),
-                ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
-        ),
-        if (!controller.isReadOnly.value)
+        ],
+      ),
+      child: Column(
+        children: [
           Container(
-            color: NRCSColors.topNavBlue,
-            child: quill.QuillSimpleToolbar(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 18, color: const Color(0xFF1A237E)),
+                const SizedBox(width: 10),
+                Text(
+                  title.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E),
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!controller.isReadOnly.value)
+            quill.QuillSimpleToolbar(
               configurations: quill.QuillSimpleToolbarConfigurations(
                 controller: quillController,
                 showAlignmentButtons: false,
@@ -450,32 +247,15 @@ class StoryEditorScreen extends StatelessWidget {
                 buttonOptions: const quill.QuillSimpleToolbarButtonOptions(
                   base: quill.QuillToolbarBaseButtonOptions(
                     iconTheme: quill.QuillIconTheme(
-                      iconButtonSelectedData: quill.IconButtonData(
-                        color: Colors.white,
-                      ),
-                      iconButtonUnselectedData: quill.IconButtonData(
-                        color: Colors.white70,
-                      ),
+                      iconButtonSelectedData: quill.IconButtonData(color: Color(0xFF1A237E)),
                     ),
-                  ),
-                  fontFamily: quill.QuillToolbarFontFamilyButtonOptions(
-                    style: TextStyle(fontSize: 12, color: Colors.white),
-                  ),
-                  fontSize: quill.QuillToolbarFontSizeButtonOptions(
-                    style: TextStyle(fontSize: 12, color: Colors.white),
                   ),
                 ),
               ),
             ),
-          ),
-        Expanded(
-          child: Container(
-            color: const Color(0xFFECEFF1),
-            padding: const EdgeInsets.all(12),
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                brightness: Brightness.light,
-              ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
               child: quill.QuillEditor.basic(
                 configurations: quill.QuillEditorConfigurations(
                   controller: quillController,
@@ -483,11 +263,7 @@ class StoryEditorScreen extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   customStyles: const quill.DefaultStyles(
                     paragraph: quill.DefaultListBlockStyle(
-                      TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
+                      TextStyle(color: Colors.black, fontSize: 16, height: 1.5),
                       quill.VerticalSpacing(0, 0),
                       quill.VerticalSpacing(0, 0),
                       null,
@@ -498,40 +274,326 @@ class StoryEditorScreen extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatusFooter(
-      BuildContext context, StoryEditorController controller) {
-    return Container(
-      color: const Color(0xFF37474F),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Row(
-        children: [
-          Obx(() => Text(
-                controller.lastSaved.value != null
-                    ? 'Last Saved: ${DateFormat('HH:mm:ss').format(controller.lastSaved.value!)}'
-                    : 'Not saved yet',
-                style: const TextStyle(color: Colors.white70, fontSize: 11),
-              )),
-          const Spacer(),
-          const Text('CAPS',
-              style: TextStyle(color: Colors.grey, fontSize: 11)),
-          const SizedBox(width: 16),
-          const Icon(Icons.keyboard_arrow_up, color: Colors.white70, size: 16),
         ],
       ),
     );
   }
 
-  void _showAttachmentsDialog(
-      BuildContext context, StoryEditorController controller) {
+  Widget _buildMetricsSidebar(BuildContext context, StoryEditorController controller) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'STORY METRICS',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              color: Colors.grey,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildMetricCard(
+            'Estimated Duration',
+            controller.formattedDuration.value,
+            Icons.timer_outlined,
+            const Color(0xFF1A237E),
+          ),
+          const SizedBox(height: 16),
+          _buildMetricCard(
+            'Anchor Words',
+            '${controller.anchorWordCount.value}',
+            Icons.mic_none,
+            Colors.orange,
+          ),
+          const SizedBox(height: 16),
+          _buildMetricCard(
+            'Story Words',
+            '${controller.notesWordCount.value}',
+            Icons.text_snippet_outlined,
+            Colors.blue,
+          ),
+          const Spacer(),
+         
+         
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+              Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status, {bool isDarkBackground = false}) {
+    Color color;
+    switch (status.toLowerCase()) {
+      case 'approved': color = Colors.green; break;
+      case 'pending': color = Colors.orange; break;
+      case 'draft': color = isDarkBackground ? Colors.blue.shade200 : Colors.blue; break;
+      case 'rejected': color = Colors.red; break;
+      default: color = isDarkBackground ? Colors.grey.shade400 : Colors.grey;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDarkBackground ? 0.2 : 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            status.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: isDarkBackground ? Colors.white : color,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernActionButtons(BuildContext context, StoryEditorController controller, bool isMobile) {
+    return Expanded(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            if (!controller.isReadOnly.value) ...[
+              ElevatedButton.icon(
+                onPressed: () => controller.saveStory(),
+                icon: const Icon(Icons.save_outlined, size: 18),
+                label: const Text('SAVE DRAFT'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A237E),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (controller.existingStory?.status == AppConstants.statusDraft)
+                ElevatedButton.icon(
+                  onPressed: () => controller.submitStory(),
+                  icon: const Icon(Icons.send_outlined, size: 18),
+                  label: const Text('SUBMIT'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade400,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              if (PermissionHelpers.canApproveStory(controller.currentUser) &&
+                  controller.existingStory?.status == AppConstants.statusPending)
+                ElevatedButton.icon(
+                  onPressed: () => controller.approveStory(),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('APPROVE'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+            ],
+            const SizedBox(width: 12),
+            _buildIconButton(Icons.copy_all, 'Copy', () => controller.handleCopy()),
+            _buildIconButton(Icons.history, 'Logs', () => controller.showComingSoon('Logs')),
+            if (PermissionHelpers.canDeleteStory(controller.currentUser, controller.existingStory ?? StoryModel.empty()))
+              _buildIconButton(Icons.delete_outline, 'Delete', () => controller.handleDelete(), color: Colors.red),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, String label, VoidCallback onTap, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: (color ?? Colors.grey).withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: color ?? Colors.grey.shade700),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernFooter(BuildContext context, StoryEditorController controller) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            controller.lastSaved.value != null
+                ? 'Autosaved at ${DateFormat('hh:mm:ss a').format(controller.lastSaved.value!)}'
+                : 'Changes not saved',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+          const Spacer(),
+          Text(
+            'V${controller.versionText.value}',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF1A237E)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(StoryEditorController controller, {bool isDarkBackground = false}) {
+    final selected = controller.selectedCategory.value;
+    final color = _categoryColor(selected);
+    final displayColor = isDarkBackground ? Colors.white : color;
+    
+    return InkWell(
+      onTap: controller.isReadOnly.value ? null : () => _showCategoryPicker(controller),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDarkBackground ? 0.3 : 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isDarkBackground ? Colors.white24 : color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.category_outlined, size: 14, color: displayColor),
+            const SizedBox(width: 8),
+            Text(
+              selected.isEmpty ? 'SELECT CATEGORY' : selected.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: displayColor,
+                letterSpacing: 0.5,
+              ),
+            ),
+            if (!controller.isReadOnly.value) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down, size: 14, color: displayColor),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCategoryPicker(StoryEditorController controller) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select Story Category',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: AppConstants.storyCategories.map((cat) {
+                final color = _categoryColor(cat);
+                return InkWell(
+                  onTap: () {
+                    controller.selectedCategory.value = cat;
+                    Get.back();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: controller.selectedCategory.value == cat ? color : color.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: color.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        color: controller.selectedCategory.value == cat ? Colors.white : color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAttachmentsDialog(BuildContext context, StoryEditorController controller) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Attachments'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
           width: 500,
           height: 400,
@@ -547,13 +609,12 @@ class StoryEditorScreen extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final attachment = controller.attachments[index];
                       return ListTile(
-                        leading: Icon(_getIconForType(attachment.type)),
-                        title: Text(attachment.name),
+                        leading: Icon(_getIconForType(attachment.type), color: const Color(0xFF1A237E)),
+                        title: Text(attachment.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(attachment.formattedSize),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () =>
-                              controller.removeAttachment(attachment.id),
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => controller.removeAttachment(attachment.id),
                         ),
                       );
                     },
@@ -563,7 +624,6 @@ class StoryEditorScreen extends StatelessWidget {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
-                  // Mock add attachment for now
                   final attachment = AttachmentModel(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     name: 'Mock Attachment.jpg',
@@ -577,6 +637,11 @@ class StoryEditorScreen extends StatelessWidget {
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Add Attachment'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A237E),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
               ),
             ],
           ),
@@ -598,132 +663,19 @@ class StoryEditorScreen extends StatelessWidget {
     return Icons.insert_drive_file;
   }
 
-  Widget _buildCategoryDropdown(StoryEditorController controller) {
-    return Obx(() {
-      final selected = controller.selectedCategory.value;
-      final isEmpty = selected.isEmpty;
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-        decoration: BoxDecoration(
-          color: isEmpty ? Colors.red.withValues(alpha: 0.05) : Colors.white,
-          border: Border.all(
-            color: isEmpty ? Colors.red.shade300 : Colors.grey.shade400,
-            width: isEmpty ? 1.5 : 1,
-          ),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selected.isEmpty ? null : selected,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF263238),
-            ),
-            hint: Text(
-              'Select Category',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: isEmpty ? Colors.red.shade400 : Colors.grey.shade600,
-              ),
-            ),
-            icon: Icon(
-              Icons.arrow_drop_down,
-              color: isEmpty ? Colors.red.shade400 : Colors.grey[700],
-            ),
-            isDense: true,
-            dropdownColor: Colors.white,
-            items: AppConstants.storyCategories.map((cat) {
-              final color = _categoryColor(cat);
-              return DropdownMenuItem<String>(
-                value: cat,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      cat,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF263238),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-            onChanged: controller.isReadOnly.value 
-                ? null 
-                : (value) {
-                    if (value != null) {
-                      controller.selectedCategory.value = value;
-                    }
-                  },
-          ),
-        ),
-      );
-    });
-  }
-}
-
-class _ToolbarButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ToolbarButton(
-      {required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 18, color: Colors.white),
-            Text(label,
-                style: const TextStyle(fontSize: 10, color: Colors.white70)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MetadataField extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _MetadataField(
-      {required this.label, required this.value, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white70)),
-        const SizedBox(width: 4),
-        Icon(icon, size: 14, color: Colors.white),
-        const SizedBox(width: 2),
-        Text(value, style: const TextStyle(fontSize: 12, color: Colors.white)),
-      ],
-    );
+  static Color _categoryColor(String category) {
+    switch (category) {
+      case 'Local News': return Colors.blue;
+      case 'Politics': return Colors.purple;
+      case 'Sports': return Colors.green;
+      case 'Foreign': return Colors.orange;
+      case 'Business & Finance': return Colors.teal;
+      case 'Breaking News': return Colors.red;
+      case 'Technology': return Colors.indigo;
+      case 'Environment': return Colors.green.shade800;
+      case 'Health': return Colors.pink;
+      case 'Entertainment & Lifestyle': return Colors.amber;
+      default: return Colors.grey;
+    }
   }
 }
