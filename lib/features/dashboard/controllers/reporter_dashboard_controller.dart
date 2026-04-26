@@ -26,6 +26,48 @@ class ReporterDashboardController extends GetxController {
   
   /// Combined list of all stories created by this reporter
   final allMyStories = <StoryModel>[].obs;
+  
+  // My Stories Screen Filters & Sorting
+  final myStoriesSearchQuery = ''.obs;
+  final myStoriesFilterStatus = 'all'.obs; // all, draft, pending, approved, rejected
+  final myStoriesSortBy = 'newest'.obs; // newest, oldest, title_asc, title_desc
+
+  List<StoryModel> get filteredAndSortedMyStories {
+    var list = allMyStories.toList();
+    
+    // Status Filter
+    if (myStoriesFilterStatus.value != 'all') {
+      list = list.where((s) => s.status == myStoriesFilterStatus.value).toList();
+    }
+    
+    // Search
+    if (myStoriesSearchQuery.value.isNotEmpty) {
+      final q = myStoriesSearchQuery.value.toLowerCase();
+      list = list.where((s) => 
+        s.title.toLowerCase().contains(q) || 
+        s.content.toLowerCase().contains(q)
+      ).toList();
+    }
+    
+    // Sort
+    switch (myStoriesSortBy.value) {
+      case 'oldest':
+        list.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+        break;
+      case 'title_asc':
+        list.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        break;
+      case 'title_desc':
+        list.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+        break;
+      case 'newest':
+      default:
+        list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        break;
+    }
+    
+    return list;
+  }
  
   /// The story currently selected in the UI for toolbar actions.
   final selectedStory = Rxn<StoryModel>();

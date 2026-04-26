@@ -356,9 +356,32 @@ class StoryEditorController extends GetxController {
     if (!isAutoSave) {
       isLoading.value = false;
       if (success) {
-        Get.back();
+        _navigateBackToDashboard();
       }
     }
+  }
+
+  void _navigateBackToDashboard() {
+    final role = currentUser?.role ?? AppConstants.roleReporter;
+    String route;
+    switch (role) {
+      case AppConstants.roleAdmin:
+        route = AppRoutes.adminDashboard;
+        break;
+      case AppConstants.roleProducer:
+        route = AppRoutes.producerDashboard;
+        break;
+      case AppConstants.roleEditor:
+        route = AppRoutes.editorDashboard;
+        break;
+      case AppConstants.roleAnchor:
+        route = AppRoutes.anchorDashboard;
+        break;
+      case AppConstants.roleReporter:
+      default:
+        route = AppRoutes.reporterDashboard;
+    }
+    Get.offAllNamed(route);
   }
 
   void handleNew() {
@@ -435,7 +458,7 @@ class StoryEditorController extends GetxController {
               try {
                 await _storyService.deleteStory(existingStory!.id);
                 isLoading.value = false;
-                Get.back(); // exit editor
+                _navigateBackToDashboard(); // exit editor
                 Get.snackbar('Deleted', 'Story has been deleted.', snackPosition: SnackPosition.BOTTOM);
               } catch (e) {
                 isLoading.value = false;
@@ -563,7 +586,7 @@ class StoryEditorController extends GetxController {
       await saveStory(isAutoSave: true);
       final success = await _storyService.approveStory(existingStory!.id);
       if (success) {
-        Get.back();
+        _navigateBackToDashboard();
       }
     } catch (e) {
       // Error handled by service
@@ -594,7 +617,7 @@ class StoryEditorController extends GetxController {
         if (updatedStory != null) {
           existingStory = updatedStory;
         }
-        Get.back(); // exit editor or just refresh? Usually NRCS exit after submission
+        _navigateBackToDashboard(); // exit editor explicitly to dashboard
       }
     } catch (e) {
       // Error handled by service

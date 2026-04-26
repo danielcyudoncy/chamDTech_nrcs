@@ -12,8 +12,10 @@ class StoryController extends GetxController {
 
   final stories = <StoryModel>[].obs;
   final isLoading = false.obs;
-  final currentFilter = 'all'.obs;
+  final currentFilter = 'all'.obs; // Maps to Status Chips
   final categoryFilter = 'all'.obs;
+  final searchQuery = ''.obs;
+  final sortBy = 'newest'.obs;
   final showArchived = false.obs;
   final selectedStoryId = ''.obs;
 
@@ -89,6 +91,10 @@ class StoryController extends GetxController {
         filtered = baseStories
             .where((s) => s.status == AppConstants.statusPending)
             .toList();
+      } else if (currentFilter.value == 'rejected') {
+        filtered = baseStories
+            .where((s) => s.status == AppConstants.statusRejected)
+            .toList();
       } else {
         filtered = baseStories;
       }
@@ -97,6 +103,32 @@ class StoryController extends GetxController {
       if (categoryFilter.value != 'all') {
         filtered =
             filtered.where((s) => s.category == categoryFilter.value).toList();
+      }
+
+      // Apply search query
+      if (searchQuery.value.isNotEmpty) {
+        final q = searchQuery.value.toLowerCase();
+        filtered = filtered.where((s) => 
+          s.title.toLowerCase().contains(q) || 
+          s.content.toLowerCase().contains(q)
+        ).toList();
+      }
+
+      // Apply sorting
+      switch (sortBy.value) {
+        case 'oldest':
+          filtered.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+          break;
+        case 'title_asc':
+          filtered.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+          break;
+        case 'title_desc':
+          filtered.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+          break;
+        case 'newest':
+        default:
+          filtered.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          break;
       }
 
       stories.value = filtered;
@@ -114,6 +146,16 @@ class StoryController extends GetxController {
 
   void setCategoryFilter(String category) {
     categoryFilter.value = category;
+    loadStories();
+  }
+
+  void setSearchQuery(String query) {
+    searchQuery.value = query;
+    loadStories();
+  }
+
+  void setSortBy(String sort) {
+    sortBy.value = sort;
     loadStories();
   }
 
@@ -441,6 +483,39 @@ class StoryController extends GetxController {
 
     if (confirmed == true) {
       await _storyService.archiveStory(storyId);
+      if (selectedStoryId.value == storyId) {
+        selectedStoryId.value = '';
+      }
+    }
+  }
+
+  Future<void> unarchiveStory(String storyId) async {
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Unarchive Story'),
+        content: const Text(
+            'Are you sure you want to restore this story to the active workspace?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A237E),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text('Unarchive'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _storyService.unarchiveStory(storyId);
       if (selectedStoryId.value == storyId) {
         selectedStoryId.value = '';
       }

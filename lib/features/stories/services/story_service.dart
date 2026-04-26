@@ -389,6 +389,49 @@ class StoryService extends GetxService {
     }
   }
 
+  // Unarchive story
+  Future<bool> unarchiveStory(String storyId) async {
+    try {
+      await _firestore
+          .collection(AppConstants.storiesCollection)
+          .doc(storyId)
+          .update({
+        'status': AppConstants.statusDraft,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      Get.snackbar(
+        'Success',
+        'Story restored to active workspace',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      // Log unarchiving
+      final user = _authService.currentUser.value;
+      if (user != null) {
+        await _activityLogService.logActivity(ActivityLogModel(
+          id: const Uuid().v4(),
+          userId: user.id,
+          userName: user.displayName,
+          action: 'unarchive',
+          entityType: 'story',
+          entityId: storyId,
+          description: 'Unarchived story',
+          timestamp: DateTime.now(),
+        ));
+      }
+
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to unarchive story: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+  }
+
   // Delete story (physical delete)
   Future<bool> deleteStory(String storyId) async {
     try {
