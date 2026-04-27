@@ -1,3 +1,4 @@
+// features/dashboard/controllers/editor_dashboard_controller.dart
 import 'dart:async';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
@@ -9,25 +10,22 @@ import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
-import 'package:chamdtech_nrcs/features/stories/models/desk_model.dart';
-import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EditorDashboardController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();
-  final NotificationService _notificationService = Get.find<NotificationService>();
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
   final AuthService _authService = Get.find<AuthService>();
-  final FirebaseFirestore _firestore = FirebaseService.firestore;
-  
+
   StreamSubscription<List<StoryModel>>? _storiesSubscription;
-  
-   final pendingStories = <StoryModel>[].obs;
-   final copyEditStories = <StoryModel>[].obs;
-   final allStories = <StoryModel>[].obs;
-  
+
+  final pendingStories = <StoryModel>[].obs;
+  final copyEditStories = <StoryModel>[].obs;
+  final allStories = <StoryModel>[].obs;
+
   final isLoading = false.obs;
 
-   @override
+  @override
   void onInit() {
     super.onInit();
     loadEditorQueues();
@@ -39,9 +37,8 @@ class EditorDashboardController extends GetxController {
     super.onClose();
   }
 
-
-   void loadEditorQueues() {
-     isLoading.value = true;
+  void loadEditorQueues() {
+    isLoading.value = true;
     _storiesSubscription?.cancel();
     _storiesSubscription = _storyService.getStories().listen((stories) {
       allStories.value = stories;
@@ -57,16 +54,19 @@ class EditorDashboardController extends GetxController {
         if (s.parentStoryId == null && originalIdsWithCopies.contains(s.id)) {
           return false;
         }
-        return s.status == AppConstants.statusPending || 
-               (s.stage == AppConstants.stageNew && s.status != AppConstants.statusApproved);
+        return s.status == AppConstants.statusPending ||
+            (s.stage == AppConstants.stageNew &&
+                s.status != AppConstants.statusApproved);
       }).toList();
 
       // 3. In Copy Edit
       copyEditStories.value = stories.where((s) {
-        return s.stage == AppConstants.stageCopyEdited && s.status != AppConstants.statusApproved;
+        return s.stage == AppConstants.stageCopyEdited &&
+            s.status != AppConstants.statusApproved;
       }).toList();
 
-      Get.log('EditorDashboardController: Loaded ${stories.length} stories. Pending: ${pendingStories.length}, CopyEdit: ${copyEditStories.length}');
+      Get.log(
+          'EditorDashboardController: Loaded ${stories.length} stories. Pending: ${pendingStories.length}, CopyEdit: ${copyEditStories.length}');
       isLoading.value = false;
     }, onError: (error) {
       Get.log('EditorDashboardController: Error in stories stream: $error');
@@ -98,7 +98,8 @@ class EditorDashboardController extends GetxController {
     }
   }
 
-  Future<void> changeStoryState(StoryModel story, String newStatus, String newStage) async {
+  Future<void> changeStoryState(
+      StoryModel story, String newStatus, String newStage) async {
     try {
       final updatedStory = story.copyWith(
         status: newStatus,
@@ -106,7 +107,8 @@ class EditorDashboardController extends GetxController {
         updatedAt: DateTime.now(),
       );
       await _storyService.updateStory(updatedStory);
-      Get.snackbar('Success', 'Story state updated successfully', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Success', 'Story state updated successfully',
+          snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar('Error', 'Failed to update story state: $e');
     }
@@ -115,12 +117,13 @@ class EditorDashboardController extends GetxController {
   Future<void> sendBackToReporter(StoryModel story) async {
     try {
       final updatedStory = story.copyWith(
-        status: AppConstants.statusRejected, // Puts it back in reporter's lap for revision
+        status: AppConstants
+            .statusRejected, // Puts it back in reporter's lap for revision
         stage: AppConstants.stageNew,
         updatedAt: DateTime.now(),
       );
       await _storyService.updateStory(updatedStory);
-      
+
       // Send notification to reporter
       final user = _authService.currentUser.value;
       await _notificationService.sendNotification(NotificationModel(
@@ -128,13 +131,15 @@ class EditorDashboardController extends GetxController {
         userId: story.authorId,
         type: 'story_update',
         title: 'Story Rejected',
-        message: '${user?.displayName ?? "An editor"} sent back "${story.title}" for revision.',
+        message:
+            '${user?.displayName ?? "An editor"} sent back "${story.title}" for revision.',
         createdAt: DateTime.now(),
         actionUrl: '${AppRoutes.storyEditor}?id=${story.id}',
         data: {'storyId': story.id},
       ));
 
-      Get.snackbar('Sent Back', 'Story has been sent back to the reporter', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Sent Back', 'Story has been sent back to the reporter',
+          snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar('Error', 'Failed to send back story: $e');
     }
@@ -152,7 +157,7 @@ class EditorDashboardController extends GetxController {
   void showChangeStateDialog(BuildContext context, StoryModel story) {
     String selectedStatus = story.status;
     String selectedStage = story.stage;
-    
+
     final statuses = [
       AppConstants.statusDraft,
       AppConstants.statusPending,
@@ -182,7 +187,10 @@ class EditorDashboardController extends GetxController {
                   DropdownButtonFormField<String>(
                     initialValue: selectedStatus,
                     decoration: const InputDecoration(labelText: 'Status'),
-                    items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                    items: statuses
+                        .map((s) => DropdownMenuItem(
+                            value: s, child: Text(s.toUpperCase())))
+                        .toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => selectedStatus = val);
                     },
@@ -191,7 +199,10 @@ class EditorDashboardController extends GetxController {
                   DropdownButtonFormField<String>(
                     initialValue: selectedStage,
                     decoration: const InputDecoration(labelText: 'Stage'),
-                    items: stages.map((s) => DropdownMenuItem(value: s, child: Text(s.toUpperCase()))).toList(),
+                    items: stages
+                        .map((s) => DropdownMenuItem(
+                            value: s, child: Text(s.toUpperCase())))
+                        .toList(),
                     onChanged: (val) {
                       if (val != null) setState(() => selectedStage = val);
                     },
@@ -219,8 +230,9 @@ class EditorDashboardController extends GetxController {
   }
 
   void showStoryMenu(BuildContext context, StoryModel story, Offset position) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+
     showMenu(
       context: context,
       position: RelativeRect.fromRect(
@@ -272,7 +284,7 @@ class EditorDashboardController extends GetxController {
       elevation: 8.0,
     ).then((value) {
       if (value == null || !context.mounted) return;
-      
+
       switch (value) {
         case 'copy_edit':
           startCopyEdit(story);

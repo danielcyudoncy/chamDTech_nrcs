@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_quill/flutter_quill.dart' as quill;
 import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
-import 'package:chamdtech_nrcs/core/models/attachment_model.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/core/utils/permission_helpers.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
@@ -39,14 +38,16 @@ class StoryEditorScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         flex: 5,
-                        child: _buildMainWorkspace(context, controller, isMobile),
+                        child:
+                            _buildMainWorkspace(context, controller, isMobile),
                       ),
                       if (!isMobile)
                         Container(
                           width: 280,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            border: Border(left: BorderSide(color: Colors.grey.shade200)),
+                            border: Border(
+                                left: BorderSide(color: Colors.grey.shade200)),
                           ),
                           child: _buildMetricsSidebar(context, controller),
                         ),
@@ -62,7 +63,8 @@ class StoryEditorScreen extends StatelessWidget {
     });
   }
 
-  Widget _buildModernHeader(BuildContext context, StoryEditorController controller, bool isMobile) {
+  Widget _buildModernHeader(
+      BuildContext context, StoryEditorController controller, bool isMobile) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
@@ -98,7 +100,8 @@ class StoryEditorScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              _buildStatusBadge(controller.existingStory?.status ?? 'draft', isDarkBackground: true),
+              _buildStatusBadge(controller.existingStory?.status ?? 'draft',
+                  isDarkBackground: true),
             ],
           ),
           const SizedBox(height: 12),
@@ -116,7 +119,8 @@ class StoryEditorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMainWorkspace(BuildContext context, StoryEditorController controller, bool isMobile) {
+  Widget _buildMainWorkspace(
+      BuildContext context, StoryEditorController controller, bool isMobile) {
     return DefaultTabController(
       length: 2,
       child: Column(
@@ -124,13 +128,14 @@ class StoryEditorScreen extends StatelessWidget {
           if (isMobile)
             Container(
               color: Colors.white,
-              child: TabBar(
-                indicatorColor: const Color(0xFF1A237E),
-                labelColor: const Color(0xFF1A237E),
+              child: const TabBar(
+                indicatorColor: Color(0xFF1A237E),
+                labelColor: Color(0xFF1A237E),
                 unselectedLabelColor: Colors.grey,
                 indicatorSize: TabBarIndicatorSize.label,
-                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                tabs: const [
+                labelStyle:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                tabs: [
                   Tab(text: 'STORY CONTENT'),
                   Tab(text: 'REPORT INTROS'),
                 ],
@@ -218,7 +223,8 @@ class StoryEditorScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F9FA),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
             ),
             child: Row(
@@ -247,7 +253,8 @@ class StoryEditorScreen extends StatelessWidget {
                 buttonOptions: const quill.QuillSimpleToolbarButtonOptions(
                   base: quill.QuillToolbarBaseButtonOptions(
                     iconTheme: quill.QuillIconTheme(
-                      iconButtonSelectedData: quill.IconButtonData(color: Color(0xFF1A237E)),
+                      iconButtonSelectedData:
+                          quill.IconButtonData(color: Color(0xFF1A237E)),
                     ),
                   ),
                 ),
@@ -279,7 +286,8 @@ class StoryEditorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricsSidebar(BuildContext context, StoryEditorController controller) {
+  Widget _buildMetricsSidebar(
+      BuildContext context, StoryEditorController controller) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -316,14 +324,13 @@ class StoryEditorScreen extends StatelessWidget {
             Colors.blue,
           ),
           const Spacer(),
-         
-         
         ],
       ),
     );
   }
 
-  Widget _buildMetricCard(String label, String value, IconData icon, Color color) {
+  Widget _buildMetricCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -345,8 +352,14 @@ class StoryEditorScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
-              Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.bold)),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w900, color: color)),
             ],
           ),
         ],
@@ -357,11 +370,20 @@ class StoryEditorScreen extends StatelessWidget {
   Widget _buildStatusBadge(String status, {bool isDarkBackground = false}) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'approved': color = Colors.green; break;
-      case 'pending': color = Colors.orange; break;
-      case 'draft': color = isDarkBackground ? Colors.blue.shade200 : Colors.blue; break;
-      case 'rejected': color = Colors.red; break;
-      default: color = isDarkBackground ? Colors.grey.shade400 : Colors.grey;
+      case 'approved':
+        color = Colors.green;
+        break;
+      case 'pending':
+        color = Colors.orange;
+        break;
+      case 'draft':
+        color = isDarkBackground ? Colors.blue.shade200 : Colors.blue;
+        break;
+      case 'rejected':
+        color = Colors.red;
+        break;
+      default:
+        color = isDarkBackground ? Colors.grey.shade400 : Colors.grey;
     }
 
     return Container(
@@ -394,7 +416,8 @@ class StoryEditorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernActionButtons(BuildContext context, StoryEditorController controller, bool isMobile) {
+  Widget _buildModernActionButtons(
+      BuildContext context, StoryEditorController controller, bool isMobile) {
     return Expanded(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -409,7 +432,8 @@ class StoryEditorScreen extends StatelessWidget {
                   backgroundColor: const Color(0xFF1A237E),
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -422,11 +446,13 @@ class StoryEditorScreen extends StatelessWidget {
                     backgroundColor: Colors.indigo.shade400,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               if (PermissionHelpers.canApproveStory(controller.currentUser) &&
-                  controller.existingStory?.status == AppConstants.statusPending)
+                  controller.existingStory?.status ==
+                      AppConstants.statusPending)
                 ElevatedButton.icon(
                   onPressed: () => controller.approveStory(),
                   icon: const Icon(Icons.check_circle_outline, size: 18),
@@ -435,22 +461,29 @@ class StoryEditorScreen extends StatelessWidget {
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
             ],
             const SizedBox(width: 12),
-            _buildIconButton(Icons.copy_all, 'Copy', () => controller.handleCopy()),
-            _buildIconButton(Icons.history, 'Logs', () => controller.showComingSoon('Logs')),
-            if (PermissionHelpers.canDeleteStory(controller.currentUser, controller.existingStory ?? StoryModel.empty()))
-              _buildIconButton(Icons.delete_outline, 'Delete', () => controller.handleDelete(), color: Colors.red),
+            _buildIconButton(
+                Icons.copy_all, 'Copy', () => controller.handleCopy()),
+            _buildIconButton(
+                Icons.history, 'Logs', () => controller.showComingSoon('Logs')),
+            if (PermissionHelpers.canDeleteStory(controller.currentUser,
+                controller.existingStory ?? StoryModel.empty()))
+              _buildIconButton(Icons.delete_outline, 'Delete',
+                  () => controller.handleDelete(),
+                  color: Colors.red),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildIconButton(IconData icon, String label, VoidCallback onTap, {Color? color}) {
+  Widget _buildIconButton(IconData icon, String label, VoidCallback onTap,
+      {Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Tooltip(
@@ -471,7 +504,8 @@ class StoryEditorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernFooter(BuildContext context, StoryEditorController controller) {
+  Widget _buildModernFooter(
+      BuildContext context, StoryEditorController controller) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       decoration: BoxDecoration(
@@ -484,32 +518,44 @@ class StoryEditorScreen extends StatelessWidget {
             controller.lastSaved.value != null
                 ? 'Autosaved at ${DateFormat('hh:mm:ss a').format(controller.lastSaved.value!)}'
                 : 'Changes not saved',
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 11, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 11,
+                fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           Text(
             'V${controller.versionText.value}',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: Color(0xFF1A237E)),
+            style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 10,
+                color: Color(0xFF1A237E)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryChip(StoryEditorController controller, {bool isDarkBackground = false}) {
+  Widget _buildCategoryChip(StoryEditorController controller,
+      {bool isDarkBackground = false}) {
     final selected = controller.selectedCategory.value;
     final color = _categoryColor(selected);
     final displayColor = isDarkBackground ? Colors.white : color;
-    
+
     return InkWell(
-      onTap: controller.isReadOnly.value ? null : () => _showCategoryPicker(controller),
+      onTap: controller.isReadOnly.value
+          ? null
+          : () => _showCategoryPicker(controller),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: color.withValues(alpha: isDarkBackground ? 0.3 : 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: isDarkBackground ? Colors.white24 : color.withValues(alpha: 0.2)),
+          border: Border.all(
+              color: isDarkBackground
+                  ? Colors.white24
+                  : color.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -549,7 +595,10 @@ class StoryEditorScreen extends StatelessWidget {
           children: [
             const Text(
               'Select Story Category',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A237E)),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A237E)),
             ),
             const SizedBox(height: 20),
             Wrap(
@@ -563,16 +612,21 @@ class StoryEditorScreen extends StatelessWidget {
                     Get.back();
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: controller.selectedCategory.value == cat ? color : color.withValues(alpha: 0.05),
+                      color: controller.selectedCategory.value == cat
+                          ? color
+                          : color.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: color.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       cat,
                       style: TextStyle(
-                        color: controller.selectedCategory.value == cat ? Colors.white : color,
+                        color: controller.selectedCategory.value == cat
+                            ? Colors.white
+                            : color,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -588,94 +642,30 @@ class StoryEditorScreen extends StatelessWidget {
     );
   }
 
-  void _showAttachmentsDialog(BuildContext context, StoryEditorController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Attachments'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: SizedBox(
-          width: 500,
-          height: 400,
-          child: Column(
-            children: [
-              Expanded(
-                child: Obx(() {
-                  if (controller.attachments.isEmpty) {
-                    return const Center(child: Text('No attachments'));
-                  }
-                  return ListView.builder(
-                    itemCount: controller.attachments.length,
-                    itemBuilder: (context, index) {
-                      final attachment = controller.attachments[index];
-                      return ListTile(
-                        leading: Icon(_getIconForType(attachment.type), color: const Color(0xFF1A237E)),
-                        title: Text(attachment.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(attachment.formattedSize),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => controller.removeAttachment(attachment.id),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () {
-                  final attachment = AttachmentModel(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: 'Mock Attachment.jpg',
-                    type: 'image',
-                    url: 'https://example.com/image.jpg',
-                    sizeBytes: 1024 * 1024,
-                    uploadedAt: DateTime.now(),
-                    uploadedBy: controller.currentUser?.id ?? 'unknown',
-                  );
-                  controller.addAttachment(attachment);
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Attachment'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A237E),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getIconForType(String type) {
-    if (type.startsWith('image')) return Icons.image;
-    if (type.startsWith('video')) return Icons.videocam;
-    if (type.startsWith('audio')) return Icons.audiotrack;
-    return Icons.insert_drive_file;
-  }
-
   static Color _categoryColor(String category) {
     switch (category) {
-      case 'Local News': return Colors.blue;
-      case 'Politics': return Colors.purple;
-      case 'Sports': return Colors.green;
-      case 'Foreign': return Colors.orange;
-      case 'Business & Finance': return Colors.teal;
-      case 'Breaking News': return Colors.red;
-      case 'Technology': return Colors.indigo;
-      case 'Environment': return Colors.green.shade800;
-      case 'Health': return Colors.pink;
-      case 'Entertainment & Lifestyle': return Colors.amber;
-      default: return Colors.grey;
+      case 'Local News':
+        return Colors.blue;
+      case 'Politics':
+        return Colors.purple;
+      case 'Sports':
+        return Colors.green;
+      case 'Foreign':
+        return Colors.orange;
+      case 'Business & Finance':
+        return Colors.teal;
+      case 'Breaking News':
+        return Colors.red;
+      case 'Technology':
+        return Colors.indigo;
+      case 'Environment':
+        return Colors.green.shade800;
+      case 'Health':
+        return Colors.pink;
+      case 'Entertainment & Lifestyle':
+        return Colors.amber;
+      default:
+        return Colors.grey;
     }
   }
 }

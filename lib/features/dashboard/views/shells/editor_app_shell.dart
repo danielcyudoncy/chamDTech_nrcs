@@ -7,8 +7,6 @@ import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/desk_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/widgets/editorial_desks_view.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
-import 'package:chamdtech_nrcs/features/stories/models/desk_model.dart';
-import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
@@ -182,7 +180,6 @@ class _EditorAppShellState extends State<EditorAppShell> {
   }
 
   void _handleTabSelection(String tab, int index) {
-    final controller = Get.find<EditorDashboardController>();
     if (tab == 'Desks') {
       try {
         final deskController = Get.find<DeskController>();
@@ -298,7 +295,8 @@ class _EditorAppShellState extends State<EditorAppShell> {
     }
   }
 
-  Widget _buildReviewQueue(EditorDashboardController controller, bool isMobile) {
+  Widget _buildReviewQueue(
+      EditorDashboardController controller, bool isMobile) {
     return Container(
       color: const Color(0xFFF8F9FA),
       child: Column(
@@ -327,55 +325,60 @@ class _EditorAppShellState extends State<EditorAppShell> {
             child: Obx(() {
               final pending = controller.pendingStories;
               final inEdit = controller.copyEditStories;
-              final other = controller.allStories.where((s) => 
-                s.status != AppConstants.statusArchived && 
-                !pending.any((p) => p.id == s.id) && 
-                !inEdit.any((e) => e.id == s.id)
-              ).toList();
-              
+              final other = controller.allStories
+                  .where((s) =>
+                      s.status != AppConstants.statusArchived &&
+                      !pending.any((p) => p.id == s.id) &&
+                      !inEdit.any((e) => e.id == s.id))
+                  .toList();
+
               if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               if (pending.isEmpty && inEdit.isEmpty && other.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.rate_review_outlined, size: 64, color: Colors.grey.shade200),
+                      Icon(Icons.rate_review_outlined,
+                          size: 64, color: Colors.grey.shade200),
                       const SizedBox(height: 16),
-                      Text('No stories found', 
-                        style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.w500)),
+                      Text('No stories found',
+                          style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontWeight: FontWeight.w500)),
                     ],
                   ),
                 );
               }
 
               return ListView(
-                padding: EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 32.0),
+                padding:
+                    EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 32.0),
                 children: [
                   if (pending.isNotEmpty) ...[
                     _buildSectionHeader('PENDING REVIEW', Colors.orange),
                     ...pending.map((s) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _buildStoryListTile(controller, s),
-                    )),
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: _buildStoryListTile(controller, s),
+                        )),
                     const SizedBox(height: 24),
                   ],
                   if (inEdit.isNotEmpty) ...[
                     _buildSectionHeader('IN COPY EDIT', Colors.blue),
                     ...inEdit.map((s) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _buildStoryListTile(controller, s),
-                    )),
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: _buildStoryListTile(controller, s),
+                        )),
                     const SizedBox(height: 24),
                   ],
                   if (other.isNotEmpty) ...[
                     _buildSectionHeader('ALL ACTIVE STORIES', Colors.grey),
                     ...other.map((s) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: _buildStoryListTile(controller, s),
-                    )),
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: _buildStoryListTile(controller, s),
+                        )),
                   ],
                 ],
               );
@@ -407,7 +410,8 @@ class _EditorAppShellState extends State<EditorAppShell> {
     );
   }
 
-  Widget _buildArchiveView(EditorDashboardController controller, bool isMobile) {
+  Widget _buildArchiveView(
+      EditorDashboardController controller, bool isMobile) {
     return Container(
       color: const Color(0xFFF8F9FA),
       child: Column(
@@ -434,35 +438,41 @@ class _EditorAppShellState extends State<EditorAppShell> {
           ),
           Expanded(
             child: Obx(() {
-              final archived = controller.allStories.where((s) => 
-                s.status == AppConstants.statusArchived
-              ).toList();
-              
+              final archived = controller.allStories
+                  .where((s) => s.status == AppConstants.statusArchived)
+                  .toList();
+
               if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
+
               if (archived.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.archive_outlined, size: 64, color: Colors.grey.shade200),
+                      Icon(Icons.archive_outlined,
+                          size: 64, color: Colors.grey.shade200),
                       const SizedBox(height: 16),
-                      Text('No stories in archive', 
-                        style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.w500)),
+                      Text('No stories in archive',
+                          style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontWeight: FontWeight.w500)),
                     ],
                   ),
                 );
               }
 
               return ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 32.0),
+                padding:
+                    EdgeInsets.symmetric(horizontal: isMobile ? 16.0 : 32.0),
                 itemCount: archived.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final story = archived[index];
-                  return _buildStoryListTile(controller, story, isArchive: true);
+                  return _buildStoryListTile(controller, story,
+                      isArchive: true);
                 },
               );
             }),
@@ -482,8 +492,9 @@ class _EditorAppShellState extends State<EditorAppShell> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Author: ${story.authorName}', 
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              Text('Author: ${story.authorName}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 12)),
               const Divider(height: 32),
               Text(
                 Get.find<StoryService>().getPlainTextFromQuill(story.content),
@@ -502,15 +513,19 @@ class _EditorAppShellState extends State<EditorAppShell> {
               Navigator.pop(context);
               Get.toNamed('/story/editor', arguments: story);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A237E)),
-            child: const Text('OPEN IN EDITOR', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A237E)),
+            child: const Text('OPEN IN EDITOR',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStoryListTile(EditorDashboardController controller, StoryModel story, {bool isArchive = false}) {
+  Widget _buildStoryListTile(
+      EditorDashboardController controller, StoryModel story,
+      {bool isArchive = false}) {
     final timeFormat = DateFormat('HH:mm');
     return Container(
       decoration: BoxDecoration(
@@ -519,11 +534,12 @@ class _EditorAppShellState extends State<EditorAppShell> {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: ListTile(
-        onTap: isArchive 
-          ? () => _showStoryContent(context, story)
-          : () => controller.startCopyEdit(story),
+        onTap: isArchive
+            ? () => _showStoryContent(context, story)
+            : () => controller.startCopyEdit(story),
         title: Text(story.title.isEmpty ? 'Untitled' : story.title,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark)),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: NRCSColors.textDark)),
         subtitle: Text(
           '${story.authorName} • ${timeFormat.format(story.updatedAt)}',
           style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
@@ -822,25 +838,5 @@ class _EditorAppShellState extends State<EditorAppShell> {
   Widget _buildEditorialDesks(
       EditorDashboardController controller, bool isMobile) {
     return EditorialDesksView(isMobile: isMobile);
-  }
-
-  Widget _buildEmptyDesksState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.desk_outlined, size: 80, color: Colors.grey.shade200),
-          const SizedBox(height: 24),
-          const Text('No Editorial Desks Found',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E))),
-          const SizedBox(height: 8),
-          Text('Editorial categories will appear here automatically.',
-              style: TextStyle(color: Colors.grey.shade500)),
-        ],
-      ),
-    );
   }
 }

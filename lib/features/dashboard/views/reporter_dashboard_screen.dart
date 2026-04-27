@@ -16,55 +16,55 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
     final controller = Get.put(ReporterDashboardController());
 
     return NRCSAppShell(
-      title: 'Reporter Dashboard',
-      toolbar: const NRCSToolbar(),
-      body: SelectionArea(
-        child: Container(
-          color: const Color(0xFFF8F9FA),
-          child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context, controller),
-              const SizedBox(height: 32),
-              Row(
+        title: 'Reporter Dashboard',
+        toolbar: const NRCSToolbar(),
+        body: SelectionArea(
+          child: Container(
+            color: const Color(0xFFF8F9FA),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left Column: Calendar & Approved Stories
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      children: [
-                        _buildCalendarCard(controller),
-                        const SizedBox(height: 24),
-                        _buildApprovedStoriesList(context, controller),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 32),
-                  // Right Column: My Active Stories & Stats
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      children: [
-                        _buildQuickStats(controller),
-                        const SizedBox(height: 24),
-                        _buildActiveStoriesSection(context, controller),
-                      ],
-                    ),
+                  _buildHeader(context, controller),
+                  const SizedBox(height: 32),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Left Column: Calendar & Approved Stories
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          children: [
+                            _buildCalendarCard(controller),
+                            const SizedBox(height: 24),
+                            _buildApprovedStoriesList(context, controller),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 32),
+                      // Right Column: My Active Stories & Stats
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
+                            _buildQuickStats(controller),
+                            const SizedBox(height: 24),
+                            _buildActiveStoriesSection(context, controller),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    )),
-    );
+        ));
   }
 
-  Widget _buildHeader(BuildContext context, ReporterDashboardController controller) {
+  Widget _buildHeader(
+      BuildContext context, ReporterDashboardController controller) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -95,7 +95,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             backgroundColor: const Color(0xFF1A237E),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 0,
           ),
         ),
@@ -126,7 +127,10 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
               SizedBox(width: 12),
               Text(
                 'Schedule',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E)),
               ),
             ],
           ),
@@ -135,22 +139,27 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
                 firstDay: DateTime.utc(2024, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: controller.focusedDay.value,
-                selectedDayPredicate: (day) => isSameDay(controller.selectedDate.value, day),
+                selectedDayPredicate: (day) =>
+                    isSameDay(controller.selectedDate.value, day),
                 onDaySelected: controller.onDateSelected,
                 calendarFormat: CalendarFormat.month,
                 headerStyle: HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
-                  titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Colors.grey.shade600),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Colors.grey.shade600),
+                  titleTextStyle: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
+                  leftChevronIcon:
+                      Icon(Icons.chevron_left, color: Colors.grey.shade600),
+                  rightChevronIcon:
+                      Icon(Icons.chevron_right, color: Colors.grey.shade600),
                 ),
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
                     color: const Color(0xFF1A237E).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  todayTextStyle: const TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold),
+                  todayTextStyle: const TextStyle(
+                      color: Color(0xFF1A237E), fontWeight: FontWeight.bold),
                   selectedDecoration: const BoxDecoration(
                     color: Color(0xFF1A237E),
                     shape: BoxShape.circle,
@@ -171,7 +180,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
     );
   }
 
-  Widget _buildApprovedStoriesList(BuildContext context, ReporterDashboardController controller) {
+  Widget _buildApprovedStoriesList(
+      BuildContext context, ReporterDashboardController controller) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -193,11 +203,17 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
             children: [
               const Text(
                 'Approved Stories',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E)),
               ),
               Obx(() => Text(
                     DateFormat('MMM dd').format(controller.selectedDate.value),
-                    style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
                   )),
             ],
           ),
@@ -209,9 +225,11 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      Icon(Icons.event_note, size: 48, color: Colors.grey.shade200),
+                      Icon(Icons.event_note,
+                          size: 48, color: Colors.grey.shade200),
                       const SizedBox(height: 16),
-                      Text('No approved stories for this date.', style: TextStyle(color: Colors.grey.shade400)),
+                      Text('No approved stories for this date.',
+                          style: TextStyle(color: Colors.grey.shade400)),
                     ],
                   ),
                 ),
@@ -233,11 +251,13 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.verified, size: 20, color: Colors.green.shade700),
+                    child: Icon(Icons.verified,
+                        size: 20, color: Colors.green.shade700),
                   ),
                   title: Text(
                     story.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -282,7 +302,8 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
     );
   }
 
-  Widget _buildActiveStoriesSection(BuildContext context, ReporterDashboardController controller) {
+  Widget _buildActiveStoriesSection(
+      BuildContext context, ReporterDashboardController controller) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -301,7 +322,10 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
         children: [
           const Text(
             'Active Workspace',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A237E)),
           ),
           const SizedBox(height: 20),
           Obx(() {
@@ -317,9 +341,12 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
                   padding: const EdgeInsets.symmetric(vertical: 80),
                   child: Column(
                     children: [
-                      Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade100),
+                      Icon(Icons.auto_stories_outlined,
+                          size: 64, color: Colors.grey.shade100),
                       const SizedBox(height: 24),
-                      Text('No active stories found.', style: TextStyle(color: Colors.grey.shade400, fontSize: 16)),
+                      Text('No active stories found.',
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 16)),
                     ],
                   ),
                 ),
@@ -348,94 +375,123 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
   void _showStoryViewer(BuildContext context, StoryModel story) {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: SelectionArea(
-          child: Container(
-            width: 800,
-            height: 600,
-          padding: const EdgeInsets.all(40),
-          child: SingleChildScrollView(
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: SelectionArea(
+            child: Container(
+              width: 800,
+              height: 600,
+              padding: const EdgeInsets.all(40),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'APPROVED STORY',
-                            style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w800, fontSize: 10, letterSpacing: 0.5),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'APPROVED STORY',
+                                  style: TextStyle(
+                                      color: Colors.green.shade700,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 10,
+                                      letterSpacing: 0.5),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                story.title,
+                                style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF1A237E),
+                                    letterSpacing: -0.5),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          story.title,
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Color(0xFF1A237E), letterSpacing: -0.5),
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: const Icon(Icons.close),
                         ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        _InfoBadge(
+                            icon: Icons.person_outline,
+                            label: 'Author',
+                            value: story.authorName),
+                        const SizedBox(width: 24),
+                        _InfoBadge(
+                            icon: Icons.category_outlined,
+                            label: 'Category',
+                            value: story.category),
+                        const SizedBox(width: 24),
+                        _InfoBadge(
+                            icon: Icons.history,
+                            label: 'Last Updated',
+                            value: DateFormat('MMM dd, hh:mm a')
+                                .format(story.updatedAt)),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    const Divider(),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'CONTENT',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.grey,
+                          letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      story.content.isEmpty
+                          ? 'No content available.'
+                          : _stripQuillJson(story.content),
+                      style: const TextStyle(
+                          fontSize: 16, height: 1.6, color: Color(0xFF263238)),
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Get.back(),
+                          child: const Text('Close'),
+                        ),
+                        const SizedBox(width: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            Get.back();
+                            controller.editStory(story);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A237E),
+                              foregroundColor: Colors.white),
+                          child: const Text('Edit Story'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  _InfoBadge(icon: Icons.person_outline, label: 'Author', value: story.authorName),
-                  const SizedBox(width: 24),
-                  _InfoBadge(icon: Icons.category_outlined, label: 'Category', value: story.category),
-                  const SizedBox(width: 24),
-                  _InfoBadge(icon: Icons.history, label: 'Last Updated', value: DateFormat('MMM dd, hh:mm a').format(story.updatedAt)),
-                ],
-              ),
-              const SizedBox(height: 32),
-              const Divider(),
-              const SizedBox(height: 32),
-              const Text(
-                'CONTENT',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 1),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
-                style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF263238)),
-              ),
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(),
-                    child: const Text('Close'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Get.back();
-                      controller.editStory(story);
-                    },
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1A237E), foregroundColor: Colors.white),
-                    child: const Text('Edit Story'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    )),
+            ),
+          )),
     );
   }
 
@@ -443,9 +499,10 @@ class ReporterDashboardScreen extends GetView<ReporterDashboardController> {
   String _stripQuillJson(String jsonStr) {
     try {
       // Check if it's JSON before trying to parse
-      final isJson = jsonStr.trim().startsWith('{') || jsonStr.trim().startsWith('[');
+      final isJson =
+          jsonStr.trim().startsWith('{') || jsonStr.trim().startsWith('[');
       if (!isJson) return jsonStr;
-      
+
       return Get.find<StoryService>().getPlainTextFromQuill(jsonStr);
     } catch (e) {
       return jsonStr;
@@ -459,7 +516,11 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _StatCard({required this.label, required this.value, required this.icon, required this.color});
+  const _StatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -491,8 +552,17 @@ class _StatCard extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1)),
-                Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                Text(label.toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade500,
+                        letterSpacing: 1)),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1A237E))),
               ],
             ),
           ],
@@ -529,20 +599,29 @@ class _ModernStoryRow extends StatelessWidget {
                 children: [
                   Text(
                     story.title.isEmpty ? 'Untitled Story' : story.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF263238)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Color(0xFF263238)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.category_outlined, size: 12, color: Colors.grey.shade400),
+                      Icon(Icons.category_outlined,
+                          size: 12, color: Colors.grey.shade400),
                       const SizedBox(width: 4),
-                      Text(story.category, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      Text(story.category,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade500)),
                       const SizedBox(width: 16),
-                      Icon(Icons.access_time, size: 12, color: Colors.grey.shade400),
+                      Icon(Icons.access_time,
+                          size: 12, color: Colors.grey.shade400),
                       const SizedBox(width: 4),
-                      Text(DateFormat('hh:mm a').format(story.updatedAt), style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      Text(DateFormat('hh:mm a').format(story.updatedAt),
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade500)),
                     ],
                   ),
                 ],
@@ -558,10 +637,17 @@ class _ModernStoryRow extends StatelessWidget {
   Widget _buildStatusIndicator(String status) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'draft': color = Colors.blue; break;
-      case 'pending': color = Colors.orange; break;
-      case 'rejected': color = Colors.red; break;
-      default: color = Colors.grey;
+      case 'draft':
+        color = Colors.blue;
+        break;
+      case 'pending':
+        color = Colors.orange;
+        break;
+      case 'rejected':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.grey;
     }
     return Container(
       width: 4,
@@ -579,7 +665,8 @@ class _InfoBadge extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoBadge({required this.icon, required this.label, required this.value});
+  const _InfoBadge(
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -590,11 +677,18 @@ class _InfoBadge extends StatelessWidget {
           children: [
             Icon(icon, size: 12, color: Colors.grey),
             const SizedBox(width: 6),
-            Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+            Text(label.toUpperCase(),
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                    letterSpacing: 0.5)),
           ],
         ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF263238))),
+        Text(value,
+            style: const TextStyle(
+                fontWeight: FontWeight.w700, color: Color(0xFF263238))),
       ],
     );
   }

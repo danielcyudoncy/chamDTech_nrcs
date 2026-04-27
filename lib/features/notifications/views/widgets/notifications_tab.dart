@@ -1,8 +1,8 @@
+// features/notifications/views/widgets/notifications_tab.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
-import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/features/notifications/views/widgets/notification_card.dart';
 
 class NotificationsTab extends StatelessWidget {
@@ -31,7 +31,8 @@ class NotificationsTab extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(context, notificationService, notifications, hasUnread),
+              _buildHeader(
+                  context, notificationService, notifications, hasUnread),
               Expanded(
                 child: notifications.isEmpty
                     ? _buildEmptyState()
@@ -44,7 +45,8 @@ class NotificationsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, NotificationService service, List<NotificationModel> notifications, bool hasUnread) {
+  Widget _buildHeader(BuildContext context, NotificationService service,
+      List<NotificationModel> notifications, bool hasUnread) {
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Row(
@@ -73,10 +75,13 @@ class NotificationsTab extends StatelessWidget {
               if (notifications.isNotEmpty)
                 TextButton.icon(
                   onPressed: () => _confirmClearAll(context, service),
-                  icon: const Icon(Icons.delete_sweep_outlined, size: 18, color: Colors.red),
-                  label: const Text('Clear All', style: TextStyle(color: Colors.red)),
+                  icon: const Icon(Icons.delete_sweep_outlined,
+                      size: 18, color: Colors.red),
+                  label: const Text('Clear All',
+                      style: TextStyle(color: Colors.red)),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
                 ),
               if (hasUnread) ...[
@@ -86,7 +91,8 @@ class NotificationsTab extends StatelessWidget {
                   icon: const Icon(Icons.done_all, size: 18),
                   label: const Text('Mark all as read'),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
                 ),
               ],
@@ -106,7 +112,8 @@ class NotificationsTab extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No notifications yet',
-            style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.w500),
+            style: TextStyle(
+                color: Colors.grey.shade400, fontWeight: FontWeight.w500),
           ),
         ],
       ),
@@ -128,7 +135,8 @@ class NotificationsTab extends StatelessWidget {
     Get.dialog(
       AlertDialog(
         title: const Text('Clear all notifications?'),
-        content: const Text('This will permanently delete all your notifications. This action cannot be undone.'),
+        content: const Text(
+            'This will permanently delete all your notifications. This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
@@ -139,7 +147,9 @@ class NotificationsTab extends StatelessWidget {
               Get.back();
               service.deleteAllNotifications();
             },
-            child: const Text('Clear All', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text('Clear All',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
