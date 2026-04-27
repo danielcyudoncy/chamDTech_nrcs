@@ -25,8 +25,23 @@ class AuthService extends GetxService {
   void onInit() {
     super.onInit();
     firebaseUser.bindStream(_auth.authStateChanges());
-    // ever(firebaseUser, _setInitialScreen); // Removed to prevent immediate navigation loop
-    // Instead, just listen once after init or handle in Splash screen
+
+    // Silently reload user data on hot restart (Firebase resolves auth async,
+    // so currentUser can be null even when a user is already signed in).
+    // This does NOT navigate — it just repopulates currentUser so the UI
+    // can react via Obx.
+    ever(firebaseUser, (User? fbUser) async {
+      if (fbUser != null && currentUser.value == null) {
+        try {
+          await _loadUserData(fbUser.uid);
+          await _setUserOnlineStatus(true);
+        } catch (e) {
+          Get.log('AuthService: Silent user-data reload failed: $e');
+        }
+      } else if (fbUser == null && currentUser.value != null) {
+        currentUser.value = null;
+      }
+    });
   }
   
   // Public method to trigger initial navigation

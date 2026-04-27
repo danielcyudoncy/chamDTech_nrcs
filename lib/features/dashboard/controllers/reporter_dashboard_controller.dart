@@ -88,6 +88,15 @@ class ReporterDashboardController extends GetxController {
     super.onInit();
     loadReporterStories();
     _listenForRundownLocks();
+
+    // Hot-restart guard: if stories loaded before Firebase resolved currentUser,
+    // the story stream returned empty (userId was null). Re-trigger once the
+    // user becomes available.
+    ever(_authService.currentUser, (user) {
+      if (user != null && allMyStories.isEmpty) {
+        loadReporterStories();
+      }
+    });
   }
 
   void onDateSelected(DateTime selected, DateTime focused) {

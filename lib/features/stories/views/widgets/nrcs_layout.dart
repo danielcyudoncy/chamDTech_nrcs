@@ -211,6 +211,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
 
   @override
   Widget build(BuildContext context) {
+    return Obx(() {
     final user = Get.find<AuthService>().currentUser.value;
     final role = user?.role ?? AppConstants.roleReporter;
 
@@ -429,6 +430,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
         ],
       ),
     );
+    }); // end Obx
   }
 }
 
@@ -579,7 +581,7 @@ class _UserSection extends StatelessWidget {
 
     return Obx(() {
       final user = authService.currentUser.value;
-      final displayName = user?.displayName ?? 'Admin';
+      final displayName = user?.displayName ?? '';
       final photoUrl = user?.photoUrl;
 
       return Container(

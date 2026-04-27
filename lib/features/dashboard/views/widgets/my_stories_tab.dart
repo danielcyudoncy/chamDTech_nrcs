@@ -246,44 +246,90 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
   }
 
   Widget _buildFilterChips(ReporterDashboardController c) {
-    final filters = ['all', 'draft', 'pending', 'approved', 'rejected'];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Obx(() {
-        return Row(
-          children: filters.map((filter) {
-            final isSelected = c.myStoriesFilterStatus.value == filter;
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: ChoiceChip(
-                label: Text(filter.toUpperCase()),
-                labelStyle: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  color: isSelected ? Colors.white : Colors.grey.shade700,
-                  letterSpacing: 0.5,
-                ),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) c.myStoriesFilterStatus.value = filter;
-                },
-                backgroundColor: Colors.white,
-                selectedColor: const Color(0xFF1A237E),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected ? const Color(0xFF1A237E) : Colors.grey.shade300,
-                  ),
-                ),
-                showCheckmark: false,
+    const filters = ['all', 'draft', 'pending', 'approved', 'rejected'];
+    const filterLabels = {
+      'all': 'All Stories',
+      'draft': 'Draft',
+      'pending': 'Pending',
+      'approved': 'Approved',
+      'rejected': 'Rejected',
+    };
+    final filterIcons = {
+      'all': Icons.layers_outlined,
+      'draft': Icons.edit_note_outlined,
+      'pending': Icons.hourglass_top_outlined,
+      'approved': Icons.check_circle_outline,
+      'rejected': Icons.cancel_outlined,
+    };
+    final filterColors = {
+      'all': const Color(0xFF1A237E),
+      'draft': Colors.blue.shade700,
+      'pending': Colors.orange.shade700,
+      'approved': Colors.green.shade700,
+      'rejected': Colors.red.shade700,
+    };
+
+    return Obx(() {
+      final selected = c.myStoriesFilterStatus.value;
+      final selectedColor = filterColors[selected] ?? const Color(0xFF1A237E);
+
+      return Row(
+        children: [
+          Icon(filterIcons[selected] ?? Icons.layers_outlined,
+              size: 16, color: selectedColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: selectedColor.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: selectedColor.withValues(alpha: 0.25)),
               ),
-            );
-          }).toList(),
-        );
-      }),
-    );
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selected,
+                  isExpanded: true,
+                  icon: Icon(Icons.keyboard_arrow_down_rounded,
+                      size: 18, color: selectedColor),
+                  style: TextStyle(
+                    color: selectedColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
+                  ),
+                  dropdownColor: Colors.white,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) c.myStoriesFilterStatus.value = newValue;
+                  },
+                  items: filters.map((filter) {
+                    final color = filterColors[filter] ?? const Color(0xFF1A237E);
+                    return DropdownMenuItem<String>(
+                      value: filter,
+                      child: Row(
+                        children: [
+                          Icon(filterIcons[filter], size: 15, color: color),
+                          const SizedBox(width: 8),
+                          Text(
+                            filterLabels[filter] ?? filter.toUpperCase(),
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildEmptyState() {
