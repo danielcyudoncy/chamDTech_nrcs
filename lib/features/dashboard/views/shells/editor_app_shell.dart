@@ -1,4 +1,5 @@
 // features/dashboard/views/shells/editor_app_shell.dart
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -268,7 +269,9 @@ class _EditorAppShellState extends State<EditorAppShell> {
                 style:
                     TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () {
-              // Add logout logic
+              Get.back(); // Close drawer first
+              final AuthService authService = Get.find<AuthService>();
+              authService.signOut();
             },
           ),
           const SizedBox(height: 20),

@@ -8,6 +8,7 @@ import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
+import 'package:chamdtech_nrcs/shared/layouts/responsive_layout.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Widget
@@ -34,16 +35,163 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
   Widget build(BuildContext context) {
     final c = widget.controller;
 
+    return ResponsiveLayout(
+      mobile: _buildMobileLayout(c),
+      desktop: _buildDesktopLayout(c),
+    );
+  }
+
+  Widget _buildMobileLayout(ReporterDashboardController c) {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Container(
+            color: const Color(0xFFF8F9FA),
+            child: const TabBar(
+              tabs: [
+                Tab(text: 'Stories'),
+                Tab(text: 'Details'),
+              ],
+              labelColor: Color(0xFF1A237E),
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Color(0xFF1A237E),
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                // Stories List Tab
+                Container(
+                  color: const Color(0xFFF8F9FA),
+                  child: Column(
+                    children: [
+                      _buildHeader(c),
+                      Expanded(
+                        child: Obx(() {
+                          if (c.isLoading.value) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+
+                          final stories = c.filteredAndSortedMyStories;
+                          if (stories.isEmpty) {
+                            return _buildEmptyState();
+                          }
+
+                          final groupedStories = _groupStoriesByDate(stories);
+
+                          return ListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            itemCount: groupedStories.keys.length,
+                            itemBuilder: (context, sectionIndex) {
+                              final dateKey =
+                                  groupedStories.keys.elementAt(sectionIndex);
+                              final sectionStories = groupedStories[dateKey]!;
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: 16, bottom: 8, left: 4),
+                                    child: Text(
+                                      dateKey,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.grey,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                  ...sectionStories.map((story) {
+                                    return Obx(() {
+                                      final isSelected =
+                                          c.selectedStory.value?.id == story.id;
+                                      return _PremiumStoryCard(
+                                        story: story,
+                                        isSelected: isSelected,
+                                        onTap: () => c.selectStory(story),
+                                      );
+                                    });
+                                  }),
+                                ],
+                              );
+                            },
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+                // Story Detail Tab
+                Container(
+                  color: Colors.white,
+                  child: Obx(() {
+                    final story = c.selectedStory.value;
+                    if (story == null) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: NRCSColors.primaryBlue
+                                    .withValues(alpha: 0.05),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.article_outlined,
+                                  size: 64,
+                                  color: NRCSColors.primaryBlue
+                                      .withValues(alpha: 0.5)),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Select a story',
+                              style: TextStyle(
+                                  color: Color(0xFF1A237E),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Choose a story from the Stories tab to view its details',
+                              style: TextStyle(
+                                  color: Colors.grey.shade600, fontSize: 14),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return _StoryDetailView(story: story, controller: c);
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(ReporterDashboardController c) {
     return Container(
       color: const Color(0xFFF8F9FA), // Premium light background
       child: Row(
         children: [
           // ── Left Side: Story List (Master) ──────────────────────────────────
           Container(
-            width: 420,
+            width: MediaQuery.of(context).size.width * 0.35, // Responsive width
+            constraints: const BoxConstraints(
+                minWidth: 350, maxWidth: 450), // Reasonable bounds
             decoration: const BoxDecoration(
               color: Colors.white,
-              border: Border(right: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
+              border:
+                  Border(right: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
             ),
             child: Column(
               children: [
@@ -66,17 +214,20 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                     final groupedStories = _groupStoriesByDate(stories);
 
                     return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       itemCount: groupedStories.keys.length,
                       itemBuilder: (context, sectionIndex) {
-                        final dateKey = groupedStories.keys.elementAt(sectionIndex);
+                        final dateKey =
+                            groupedStories.keys.elementAt(sectionIndex);
                         final sectionStories = groupedStories[dateKey]!;
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(top: 16, bottom: 8, left: 4),
+                              padding: const EdgeInsets.only(
+                                  top: 16, bottom: 8, left: 4),
                               child: Text(
                                 dateKey,
                                 style: const TextStyle(
@@ -89,7 +240,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                             ),
                             ...sectionStories.map((story) {
                               return Obx(() {
-                                final isSelected = c.selectedStory.value?.id == story.id;
+                                final isSelected =
+                                    c.selectedStory.value?.id == story.id;
                                 return _PremiumStoryCard(
                                   story: story,
                                   isSelected: isSelected,
@@ -121,17 +273,24 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                           color: NRCSColors.primaryBlue.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.article_outlined, size: 64, color: NRCSColors.primaryBlue.withValues(alpha: 0.5)),
+                        child: Icon(Icons.article_outlined,
+                            size: 64,
+                            color:
+                                NRCSColors.primaryBlue.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 24),
                       const Text(
                         'Select a story',
-                        style: TextStyle(color: Color(0xFF1A237E), fontSize: 22, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: Color(0xFF1A237E),
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Choose a story from the list to view its details',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 14),
                       ),
                     ],
                   ),
@@ -175,8 +334,10 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                   backgroundColor: const Color(0xFF1A237E),
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ),
             ],
@@ -192,7 +353,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                   decoration: InputDecoration(
                     hintText: 'Search stories...',
                     hintStyle: TextStyle(color: Colors.grey.shade500),
-                    prefixIcon: Icon(Icons.search, size: 20, color: Colors.grey.shade400),
+                    prefixIcon: Icon(Icons.search,
+                        size: 20, color: Colors.grey.shade400),
                     isDense: true,
                     filled: true,
                     fillColor: const Color(0xFFF5F7FA),
@@ -228,7 +390,10 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
           child: DropdownButton<String>(
             value: c.myStoriesSortBy.value,
             icon: Icon(Icons.sort, size: 18, color: Colors.grey.shade600),
-            style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
             dropdownColor: Colors.white,
             onChanged: (String? newValue) {
               if (newValue != null) c.myStoriesSortBy.value = newValue;
@@ -285,7 +450,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
               decoration: BoxDecoration(
                 color: selectedColor.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: selectedColor.withValues(alpha: 0.25)),
+                border:
+                    Border.all(color: selectedColor.withValues(alpha: 0.25)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -301,10 +467,13 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
                   ),
                   dropdownColor: Colors.white,
                   onChanged: (String? newValue) {
-                    if (newValue != null) c.myStoriesFilterStatus.value = newValue;
+                    if (newValue != null) {
+                      c.myStoriesFilterStatus.value = newValue;
+                    }
                   },
                   items: filters.map((filter) {
-                    final color = filterColors[filter] ?? const Color(0xFF1A237E);
+                    final color =
+                        filterColors[filter] ?? const Color(0xFF1A237E);
                     return DropdownMenuItem<String>(
                       value: filter,
                       child: Row(
@@ -341,7 +510,10 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
           const SizedBox(height: 16),
           const Text(
             'No stories found',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -360,7 +532,8 @@ class _MyStoriesTabState extends State<MyStoriesTab> {
     final yesterday = today.subtract(const Duration(days: 1));
 
     for (var story in stories) {
-      final date = DateTime(story.updatedAt.year, story.updatedAt.month, story.updatedAt.day);
+      final date = DateTime(
+          story.updatedAt.year, story.updatedAt.month, story.updatedAt.day);
       String key;
       if (date == today) {
         key = 'TODAY';
@@ -403,7 +576,9 @@ class _PremiumStoryCard extends StatelessWidget {
         color: isSelected ? const Color(0xFFE8EAF6) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected ? const Color(0xFF1A237E).withValues(alpha: 0.3) : Colors.grey.shade200,
+          color: isSelected
+              ? const Color(0xFF1A237E).withValues(alpha: 0.3)
+              : Colors.grey.shade200,
           width: isSelected ? 1.5 : 1,
         ),
         boxShadow: isSelected
@@ -433,7 +608,9 @@ class _PremiumStoryCard extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
-                        color: isSelected ? const Color(0xFF1A237E) : const Color(0xFF263238),
+                        color: isSelected
+                            ? const Color(0xFF1A237E)
+                            : const Color(0xFF263238),
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -446,7 +623,9 @@ class _PremiumStoryCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? const Color(0xFF1A237E).withValues(alpha: 0.6) : Colors.grey.shade500,
+                      color: isSelected
+                          ? const Color(0xFF1A237E).withValues(alpha: 0.6)
+                          : Colors.grey.shade500,
                     ),
                   ),
                 ],
@@ -457,14 +636,18 @@ class _PremiumStoryCard extends StatelessWidget {
                   _PremiumStatusBadge(status: story.status),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       story.format,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -472,7 +655,8 @@ class _PremiumStoryCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         story.category,
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade600),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -558,8 +742,10 @@ class _StoryDetailView extends StatelessWidget {
                       backgroundColor: Colors.green.shade600,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
               ],
@@ -583,7 +769,10 @@ class _StoryDetailView extends StatelessWidget {
                             const SizedBox(width: 12),
                             Text(
                               'Last updated ${dateFormat.format(story.updatedAt)}',
-                              style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -612,19 +801,35 @@ class _StoryDetailView extends StatelessWidget {
                             spacing: 40,
                             runSpacing: 24,
                             children: [
-                              _DetailMeta(label: 'AUTHOR', value: story.authorName, icon: Icons.person_outline),
-                              _DetailMeta(label: 'FORMAT', value: story.format, icon: Icons.movie_creation_outlined),
-                              _DetailMeta(label: 'DURATION', value: durationStr, icon: Icons.timer_outlined),
+                              _DetailMeta(
+                                  label: 'AUTHOR',
+                                  value: story.authorName,
+                                  icon: Icons.person_outline),
+                              _DetailMeta(
+                                  label: 'FORMAT',
+                                  value: story.format,
+                                  icon: Icons.movie_creation_outlined),
+                              _DetailMeta(
+                                  label: 'DURATION',
+                                  value: durationStr,
+                                  icon: Icons.timer_outlined),
                               _DetailMeta(
                                   label: 'WORKSPACE',
-                                  value: story.deskId != null && story.deskId!.isNotEmpty
+                                  value: story.deskId != null &&
+                                          story.deskId!.isNotEmpty
                                       ? story.deskId!
                                       : (story.category.isNotEmpty
                                           ? story.category
                                           : 'None'),
                                   icon: Icons.workspaces_outline),
-                              _DetailMeta(label: 'VERSION', value: 'v${story.version}', icon: Icons.history),
-                              _DetailMeta(label: 'WORDS', value: '$wordCount', icon: Icons.text_snippet_outlined),
+                              _DetailMeta(
+                                  label: 'VERSION',
+                                  value: 'v${story.version}',
+                                  icon: Icons.history),
+                              _DetailMeta(
+                                  label: 'WORDS',
+                                  value: '$wordCount',
+                                  icon: Icons.text_snippet_outlined),
                             ],
                           ),
                         ),
@@ -707,7 +912,8 @@ class _DetailMeta extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _DetailMeta({required this.label, required this.value, required this.icon});
+  const _DetailMeta(
+      {required this.label, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -779,7 +985,7 @@ class _PremiumStatusBadge extends StatelessWidget {
         color = Colors.grey.shade700;
         bgColor = Colors.grey.shade100;
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -799,7 +1005,10 @@ class _PremiumStatusBadge extends StatelessWidget {
           Text(
             status.toUpperCase(),
             style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.w900, color: color, letterSpacing: 0.5),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: color,
+                letterSpacing: 0.5),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 // features/dashboard/views/shells/admin_app_shell.dart
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
@@ -12,8 +13,6 @@ import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dar
 import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/notifications/views/widgets/notifications_tab.dart';
-
-
 
 class AdminAppShell extends StatefulWidget {
   const AdminAppShell({super.key});
@@ -55,118 +54,145 @@ class _AdminAppShellState extends State<AdminAppShell> {
   Widget build(BuildContext context) {
     final AdminController controller = Get.put(AdminController());
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 1100;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isMobile = constraints.maxWidth < 1100;
 
-        return Scaffold(
-          key: GlobalKey<ScaffoldState>(),
-          backgroundColor: Colors.white,
-          appBar: isMobile ? AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            title: const Text(
-              'ADMIN CONTROL CENTER',
-              style: TextStyle(
-                color: Color(0xFF1A237E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 1.1,
-              ),
-            ),
-            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
-            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-          ) : null,
-          drawer: isMobile ? _buildDrawer(controller) : null,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!isMobile) ...[
-                const NRCSTopNav(),
-                const NRCSSubNav(),
-                // Sub-header
-                Container(
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-                  ),
-                  child: const Row(
-                    children: [
-                      SizedBox(width: 24),
-                      Text(
-                        'ADMIN CONTROL CENTER',
-                        style: TextStyle(
-                          color: NRCSColors.breakingRed,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                    ],
+      return Scaffold(
+        key: GlobalKey<ScaffoldState>(),
+        backgroundColor: Colors.white,
+        appBar: isMobile
+            ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                title: const Text(
+                  'ADMIN CONTROL CENTER',
+                  style: TextStyle(
+                    color: Color(0xFF1A237E),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 1.1,
                   ),
                 ),
-              ],
-              const NRCSToolbar(),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+                shape: const Border(
+                    bottom:
+                        BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+              )
+            : null,
+        drawer: isMobile ? _buildDrawer(controller) : null,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!isMobile) ...[
+              const NRCSTopNav(),
+              const NRCSSubNav(),
+              // Sub-header
+              Container(
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                      bottom:
+                          BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                ),
+                child: const Row(
                   children: [
-                    // Sidebar (Desktop only)
-                    if (!isMobile)
-                      Container(
-                        width: 300,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            right: BorderSide(color: NRCSColors.borderGray, width: 8),
-                          ),
-                        ),
-                        child: ListView.builder(
-                          itemCount: _tabs.length,
-                          itemBuilder: (context, index) {
-                            final tab = _tabs[index];
-                            IconData icon;
-                            switch (tab) {
-                              case 'Dashboard': icon = Icons.dashboard_outlined; break;
-                              case 'Users': icon = Icons.people_outline; break;
-                              case 'Privileges': icon = Icons.security_outlined; break;
-                              case 'Desks': icon = Icons.desk_outlined; break;
-                              case 'Story States': icon = Icons.low_priority; break;
-                              case 'Archive': icon = Icons.archive_outlined; break;
-                              case 'Configurations': icon = Icons.settings_outlined; break;
-                              case 'Audit Logs': icon = Icons.history; break;
-                              case 'Notifications': icon = Icons.notifications_none; break;
-                              default: icon = Icons.folder_outlined;
-                            }
-                            return ListTile(
-                              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey.shade600),
-                              title: Text(
-                                tab, 
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
-                                )
-                              ),
-                              selected: _selectedIndex == index,
-                              selectedTileColor: NRCSColors.subNavGray.withValues(alpha: 0.5),
-                              onTap: () => _handleTabSelection(tab, index),
-                            );
-                          },
-                        ),
+                    SizedBox(width: 24),
+                    Text(
+                      'ADMIN CONTROL CENTER',
+                      style: TextStyle(
+                        color: NRCSColors.breakingRed,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 1.1,
                       ),
-                    // Main Content Area
-                    Expanded(
-                      child: _buildContentArea(controller, isMobile),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-        );
-      }
-    );
+            const NRCSToolbar(),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Sidebar (Desktop only)
+                  if (!isMobile)
+                    Container(
+                      width: 300,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                              color: NRCSColors.borderGray, width: 8),
+                        ),
+                      ),
+                      child: ListView.builder(
+                        itemCount: _tabs.length,
+                        itemBuilder: (context, index) {
+                          final tab = _tabs[index];
+                          IconData icon;
+                          switch (tab) {
+                            case 'Dashboard':
+                              icon = Icons.dashboard_outlined;
+                              break;
+                            case 'Users':
+                              icon = Icons.people_outline;
+                              break;
+                            case 'Privileges':
+                              icon = Icons.security_outlined;
+                              break;
+                            case 'Desks':
+                              icon = Icons.desk_outlined;
+                              break;
+                            case 'Story States':
+                              icon = Icons.low_priority;
+                              break;
+                            case 'Archive':
+                              icon = Icons.archive_outlined;
+                              break;
+                            case 'Configurations':
+                              icon = Icons.settings_outlined;
+                              break;
+                            case 'Audit Logs':
+                              icon = Icons.history;
+                              break;
+                            case 'Notifications':
+                              icon = Icons.notifications_none;
+                              break;
+                            default:
+                              icon = Icons.folder_outlined;
+                          }
+                          return ListTile(
+                            leading: Icon(icon,
+                                color: _selectedIndex == index
+                                    ? const Color(0xFF1A237E)
+                                    : Colors.grey.shade600),
+                            title: Text(tab,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _selectedIndex == index
+                                        ? const Color(0xFF1A237E)
+                                        : Colors.black87)),
+                            selected: _selectedIndex == index,
+                            selectedTileColor:
+                                NRCSColors.subNavGray.withValues(alpha: 0.5),
+                            onTap: () => _handleTabSelection(tab, index),
+                          );
+                        },
+                      ),
+                    ),
+                  // Main Content Area
+                  Expanded(
+                    child: _buildContentArea(controller, isMobile),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   void _handleTabSelection(String tab, int index) {
@@ -220,11 +246,15 @@ class _AdminAppShellState extends State<AdminAppShell> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.admin_panel_settings, size: 64, color: Colors.white),
+                  Icon(Icons.admin_panel_settings,
+                      size: 64, color: Colors.white),
                   SizedBox(height: 12),
                   Text(
                     'Admin Menu',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -234,26 +264,45 @@ class _AdminAppShellState extends State<AdminAppShell> {
             final tab = _tabs[index];
             IconData icon;
             switch (tab) {
-              case 'Dashboard': icon = Icons.dashboard_outlined; break;
-              case 'Users': icon = Icons.people_outline; break;
-              case 'Privileges': icon = Icons.security_outlined; break;
-              case 'Desks': icon = Icons.desk_outlined; break;
-              case 'Story States': icon = Icons.low_priority; break;
-              case 'Configurations': icon = Icons.settings_outlined; break;
-              case 'Audit Logs': icon = Icons.history; break;
-              case 'Notifications': icon = Icons.notifications_none; break;
-              default: icon = Icons.folder_outlined;
+              case 'Dashboard':
+                icon = Icons.dashboard_outlined;
+                break;
+              case 'Users':
+                icon = Icons.people_outline;
+                break;
+              case 'Privileges':
+                icon = Icons.security_outlined;
+                break;
+              case 'Desks':
+                icon = Icons.desk_outlined;
+                break;
+              case 'Story States':
+                icon = Icons.low_priority;
+                break;
+              case 'Configurations':
+                icon = Icons.settings_outlined;
+                break;
+              case 'Audit Logs':
+                icon = Icons.history;
+                break;
+              case 'Notifications':
+                icon = Icons.notifications_none;
+                break;
+              default:
+                icon = Icons.folder_outlined;
             }
 
             return ListTile(
-              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey),
-              title: Text(
-                tab, 
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
-                )
-              ),
+              leading: Icon(icon,
+                  color: _selectedIndex == index
+                      ? const Color(0xFF1A237E)
+                      : Colors.grey),
+              title: Text(tab,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _selectedIndex == index
+                          ? const Color(0xFF1A237E)
+                          : Colors.black87)),
               selected: _selectedIndex == index,
               onTap: () {
                 Get.back(); // Close drawer
@@ -265,9 +314,13 @@ class _AdminAppShellState extends State<AdminAppShell> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            title: const Text('Logout',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () {
-              // Add logout logic
+              Get.back(); // Close drawer first
+              final AuthService authService = Get.find<AuthService>();
+              authService.signOut();
             },
           ),
           const SizedBox(height: 20),
@@ -300,7 +353,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
           backgroundColor: Colors.white,
           foregroundColor: const Color(0xFF1A237E),
           side: const BorderSide(color: Color(0xFF1A237E)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
       ),
@@ -327,7 +381,8 @@ class _AdminAppShellState extends State<AdminAppShell> {
             const SizedBox(height: 4),
             Text(
               'Monitor system health and administrative activities.',
-              style: TextStyle(fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
+              style: TextStyle(
+                  fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 32),
             Obx(() {
@@ -366,20 +421,24 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
               if (isMobile) {
                 return Column(
-                  children: stats.map((s) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: s,
-                  )).toList(),
+                  children: stats
+                      .map((s) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: s,
+                          ))
+                      .toList(),
                 );
               }
 
               return Row(
-                children: stats.map((s) => Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: s,
-                  ),
-                )).toList(),
+                children: stats
+                    .map((s) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: s,
+                          ),
+                        ))
+                    .toList(),
               );
             }),
             const SizedBox(height: 32),
@@ -421,9 +480,11 @@ class _AdminAppShellState extends State<AdminAppShell> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.touch_app_outlined, size: 48, color: Colors.grey.shade200),
+                        Icon(Icons.touch_app_outlined,
+                            size: 48, color: Colors.grey.shade200),
                         const SizedBox(height: 16),
-                        Text('Click a card above to see details', style: TextStyle(color: Colors.grey.shade400)),
+                        Text('Click a card above to see details',
+                            style: TextStyle(color: Colors.grey.shade400)),
                       ],
                     ),
                   );
@@ -445,27 +506,33 @@ class _AdminAppShellState extends State<AdminAppShell> {
           ],
         ),
       ),
-    );  }
+    );
+  }
 
   Widget _buildUserList(List<UserModel> users) {
     if (users.isEmpty) return const Center(child: Text('No users found'));
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: users.length,
-      separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, indent: 16, endIndent: 16),
       itemBuilder: (context, index) {
         final user = users[index];
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: NRCSColors.topNavBlue.withValues(alpha: 0.1),
-            child: Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U'),
+            child: Text(user.displayName.isNotEmpty
+                ? user.displayName[0].toUpperCase()
+                : 'U'),
           ),
           title: Text(
             user.displayName,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: NRCSColors.textDark),
           ),
-          subtitle: Text(user.email, style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7))),
-
+          subtitle: Text(user.email,
+              style:
+                  TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7))),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -483,29 +550,33 @@ class _AdminAppShellState extends State<AdminAppShell> {
   }
 
   Widget _buildStoryList(List<StoryModel> stories) {
-    if (stories.isEmpty) return const Center(child: Text('No stories found today'));
+    if (stories.isEmpty) {
+      return const Center(child: Text('No stories found today'));
+    }
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: stories.length,
-      separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, indent: 16, endIndent: 16),
       itemBuilder: (context, index) {
         final story = stories[index];
         return ListTile(
           title: Text(
             story.title,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: NRCSColors.textDark),
           ),
           subtitle: Text(
             'by ${story.authorName} • ${story.format}',
             style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7)),
           ),
-
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: _getStatusColor(story.status).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: _getStatusColor(story.status).withValues(alpha: 0.5)),
+              border: Border.all(
+                  color: _getStatusColor(story.status).withValues(alpha: 0.5)),
             ),
             child: Text(
               story.status.toUpperCase(),
@@ -523,26 +594,34 @@ class _AdminAppShellState extends State<AdminAppShell> {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'approved': return Colors.green;
-      case 'draft': return Colors.grey;
-      case 'rejected': return Colors.red;
-      default: return Colors.blue;
+      case 'approved':
+        return Colors.green;
+      case 'draft':
+        return Colors.grey;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.blue;
     }
   }
 
   Widget _buildRundownList(List<RundownModel> rundowns) {
-    if (rundowns.isEmpty) return const Center(child: Text('No active rundowns found'));
+    if (rundowns.isEmpty) {
+      return const Center(child: Text('No active rundowns found'));
+    }
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: rundowns.length,
-      separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16),
+      separatorBuilder: (context, index) =>
+          const Divider(height: 1, indent: 16, endIndent: 16),
       itemBuilder: (context, index) {
         final rundown = rundowns[index];
         final timeStr = DateFormat('HH:mm').format(rundown.scheduledTime);
         return ListTile(
           title: Text(
             rundown.name,
-            style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: NRCSColors.textDark),
           ),
           subtitle: Text(
             'Scheduled for $timeStr',
@@ -553,12 +632,15 @@ class _AdminAppShellState extends State<AdminAppShell> {
             style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.5)),
           ),
         );
-
       },
     );
   }
 
-  Widget _buildStatCard(String title, String value, {IconData? icon, Color? color, bool isSelected = false, VoidCallback? onTap}) {
+  Widget _buildStatCard(String title, String value,
+      {IconData? icon,
+      Color? color,
+      bool isSelected = false,
+      VoidCallback? onTap}) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
@@ -569,7 +651,9 @@ class _AdminAppShellState extends State<AdminAppShell> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? (color ?? const Color(0xFF1A237E)) : Colors.transparent,
+              color: isSelected
+                  ? (color ?? const Color(0xFF1A237E))
+                  : Colors.transparent,
               width: 2,
             ),
             boxShadow: [
@@ -586,10 +670,12 @@ class _AdminAppShellState extends State<AdminAppShell> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: (color ?? const Color(0xFF1A237E)).withValues(alpha: 0.1),
+                    color: (color ?? const Color(0xFF1A237E))
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, color: color ?? const Color(0xFF1A237E), size: 20),
+                  child: Icon(icon,
+                      color: color ?? const Color(0xFF1A237E), size: 20),
                 ),
                 const SizedBox(width: 16),
               ],
@@ -623,4 +709,3 @@ class _AdminAppShellState extends State<AdminAppShell> {
     );
   }
 }
-
