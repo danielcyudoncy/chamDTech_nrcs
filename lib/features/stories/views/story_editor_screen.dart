@@ -17,20 +17,27 @@ class StoryEditorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(StoryEditorController());
 
-    return Obx(() {
-      // Accessing reactive variables at the top to ensure Obx listens to them
-      controller.isReadOnly.value;
-      controller.formattedDuration.value;
-      controller.anchorWordCount.value;
-      controller.notesWordCount.value;
+    return NRCSAppShell(
+      title: 'STORY EDITOR',
+      body: LayoutBuilder(builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 900;
+        return Container(
+          color: const Color(0xFFF5F7FB),
+          child: Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading story...'),
+                  ],
+                ),
+              );
+            }
 
-      return NRCSAppShell(
-        title: 'STORY EDITOR',
-        body: LayoutBuilder(builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 900;
-          return Container(
-            color: const Color(0xFFF5F7FB),
-            child: Column(
+            return Column(
               children: [
                 _buildModernHeader(context, controller, isMobile),
                 Expanded(
@@ -56,11 +63,11 @@ class StoryEditorScreen extends StatelessWidget {
                 ),
                 _buildModernFooter(context, controller),
               ],
-            ),
-          );
-        }),
-      );
-    });
+            );
+          }),
+        );
+      }),
+    );
   }
 
   Widget _buildModernHeader(
@@ -77,45 +84,46 @@ class StoryEditorScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
+      child: Obx(() => Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: TextField(
-                  controller: controller.titleController,
-                  enabled: !controller.isReadOnly.value,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller.titleController,
+                      focusNode: controller.titleFocusNode,
+                      enabled: !controller.isReadOnly.value,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Story Title...',
+                        border: InputBorder.none,
+                        hintStyle: TextStyle(color: Colors.white70),
+                      ),
+                    ),
                   ),
-                  decoration: const InputDecoration(
-                    hintText: 'Story Title...',
-                    border: InputBorder.none,
-                    hintStyle: TextStyle(color: Colors.white70),
-                  ),
-                ),
+                  const SizedBox(width: 16),
+                  _buildStatusBadge(controller.existingStory?.status ?? 'draft',
+                      isDarkBackground: true),
+                ],
               ),
-              const SizedBox(width: 16),
-              _buildStatusBadge(controller.existingStory?.status ?? 'draft',
-                  isDarkBackground: true),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildCategoryChip(controller, isDarkBackground: true),
+                  const SizedBox(width: 12),
+                  Container(width: 1, height: 24, color: Colors.white24),
+                  const SizedBox(width: 12),
+                  _buildModernActionButtons(context, controller, isMobile),
+                ],
+              ),
             ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildCategoryChip(controller, isDarkBackground: true),
-              const SizedBox(width: 12),
-              Container(width: 1, height: 24, color: Colors.white24),
-              const SizedBox(width: 12),
-              _buildModernActionButtons(context, controller, isMobile),
-            ],
-          ),
-        ],
-      ),
+          )),
     );
   }
 
@@ -288,45 +296,45 @@ class StoryEditorScreen extends StatelessWidget {
 
   Widget _buildMetricsSidebar(
       BuildContext context, StoryEditorController controller) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'STORY METRICS',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: Colors.grey,
-              letterSpacing: 1.2,
-            ),
+    return Obx(() => Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'STORY METRICS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.grey,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _buildMetricCard(
+                'Estimated Duration',
+                controller.formattedDuration.value,
+                Icons.timer_outlined,
+                const Color(0xFF1A237E),
+              ),
+              const SizedBox(height: 16),
+              _buildMetricCard(
+                'Anchor Words',
+                '${controller.anchorWordCount.value}',
+                Icons.mic_none,
+                Colors.orange,
+              ),
+              const SizedBox(height: 16),
+              _buildMetricCard(
+                'Story Words',
+                '${controller.notesWordCount.value}',
+                Icons.text_snippet_outlined,
+                Colors.blue,
+              ),
+              const Spacer(),
+            ],
           ),
-          const SizedBox(height: 24),
-          _buildMetricCard(
-            'Estimated Duration',
-            controller.formattedDuration.value,
-            Icons.timer_outlined,
-            const Color(0xFF1A237E),
-          ),
-          const SizedBox(height: 16),
-          _buildMetricCard(
-            'Anchor Words',
-            '${controller.anchorWordCount.value}',
-            Icons.mic_none,
-            Colors.orange,
-          ),
-          const SizedBox(height: 16),
-          _buildMetricCard(
-            'Story Words',
-            '${controller.notesWordCount.value}',
-            Icons.text_snippet_outlined,
-            Colors.blue,
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
+        ));
   }
 
   Widget _buildMetricCard(
@@ -506,34 +514,34 @@ class StoryEditorScreen extends StatelessWidget {
 
   Widget _buildModernFooter(
       BuildContext context, StoryEditorController controller) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade100)),
-      ),
-      child: Row(
-        children: [
-          Text(
-            controller.lastSaved.value != null
-                ? 'Autosaved at ${DateFormat('hh:mm:ss a').format(controller.lastSaved.value!)}'
-                : 'Changes not saved',
-            style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 11,
-                fontWeight: FontWeight.w600),
+    return Obx(() => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Colors.grey.shade100)),
           ),
-          const Spacer(),
-          Text(
-            'V${controller.versionText.value}',
-            style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 10,
-                color: Color(0xFF1A237E)),
+          child: Row(
+            children: [
+              Text(
+                controller.lastSaved.value != null
+                    ? 'Autosaved at ${DateFormat('hh:mm:ss a').format(controller.lastSaved.value!)}'
+                    : 'Changes not saved',
+                style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              Text(
+                'V${controller.versionText.value}',
+                style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    color: Color(0xFF1A237E)),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ));
   }
 
   Widget _buildCategoryChip(StoryEditorController controller,

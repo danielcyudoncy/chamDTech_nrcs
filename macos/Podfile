@@ -37,6 +37,24 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
+    end
     flutter_additional_macos_build_settings(target)
+
+    if target.respond_to?(:source_build_phase) && target.source_build_phase
+      target.source_build_phase.files.each do |build_file|
+        next unless build_file.respond_to?(:settings) && build_file.settings
+        compiler_flags = build_file.settings['COMPILER_FLAGS']
+        next unless compiler_flags.is_a?(String)
+
+        cleaned_flags = compiler_flags.gsub(/-GCC_WARN_INHIBIT_ALL_WARNINGS/, '').gsub(/\s+/, ' ').strip
+        if cleaned_flags.empty?
+          build_file.settings.delete('COMPILER_FLAGS')
+        else
+          build_file.settings['COMPILER_FLAGS'] = cleaned_flags
+        end
+      end
+    end
   end
 end

@@ -20,20 +20,22 @@ import 'package:uuid/uuid.dart';
 class StoryEditorController extends GetxController {
   final StoryService _storyService = Get.find<StoryService>();
   final AuthService _authService = Get.find<AuthService>();
-  final NotificationService _notificationService = Get.find<NotificationService>();
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
   final RundownService _rundownService = Get.find<RundownService>();
 
   final titleController = TextEditingController();
+  final titleFocusNode = FocusNode();
   final slugController = TextEditingController();
   final durationController = TextEditingController(text: '0');
-  
+
   late quill.QuillController anchorQuillController;
   late quill.QuillController notesQuillController;
-  
+
   final isLoading = false.obs;
   final isSaving = false.obs;
   final lastSaved = Rxn<DateTime>();
-  
+
   final storyTitle = ''.obs;
   final durationText = '0'.obs;
   final attachments = <AttachmentModel>[].obs; // Reactive attachments list
@@ -70,7 +72,7 @@ class StoryEditorController extends GetxController {
             Text(
               cat,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Get.isDarkMode ? Colors.white70 : Colors.black87,
               ),
@@ -83,64 +85,68 @@ class StoryEditorController extends GetxController {
 
   Color _categoryColor(String category) {
     switch (category) {
-      case 'Local News':                return Colors.blue;
-      case 'Politics':                  return Colors.purple;
-      case 'Sports':                    return Colors.green;
-      case 'Foreign':                   return Colors.orange;
-      case 'Business & Finance':        return Colors.teal;
-      case 'Breaking News':             return Colors.red;
-      case 'Technology':                return Colors.indigo;
-      case 'Environment':               return Colors.green.shade800;
-      case 'Health':                    return Colors.pink;
-      case 'Entertainment & Lifestyle': return Colors.amber;
-      default:                          return Colors.grey;
+      case 'Local News':
+        return Colors.blue;
+      case 'Politics':
+        return Colors.purple;
+      case 'Sports':
+        return Colors.green;
+      case 'Foreign':
+        return Colors.orange;
+      case 'Business & Finance':
+        return Colors.teal;
+      case 'Breaking News':
+        return Colors.red;
+      case 'Technology':
+        return Colors.indigo;
+      case 'Environment':
+        return Colors.green.shade800;
+      case 'Health':
+        return Colors.pink;
+      case 'Entertainment & Lifestyle':
+        return Colors.amber;
+      default:
+        return Colors.grey;
     }
   }
 
   @override
   void onInit() {
     super.onInit();
-    
-    if (Get.arguments != null && Get.arguments is StoryModel) {
+
+    // Check for URL parameters first (from notifications)
+    final storyId = Get.parameters['id'];
+    if (storyId != null && storyId.isNotEmpty) {
+      _loadStoryById(storyId);
+    } else if (Get.arguments != null && Get.arguments is StoryModel) {
       existingStory = Get.arguments as StoryModel;
-      titleController.text = existingStory!.title;
-      storyTitle.value = existingStory!.title;
-      slugController.text = existingStory!.slug;
-      durationController.text = existingStory!.duration.toString();
-      durationText.value = existingStory!.duration.toString();
-      selectedCategory.value = existingStory!.category;
-      
-      if (existingStory!.version > 1) {
-        versionText.value = 'Version ${existingStory!.version}';
-      }
-      
-      // Load attachments
-      attachments.assignAll(existingStory!.attachments);
-      
-      // Load content
-      _loadContent(existingStory!.content);
-      
-      // Check if this story should be read-only
-      _checkReadOnlyState();
+      _initializeFromExistingStory();
+      _setupListeners();
     } else {
       anchorQuillController = quill.QuillController.basic();
       notesQuillController = quill.QuillController.basic();
-      
+
       // Pre-fill category if passed from the New Story popup
-      if (Get.arguments != null && Get.arguments is Map && Get.arguments['category'] != null) {
+      if (Get.arguments != null &&
+          Get.arguments is Map &&
+          Get.arguments['category'] != null) {
         selectedCategory.value = Get.arguments['category'];
       }
+      _setupListeners();
     }
 
     // Start auto-save
-    _autoSaveTimer = Timer.periodic(AppConstants.autoSaveInterval, (_) => autoSave());
-    
+    _autoSaveTimer =
+        Timer.periodic(AppConstants.autoSaveInterval, (_) => autoSave());
+  }
+
+  void _setupListeners() {
     // Listen for title changes and updates
     titleController.addListener(() {
       storyTitle.value = titleController.text;
       _onTitleChanged();
     });
-    
+
     durationController.addListener(() {
       durationText.value = durationController.text;
     });
@@ -148,7 +154,7 @@ class StoryEditorController extends GetxController {
     // Add text listeners for word count and duration
     anchorQuillController.document.changes.listen((_) => _updateMetrics());
     notesQuillController.document.changes.listen((_) => _updateMetrics());
-    
+
     // Initial calculation
     _updateMetrics();
   }
@@ -156,21 +162,27 @@ class StoryEditorController extends GetxController {
   void _updateMetrics() {
     final anchorText = anchorQuillController.document.toPlainText().trim();
     final notesText = notesQuillController.document.toPlainText().trim();
-    
+
     // Anchor Words
     int ancWords = 0;
     if (anchorText.isNotEmpty) {
-      ancWords = anchorText.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
+      ancWords = anchorText
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .length;
     }
     anchorWordCount.value = ancWords;
-    
+
     // Notes Words
     int ntsWords = 0;
     if (notesText.isNotEmpty) {
-      ntsWords = notesText.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).length;
+      ntsWords = notesText
+          .split(RegExp(r'\s+'))
+          .where((word) => word.isNotEmpty)
+          .length;
     }
     notesWordCount.value = ntsWords;
-    
+
     // Calculate duration strictly from Anchor text (3 words per second)
     if (ancWords == 0) {
       formattedDuration.value = '00:00:00';
@@ -183,7 +195,7 @@ class StoryEditorController extends GetxController {
       final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
       final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
       formattedDuration.value = '$h:$m:$s';
-      
+
       durationText.value = seconds.toString();
       if (durationController.text != seconds.toString()) {
         durationController.text = seconds.toString();
@@ -193,11 +205,12 @@ class StoryEditorController extends GetxController {
 
   Future<void> _checkReadOnlyState() async {
     if (existingStory == null) return;
-    
-    // Rule: If a script has been approved once and it has been added to rundown, 
+
+    // Rule: If a script has been approved once and it has been added to rundown,
     // it can only be opened for read-only.
     if (existingStory!.status == AppConstants.statusApproved) {
-      final rundowns = await _rundownService.getRundownsForStory(existingStory!.id);
+      final rundowns =
+          await _rundownService.getRundownsForStory(existingStory!.id);
       if (rundowns.isNotEmpty) {
         isReadOnly.value = true;
         anchorQuillController.readOnly = true;
@@ -211,12 +224,12 @@ class StoryEditorController extends GetxController {
       final decoded = jsonDecode(contentJson);
       final anchorDoc = quill.Document.fromJson(decoded['anchor'] ?? []);
       final notesDoc = quill.Document.fromJson(decoded['notes'] ?? []);
-      
+
       anchorQuillController = quill.QuillController(
         document: anchorDoc,
         selection: const TextSelection.collapsed(offset: 0),
       );
-      
+
       notesQuillController = quill.QuillController(
         document: notesDoc,
         selection: const TextSelection.collapsed(offset: 0),
@@ -235,6 +248,74 @@ class StoryEditorController extends GetxController {
     }
   }
 
+  void _initializeFromExistingStory() {
+    if (existingStory == null) return;
+
+    titleController.text = existingStory!.title;
+    storyTitle.value = existingStory!.title;
+    slugController.text = existingStory!.slug;
+    durationController.text = existingStory!.duration.toString();
+    durationText.value = existingStory!.duration.toString();
+    selectedCategory.value = existingStory!.category;
+
+    if (existingStory!.version > 1) {
+      versionText.value = 'Version ${existingStory!.version}';
+    }
+
+    // Load attachments
+    attachments.assignAll(existingStory!.attachments);
+
+    // Load content
+    _loadContent(existingStory!.content);
+
+    // Check if this story should be read-only
+    _checkReadOnlyState();
+  }
+
+  Future<void> _loadStoryById(String storyId) async {
+    try {
+      isLoading.value = true;
+      final story = await _storyService.getStoryById(storyId);
+      if (story != null) {
+        existingStory = story;
+        _initializeFromExistingStory();
+        _setupListeners();
+      } else {
+        // Story not found, initialize empty controllers
+        anchorQuillController = quill.QuillController.basic();
+        notesQuillController = quill.QuillController.basic();
+        _setupListeners();
+
+        // Show error
+        Get.snackbar(
+          'Story Not Found',
+          'The requested story could not be found.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade50,
+          colorText: Colors.red,
+        );
+        // Navigate back or to story list
+        Get.back();
+      }
+    } catch (e) {
+      // Initialize empty controllers on error
+      anchorQuillController = quill.QuillController.basic();
+      notesQuillController = quill.QuillController.basic();
+      _setupListeners();
+
+      Get.snackbar(
+        'Error',
+        'Failed to load story: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade50,
+        colorText: Colors.red,
+      );
+      Get.back();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   String _serializeContent() {
     return jsonEncode({
       'anchor': anchorQuillController.document.toDelta().toJson(),
@@ -249,7 +330,9 @@ class StoryEditorController extends GetxController {
 
   Future<void> saveStory({bool isAutoSave = false, String? nextStage}) async {
     if (isReadOnly.value && !isAutoSave) {
-      Get.snackbar('Read Only', 'This story is in a rundown and cannot be modified.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+          'Read Only', 'This story is in a rundown and cannot be modified.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (titleController.text.isEmpty) return;
@@ -281,17 +364,19 @@ class StoryEditorController extends GetxController {
       newVersion++;
     }
 
-    final story = (existingStory ?? StoryModel(
-      id: const Uuid().v4(),
-      title: titleController.text,
-      slug: slugController.text,
-      content: _serializeContent(),
-      authorId: user.id,
-      authorName: user.displayName,
-      status: AppConstants.statusDraft,
-      createdAt: now,
-      updatedAt: now,
-    )).copyWith(
+    final story = (existingStory ??
+            StoryModel(
+              id: const Uuid().v4(),
+              title: titleController.text,
+              slug: slugController.text,
+              content: _serializeContent(),
+              authorId: user.id,
+              authorName: user.displayName,
+              status: AppConstants.statusDraft,
+              createdAt: now,
+              updatedAt: now,
+            ))
+        .copyWith(
       title: titleController.text,
       slug: slugController.text,
       content: _serializeContent(),
@@ -324,9 +409,9 @@ class StoryEditorController extends GetxController {
       } else {
         existingStory = story;
       }
-      
+
       lastSaved.value = now;
-      
+
       if (existingStory!.version > 1) {
         versionText.value = 'Version ${existingStory!.version}';
       } else {
@@ -335,7 +420,7 @@ class StoryEditorController extends GetxController {
 
       if (!isAutoSave) {
         Get.snackbar(
-          'Saved', 
+          'Saved',
           'Story saved successfully.',
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green.withValues(alpha: 0.1),
@@ -344,7 +429,7 @@ class StoryEditorController extends GetxController {
       }
     } else if (!isAutoSave) {
       Get.snackbar(
-        'Error', 
+        'Error',
         'Failed to save story.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.withValues(alpha: 0.1),
@@ -385,33 +470,40 @@ class StoryEditorController extends GetxController {
   }
 
   void handleNew() {
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Create New Story?', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
-        content: const Text('If you have unsaved changes in this story, they will be auto-saved.', style: TextStyle(color: Color(0xFF263238))),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(), 
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
-          TextButton(
-            onPressed: () {
-              Get.back(); // close dialog
-              autoSave(); // auto save current
-              Get.back(); // exit current editor
-              Get.find<StoryController>().createNewStory();
-            }, 
-            child: const Text('Proceed', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
-          ),
-        ],
-      )
-    );
+    Get.dialog(AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Create New Story?',
+          style:
+              TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+      content: const Text(
+          'If you have unsaved changes in this story, they will be auto-saved.',
+          style: TextStyle(color: Color(0xFF263238))),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Cancel',
+              style:
+                  TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+        ),
+        TextButton(
+          onPressed: () {
+            Get.back(); // close dialog
+            autoSave(); // auto save current
+            Get.back(); // exit current editor
+            Get.find<StoryController>().createNewStory();
+          },
+          child: const Text('Proceed',
+              style: TextStyle(
+                  color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+        ),
+      ],
+    ));
   }
 
   Future<void> handleCopy() async {
     if (existingStory == null) {
-      Get.snackbar('Cannot Copy', 'Please save the story first before copying.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Cannot Copy', 'Please save the story first before copying.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     isLoading.value = true;
@@ -424,12 +516,14 @@ class StoryEditorController extends GetxController {
         updatedAt: DateTime.now(),
       );
       await _storyService.createStory(copy);
-      Get.snackbar('Copied', 'Story copied successfully.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Copied', 'Story copied successfully.',
+          snackPosition: SnackPosition.BOTTOM);
       // Close current editor, open the copy
       Get.back();
       Get.toNamed('/story/editor', arguments: copy);
     } catch (e) {
-      Get.snackbar('Error', 'Failed to copy story.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Failed to copy story.',
+          snackPosition: SnackPosition.BOTTOM);
     }
     isLoading.value = false;
   }
@@ -440,82 +534,97 @@ class StoryEditorController extends GetxController {
       return;
     }
 
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Delete Story', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to delete this story? This action cannot be undone.', style: TextStyle(color: Color(0xFF263238))),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(), 
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () async {
-              Get.back(); // hide dialog
-              isLoading.value = true;
-              try {
-                await _storyService.deleteStory(existingStory!.id);
-                isLoading.value = false;
-                _navigateBackToDashboard(); // exit editor
-                Get.snackbar('Deleted', 'Story has been deleted.', snackPosition: SnackPosition.BOTTOM);
-              } catch (e) {
-                isLoading.value = false;
-                Get.snackbar('Error', 'Failed to delete story.', snackPosition: SnackPosition.BOTTOM);
-              }
-            }, 
-            child: const Text('Delete'),
-          ),
-        ],
-      )
-    );
+    Get.dialog(AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Delete Story',
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+      content: const Text(
+          'Are you sure you want to delete this story? This action cannot be undone.',
+          style: TextStyle(color: Color(0xFF263238))),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Cancel',
+              style:
+                  TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red, foregroundColor: Colors.white),
+          onPressed: () async {
+            Get.back(); // hide dialog
+            isLoading.value = true;
+            try {
+              await _storyService.deleteStory(existingStory!.id);
+              isLoading.value = false;
+              _navigateBackToDashboard(); // exit editor
+              Get.snackbar('Deleted', 'Story has been deleted.',
+                  snackPosition: SnackPosition.BOTTOM);
+            } catch (e) {
+              isLoading.value = false;
+              Get.snackbar('Error', 'Failed to delete story.',
+                  snackPosition: SnackPosition.BOTTOM);
+            }
+          },
+          child: const Text('Delete'),
+        ),
+      ],
+    ));
   }
 
   Future<void> showAssignDialog() async {
-    Get.dialog(
-      AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('Assign Story', style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
-        content: SizedBox(
-          width: 300,
-          child: StreamBuilder<List<UserModel>>(
-            stream: _authService.getUsersStream(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final users = snapshot.data ?? [];
-              return ListView.builder(
-                shrinkWrap: true,
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  final user = users[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: const Color(0xFF1A237E).withValues(alpha: 0.1),
-                      child: Text(user.displayName[0].toUpperCase(), style: const TextStyle(color: Color(0xFF1A237E))),
-                    ),
-                    title: Text(user.displayName, style: const TextStyle(color: Color(0xFF263238), fontWeight: FontWeight.bold)),
-                    subtitle: Text(user.role, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                    onTap: () {
-                      Get.back();
-                      assignStory(user);
-                    },
-                  );
-                },
-              );
-            },
-          ),
+    Get.dialog(AlertDialog(
+      backgroundColor: Colors.white,
+      title: const Text('Assign Story',
+          style:
+              TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+      content: SizedBox(
+        width: 300,
+        child: StreamBuilder<List<UserModel>>(
+          stream: _authService.getUsersStream(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final users = snapshot.data ?? [];
+            return ListView.builder(
+              shrinkWrap: true,
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final user = users[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        const Color(0xFF1A237E).withValues(alpha: 0.1),
+                    child: Text(user.displayName[0].toUpperCase(),
+                        style: const TextStyle(color: Color(0xFF1A237E))),
+                  ),
+                  title: Text(user.displayName,
+                      style: const TextStyle(
+                          color: Color(0xFF263238),
+                          fontWeight: FontWeight.bold)),
+                  subtitle: Text(user.role,
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  onTap: () {
+                    Get.back();
+                    assignStory(user);
+                  },
+                );
+              },
+            );
+          },
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      )
-    );
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Get.back(),
+          child: const Text('Close',
+              style:
+                  TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+        ),
+      ],
+    ));
   }
 
   Future<void> assignStory(UserModel user) async {
@@ -530,7 +639,7 @@ class StoryEditorController extends GetxController {
         assignedToName: user.displayName,
         updatedAt: DateTime.now(),
       );
-      
+
       await _storyService.updateStory(updatedStory);
       existingStory = updatedStory;
 
@@ -552,7 +661,7 @@ class StoryEditorController extends GetxController {
 
   void showComingSoon(String feature) {
     Get.snackbar(
-      '$feature Pending', 
+      '$feature Pending',
       'The $feature module is currently under active development and will be available soon.',
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Colors.blue.withValues(alpha: 0.1),
@@ -573,14 +682,17 @@ class StoryEditorController extends GetxController {
 
   Future<void> approveStory() async {
     if (isReadOnly.value) {
-      Get.snackbar('Read Only', 'This story is already approved and in a rundown.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+          'Read Only', 'This story is already approved and in a rundown.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (existingStory == null) {
-      Get.snackbar('Error', 'Cannot approve a new story. Please save first.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Cannot approve a new story. Please save first.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
-    
+
     isLoading.value = true;
     try {
       await saveStory(isAutoSave: true);
@@ -597,11 +709,15 @@ class StoryEditorController extends GetxController {
 
   Future<void> submitStory() async {
     if (isReadOnly.value) {
-      Get.snackbar('Read Only', 'This story is already approved and in a rundown.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+          'Read Only', 'This story is already approved and in a rundown.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
     if (existingStory == null) {
-      Get.snackbar('Error', 'Please save the story as a draft first before submitting.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar(
+          'Error', 'Please save the story as a draft first before submitting.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
@@ -609,11 +725,12 @@ class StoryEditorController extends GetxController {
     try {
       // Auto-save any changes before submitting
       await saveStory(isAutoSave: true);
-      
+
       final success = await _storyService.submitStory(existingStory!.id);
       if (success) {
         // Refresh local state
-        final updatedStory = await _storyService.getStoryById(existingStory!.id);
+        final updatedStory =
+            await _storyService.getStoryById(existingStory!.id);
         if (updatedStory != null) {
           existingStory = updatedStory;
         }
@@ -630,6 +747,7 @@ class StoryEditorController extends GetxController {
   void onClose() {
     _autoSaveTimer?.cancel();
     titleController.dispose();
+    titleFocusNode.dispose();
     slugController.dispose();
     durationController.dispose();
     anchorQuillController.dispose();

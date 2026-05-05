@@ -12,6 +12,15 @@ import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/desk_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/anchor_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/story_pool_controller.dart';
+import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
+import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
+import 'package:chamdtech_nrcs/features/newsroom/controllers/newsroom_controller.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
@@ -283,14 +292,28 @@ class AuthService extends GetxService {
   Future<void> signOut() async {
     try {
       await _setUserOnlineStatus(false);
-      await _auth.signOut();
-      currentUser.value = null;
+      
+      // Navigate first to unmount any active StreamBuilders in the UI
+      Get.offAllNamed(AppRoutes.login);
       
       // Clear session controllers to prevent stale data/permission errors
       try { Get.delete<DeskController>(force: true); } catch (_) {}
       try { Get.delete<EditorDashboardController>(force: true); } catch (_) {}
+      try { Get.delete<StoryController>(force: true); } catch (_) {}
+      try { Get.delete<ProducerDashboardController>(force: true); } catch (_) {}
+      try { Get.delete<AnchorDashboardController>(force: true); } catch (_) {}
+      try { Get.delete<ReporterDashboardController>(force: true); } catch (_) {}
+      try { Get.delete<StoryPoolController>(force: true); } catch (_) {}
+      try { Get.delete<AdminController>(force: true); } catch (_) {}
+      try { Get.delete<StoryEditorController>(force: true); } catch (_) {}
+      try { Get.delete<RundownBuilderController>(force: true); } catch (_) {}
+      try { Get.delete<NewsroomController>(force: true); } catch (_) {}
       
-      Get.offAllNamed(AppRoutes.login);
+      // Give the UI a brief moment to unmount streams before cutting auth access
+      await Future.delayed(const Duration(milliseconds: 150));
+      
+      await _auth.signOut();
+      currentUser.value = null;
     } catch (e) {
       Get.log('Error signing out: $e');
     }

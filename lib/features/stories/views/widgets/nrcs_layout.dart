@@ -229,7 +229,7 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
       'Archive': '/stories', // Will use filter
       'Create Story': AppRoutes.storyEditor,
       'Review Queue': '/stories', // Could filter logically later
-      'Rundowns': '/rundowns',
+      'Rundowns': (role == AppConstants.roleAnchor) ? AppRoutes.anchorDashboard : AppRoutes.producerDashboard,
       'Desks': '/admin/desks',
       'Users': '/users',
       'Privileges': AppRoutes.adminPrivileges,

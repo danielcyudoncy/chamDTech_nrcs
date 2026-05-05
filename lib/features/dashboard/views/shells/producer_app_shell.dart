@@ -173,9 +173,7 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
   }
 
   void _handleTabSelection(String tab, int index) {
-    if (tab == 'Rundowns') {
-      Get.toNamed(AppRoutes.rundownList);
-    } else if (tab == 'Archive') {
+    if (tab == 'Archive') {
       try {
         final controller = Get.find<StoryController>();
         controller.showArchived.value = true;
@@ -265,6 +263,8 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
     switch (_selectedIndex) {
       case 0: // Dashboard
         return _buildProducerHome(controller, isMobile);
+      case 1: // Rundowns
+        return _buildRundownsViewer(controller, isMobile);
       case 2: // Story Pool
         return _buildStoryPoolViewer(controller, isMobile);
       case 4: // Reports
@@ -643,6 +643,62 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
           const SizedBox(height: 24),
           const Expanded(
             child: StoryPoolWidget(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRundownsViewer(ProducerDashboardController controller, bool isMobile) {
+    return Container(
+      color: const Color(0xFFF8F9FA),
+      padding: EdgeInsets.all(isMobile ? 16.0 : 32.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rundowns',
+                      style: TextStyle(
+                        fontSize: isMobile ? 24 : 32,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF1A237E),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Manage and monitor all your rundowns.',
+                      style: TextStyle(fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => controller.createNewRundown(context),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text('CREATE RUNDOWN'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A237E),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: SingleChildScrollView(
+              child: _buildRundownsSection(controller, isMobile),
+            ),
           ),
         ],
       ),
