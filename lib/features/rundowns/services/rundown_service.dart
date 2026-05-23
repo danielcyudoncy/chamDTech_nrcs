@@ -5,11 +5,13 @@ import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/rundowns/models/rundown_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class RundownService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   static const String collectionName = 'rundowns';
-  final NotificationService _notificationService = Get.find<NotificationService>();
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
   final AuthService _authService = Get.find<AuthService>();
 
   // Get active rundowns (today or future)
@@ -20,7 +22,8 @@ class RundownService extends GetxService {
     return _firestore
         .collection(collectionName)
         // Need composite index likely, or we filter client side to avoid index errors quickly
-        .where('scheduledTime', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('scheduledTime',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
         .orderBy('scheduledTime', descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -30,11 +33,7 @@ class RundownService extends GetxService {
 
   // Get single rundown
   Stream<RundownModel?> streamRundown(String id) {
-    return _firestore
-        .collection(collectionName)
-        .doc(id)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection(collectionName).doc(id).snapshots().map((doc) {
       if (doc.exists && doc.data() != null) {
         return RundownModel.fromJson(doc.data()!);
       }
@@ -45,19 +44,54 @@ class RundownService extends GetxService {
   // Create
   Future<String?> createRundown(RundownModel rundown) async {
     try {
-      final docRef = await _firestore.collection(collectionName).add(rundown.toJson());
+      final docRef =
+          await _firestore.collection(collectionName).add(rundown.toJson());
       await docRef.update({'id': docRef.id});
 
-      // Broadcast new rundown creation
-      final user = _authService.currentUser.value;
-      if (user != null) {
-        await _notificationService.broadcastNotification(
-          title: 'New Rundown Created',
-          message: '${user.displayName} created a new rundown: "${rundown.name}"',
-          type: 'rundown_change',
-          actionUrl: '/rundowns', // Or specific rundown view if available
-          data: {'rundownId': docRef.id},
-        );
+      // Notify reporters of stories in this rundown, plus directors and anchors
+      try {
+        final user = _authService.currentUser.value;
+        final Set<String> notifyIds = {};
+
+        // Collect story authors
+        for (final storyId in rundown.storyIds) {
+          try {
+            final doc = await _firestore
+                .collection(AppConstants.storiesCollection)
+                .doc(storyId)
+                .get();
+            if (doc.exists) {
+              final data = doc.data();
+              final authorId = data?['authorId'] as String?;
+              if (authorId != null && authorId.isNotEmpty) {
+                notifyIds.add(authorId);
+              }
+            }
+          } catch (_) {}
+        }
+
+        // Add directors and anchors
+        final directorIds =
+            await _authService.getUserIdsByRole(AppConstants.roleDirector);
+        final anchorIds =
+            await _authService.getUserIdsByRole(AppConstants.roleAnchor);
+        notifyIds.addAll(directorIds);
+        notifyIds.addAll(anchorIds);
+
+        if (notifyIds.isNotEmpty) {
+          await _notificationService.notifyRelevantUsers(
+            userIds: notifyIds.toList(),
+            title: 'New Rundown Created',
+            message:
+                '${user?.displayName ?? 'A producer'} created a new rundown: "${rundown.name}"',
+            type: 'rundown_change',
+            actionUrl: '/rundowns',
+            data: {'rundownId': docRef.id},
+            eventKey: 'rundown_created:${docRef.id}',
+          );
+        }
+      } catch (e) {
+        Get.log('Error notifying rundowns participants: $e');
       }
 
       return docRef.id;
@@ -80,8 +114,10 @@ class RundownService extends GetxService {
       if (rundown.status == 'locked' || rundown.status == 'on-air') {
         final user = _authService.currentUser.value;
         await _notificationService.broadcastNotification(
-          title: rundown.status == 'on-air' ? 'Rundown Live!' : 'Rundown Locked',
-          message: 'The rundown "${rundown.name}" is now ${rundown.status}${user != null ? " by ${user.displayName}" : "."}',
+          title:
+              rundown.status == 'on-air' ? 'Rundown Live!' : 'Rundown Locked',
+          message:
+              'The rundown "${rundown.name}" is now ${rundown.status}${user != null ? " by ${user.displayName}" : "."}',
           type: 'rundown_change',
           actionUrl: '/rundowns',
           data: {'rundownId': rundown.id},
@@ -129,8 +165,7 @@ class RundownService extends GetxService {
       final snapshot = await _firestore
           .collection(collectionName)
           .where('storyIds', arrayContains: storyId)
-          .where('status', whereIn: ['locked', 'on-air'])
-          .get();
+          .where('status', whereIn: ['locked', 'on-air']).get();
       return snapshot.docs
           .map((doc) => RundownModel.fromJson(doc.data()))
           .toList();

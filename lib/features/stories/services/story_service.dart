@@ -247,15 +247,8 @@ class StoryService extends GetxService {
       }
 
       // Broadcast notification
-      if (user != null) {
-        await _notificationService.broadcastNotification(
-          title: 'New Story Created',
-          message: '${user.displayName} created a new story: "${story.title}"',
-          type: 'story_update',
-          actionUrl: '${AppRoutes.storyEditor}?id=${story.id}',
-          data: {'storyId': story.id},
-        );
-      }
+      // NOTE: We intentionally do NOT notify on mere creation to avoid noise.
+      // Notifications should be sent when the story is submitted for review.
 
       return story.id;
     } catch (e) {
@@ -288,18 +281,20 @@ class StoryService extends GetxService {
 
       if (doc.exists && isStaff && isNotAuthor && isOriginal) {
         final originalData = StoryModel.fromJson(doc.data()!);
-        
+
         // Check if the actual content or key metadata has changed
         // We ignore 'stage' and 'status' changes for branching purposes
         bool contentModified = originalData.content != story.content ||
-                               originalData.title != story.title ||
-                               originalData.category != story.category;
+            originalData.title != story.title ||
+            originalData.category != story.category;
 
         if (contentModified) {
-          Get.log('Content changed by editor. Branching story ${story.id} to [Re-edited] copy.');
+          Get.log(
+              'Content changed by editor. Branching story ${story.id} to [Re-edited] copy.');
           return await _handleEditorApprovalCopy(story, isFinalApproval: false);
         } else {
-          Get.log('Metadata-only change (stage/status) for story ${story.id}. Updating original.');
+          Get.log(
+              'Metadata-only change (stage/status) for story ${story.id}. Updating original.');
         }
       }
 
@@ -493,7 +488,8 @@ class StoryService extends GetxService {
         final rundownService = Get.find<RundownService>();
         final rundowns = await rundownService.getRundownsForStory(storyId);
         if (rundowns.isNotEmpty) {
-          Get.snackbar('Approval Blocked', 'This story is already approved and in a rundown.');
+          Get.snackbar('Approval Blocked',
+              'This story is already approved and in a rundown.');
           return false;
         }
       }
@@ -548,6 +544,7 @@ class StoryService extends GetxService {
           type: 'story_update',
           actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
           data: {'storyId': storyId},
+          eventKey: 'story_approved:$storyId',
         );
       }
 
@@ -563,6 +560,7 @@ class StoryService extends GetxService {
           type: 'story_update',
           actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
           data: {'storyId': storyId},
+          eventKey: 'story_approved:$storyId',
         );
       }
 
@@ -687,7 +685,7 @@ class StoryService extends GetxService {
         timestamp: DateTime.now(),
       ));
 
-      // Notify all Editors
+      // Notify Editors only (avoid notifying Admins to reduce noise).
       final editorIds =
           await _authService.getUserIdsByRole(AppConstants.roleEditor);
       if (editorIds.isNotEmpty) {
@@ -698,20 +696,7 @@ class StoryService extends GetxService {
           type: 'story_update',
           actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
           data: {'storyId': storyId},
-        );
-      }
-
-      // Notify all Admins
-      final adminIds =
-          await _authService.getUserIdsByRole(AppConstants.roleAdmin);
-      if (adminIds.isNotEmpty) {
-        await _notificationService.notifyRelevantUsers(
-          userIds: adminIds,
-          title: 'New Story Submitted',
-          message: '${user.displayName} submitted a story for review: "$title"',
-          type: 'story_update',
-          actionUrl: '${AppRoutes.storyEditor}?id=$storyId',
-          data: {'storyId': storyId},
+          eventKey: 'story_submitted:$storyId',
         );
       }
 

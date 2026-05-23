@@ -1,3 +1,4 @@
+// core/models/notification_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NotificationModel {
@@ -6,7 +7,9 @@ class NotificationModel {
   final String type; // story_update, rundown_change, mention, system
   final String title;
   final String message;
-  final Map<String, dynamic>? data; // Additional context (storyId, rundownId, etc.)
+  final Map<String, dynamic>?
+      data; // Additional context (storyId, rundownId, etc.)
+  final String? eventKey; // Optional dedupe key (e.g. "story_submitted:<id>")
   final bool isRead;
   final DateTime createdAt;
   final String? actionUrl; // Deep link to related content
@@ -21,6 +24,7 @@ class NotificationModel {
     this.isRead = false,
     required this.createdAt,
     this.actionUrl,
+    this.eventKey,
   });
 
   Map<String, dynamic> toJson() {
@@ -34,6 +38,7 @@ class NotificationModel {
       'isRead': isRead,
       'createdAt': createdAt.toIso8601String(),
       'actionUrl': actionUrl,
+      'eventKey': eventKey,
     };
   }
 
@@ -56,6 +61,7 @@ class NotificationModel {
       isRead: json['isRead'] ?? false,
       createdAt: parseDate(json['createdAt']),
       actionUrl: json['actionUrl'],
+      eventKey: json['eventKey'],
     );
   }
 
@@ -69,6 +75,7 @@ class NotificationModel {
     bool? isRead,
     DateTime? createdAt,
     String? actionUrl,
+    String? eventKey,
   }) {
     return NotificationModel(
       id: id ?? this.id,
@@ -80,6 +87,7 @@ class NotificationModel {
       isRead: isRead ?? this.isRead,
       createdAt: createdAt ?? this.createdAt,
       actionUrl: actionUrl ?? this.actionUrl,
+      eventKey: eventKey ?? this.eventKey,
     );
   }
 

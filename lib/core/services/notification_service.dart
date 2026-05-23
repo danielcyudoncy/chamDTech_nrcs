@@ -1,3 +1,4 @@
+// core/services/notification_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
@@ -30,11 +31,13 @@ class NotificationService extends GetxService {
     String type = 'system',
     String? actionUrl,
     Map<String, dynamic>? data,
+    String? eventKey,
   }) async {
     try {
-      final usersSnapshot = await _firestore.collection(AppConstants.usersCollection).get();
+      final usersSnapshot =
+          await _firestore.collection(AppConstants.usersCollection).get();
       final userIds = usersSnapshot.docs.map((doc) => doc.id).toList();
-      
+
       await notifyRelevantUsers(
         userIds: userIds,
         title: title,
@@ -42,6 +45,7 @@ class NotificationService extends GetxService {
         type: type,
         actionUrl: actionUrl,
         data: data,
+        eventKey: eventKey,
       );
     } catch (e) {
       Get.log('Error broadcasting notification: $e');
@@ -56,6 +60,7 @@ class NotificationService extends GetxService {
     String type = 'system',
     String? actionUrl,
     Map<String, dynamic>? data,
+    String? eventKey,
   }) async {
     if (userIds.isEmpty) return;
 
@@ -63,12 +68,31 @@ class NotificationService extends GetxService {
       final currentUserId = _authService.currentUser.value?.id;
       final now = DateTime.now();
       final batch = _firestore.batch();
-      
+
       int count = 0;
       for (final userId in userIds) {
         // Don't notify the person who triggered the event, unless specifically desired
         // (usually better to exclude them to avoid self-notification noise)
         if (userId == currentUserId) continue;
+
+        // If an eventKey is provided, check for an existing notification with same key
+        if (eventKey != null && eventKey.isNotEmpty) {
+          try {
+            final existing = await _firestore
+                .collection('notifications')
+                .where('userId', isEqualTo: userId)
+                .where('eventKey', isEqualTo: eventKey)
+                .limit(1)
+                .get();
+            if (existing.docs.isNotEmpty) {
+              // Already notified for this event, skip
+              continue;
+            }
+          } catch (e) {
+            // On query error, fall through and create notification to avoid missing important alerts
+            Get.log('Error checking existing notification for dedupe: $e');
+          }
+        }
 
         final notification = NotificationModel(
           id: _uuid.v4(),
@@ -79,11 +103,13 @@ class NotificationService extends GetxService {
           createdAt: now,
           actionUrl: actionUrl,
           data: data,
+          eventKey: eventKey,
         );
 
-        final docRef = _firestore.collection('notifications').doc(notification.id);
+        final docRef =
+            _firestore.collection('notifications').doc(notification.id);
         batch.set(docRef, notification.toJson());
-        
+
         count++;
         // Firestore batch limit is 500
         if (count >= 490) {
@@ -92,12 +118,32 @@ class NotificationService extends GetxService {
           // (Simplified for now, assuming user count < 500)
         }
       }
-      
+
       if (count > 0) {
         await batch.commit();
       }
     } catch (e) {
       Get.log('Error notifying users: $e');
+    }
+  }
+
+  // Delete notifications that reference a specific storyId in their data.
+  Future<void> deleteNotificationsForStory(String storyId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('notifications')
+          .where('data.storyId', isEqualTo: storyId)
+          .get();
+
+      if (snapshot.docs.isEmpty) return;
+
+      final batch = _firestore.batch();
+      for (var doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    } catch (e) {
+      Get.log('Error deleting notifications for story $storyId: $e');
     }
   }
 
@@ -153,10 +199,7 @@ class NotificationService extends GetxService {
   // Delete a notification
   Future<void> deleteNotification(String notificationId) async {
     try {
-      await _firestore
-          .collection('notifications')
-          .doc(notificationId)
-          .delete();
+      await _firestore.collection('notifications').doc(notificationId).delete();
     } catch (e) {
       Get.log('Error deleting notification: $e');
     }
@@ -180,7 +223,7 @@ class NotificationService extends GetxService {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      
+
       Get.snackbar(
         'Success',
         'All notifications cleared',
