@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
-import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
@@ -250,7 +249,8 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () {
-              // Add logout logic
+              Get.back();
+              Get.find<AuthService>().signOut();
             },
           ),
           const SizedBox(height: 20),

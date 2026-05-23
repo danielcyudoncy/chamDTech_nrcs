@@ -1,10 +1,14 @@
 // features/dashboard/views/shells/reporter_app_shell.dart
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
+import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
@@ -32,6 +36,26 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
 
   void _handleTabSelection(int index) {
     final tab = _tabs[index];
+    // #region debug-point A:reporter-tab-selection
+    Future.microtask(() => http
+        .post(Uri.parse('http://127.0.0.1:7777/event'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'sessionId': 'reporter-archive-drawer',
+              'runId': 'pre',
+              'hypothesisId': 'A',
+              'location': 'reporter_app_shell.dart:_handleTabSelection',
+              'msg': '[DEBUG] Reporter tab selected',
+              'data': {
+                'index': index,
+                'tab': tab,
+                'selectedIndexBefore': _selectedIndex,
+                'currentRoute': Get.currentRoute
+              },
+              'ts': DateTime.now().millisecondsSinceEpoch
+            }))
+        .catchError((_) => http.Response('', 500)));
+    // #endregion
     if (tab == 'Create Story') {
       Get.find<ReporterDashboardController>().createNewStory();
     } else if (tab == 'Archive') {
@@ -58,146 +82,204 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     // Initialize controller
     final controller = Get.put(ReporterDashboardController());
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 1100;
+    return LayoutBuilder(builder: (context, constraints) {
+      final isMobile = constraints.maxWidth < 1100;
 
-        return Scaffold(
-          key: GlobalKey<ScaffoldState>(),
-          backgroundColor: Colors.white,
-          appBar: isMobile ? AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            title: const Text(
-              'REPORTER WORKSPACE',
-              style: TextStyle(
-                color: Color(0xFF1A237E),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                letterSpacing: 1.1,
-              ),
-            ),
-            iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
-            shape: const Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-          ) : null,
-          drawer: isMobile ? _buildDrawer(controller) : null,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (!isMobile) ...[
-                const NRCSTopNav(),
-                const NRCSSubNav(),
-                // Sub-header
-                Container(
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-                  ),
-                  child: const Row(
-                    children: [
-                      SizedBox(width: 24),
-                      Text(
-                        'REPORTER WORKSPACE',
-                        style: TextStyle(
-                          color: NRCSColors.textDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                    ],
+      return Scaffold(
+        key: GlobalKey<ScaffoldState>(),
+        backgroundColor: Colors.white,
+        appBar: isMobile
+            ? AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                title: const Text(
+                  'REPORTER WORKSPACE',
+                  style: TextStyle(
+                    color: Color(0xFF1A237E),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    letterSpacing: 1.1,
                   ),
                 ),
-              ],
-              NRCSToolbar(
-                onRefresh: () => controller.loadReporterStories(),
-                onNew: () => controller.createNewStory(),
-                onEdit: () => controller.editSelectedStory(),
-                onDelete: () => controller.deleteSelectedStory(context),
-                onCopy: () => controller.copySelectedStory(),
-                onMove: () => controller.performAction('Move'),
-                onLink: () => controller.performAction('Link'),
-                onAssign: () => controller.performAction('Assign'),
-                onStoryLog: () => controller.performAction('Story Log'),
-                onPrint: () => controller.performAction('Print'),
-                onPowerview: () => controller.performAction('Powerview'),
-              ),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                iconTheme: const IconThemeData(color: Color(0xFF1A237E)),
+                shape: const Border(
+                    bottom:
+                        BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+              )
+            : null,
+        drawer: isMobile ? _buildDrawer(controller) : null,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!isMobile) ...[
+              const NRCSTopNav(),
+              const NRCSSubNav(),
+              // Sub-header
+              Container(
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                      bottom:
+                          BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+                ),
+                child: const Row(
                   children: [
-                    // Sidebar (Desktop only)
-                    if (!isMobile)
-                      Container(
-                        width: 300,
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            right: BorderSide(color: NRCSColors.borderGray, width: 8),
-                          ),
-                        ),
-                        child: ListView.builder(
-                          itemCount: _tabs.length,
-                          itemBuilder: (context, index) {
-                            final tab = _tabs[index];
-                            IconData icon;
-                            switch (tab) {
-                              case 'Dashboard': icon = Icons.dashboard_outlined; break;
-                              case 'My Stories': icon = Icons.article_outlined; break;
-                              case 'Create Story': icon = Icons.add_circle_outline; break;
-                              case 'Archive': icon = Icons.archive_outlined; break;
-                              case 'Notifications': icon = Icons.notifications_none; break;
-                              default: icon = Icons.folder_outlined;
-                            }
-                            return ListTile(
-                              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey.shade600),
-                              title: Text(
-                                tab, 
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
-                                )
-                              ),
-                              selected: _selectedIndex == index,
-                              selectedTileColor: NRCSColors.subNavGray.withValues(alpha: 0.5),
-                              onTap: () => _handleTabSelection(index),
-                            );
-                          },
-                        ),
+                    SizedBox(width: 24),
+                    Text(
+                      'REPORTER WORKSPACE',
+                      style: TextStyle(
+                        color: NRCSColors.textDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        letterSpacing: 1.1,
                       ),
-                    // Main Content Area
-                    Expanded(
-                      child: _buildContentArea(controller, isMobile),
                     ),
                   ],
                 ),
               ),
             ],
-          ),
-        );
-      }
-    );
+            NRCSToolbar(
+              onRefresh: () => controller.loadReporterStories(),
+              onNew: () => controller.createNewStory(),
+              onEdit: () => controller.editSelectedStory(),
+              onDelete: () => controller.deleteSelectedStory(context),
+              onCopy: () => controller.copySelectedStory(),
+              onMove: () => controller.performAction('Move'),
+              onLink: () => controller.performAction('Link'),
+              onAssign: () => controller.performAction('Assign'),
+              onStoryLog: () => controller.performAction('Story Log'),
+              onPrint: () => controller.performAction('Print'),
+              onPowerview: () => controller.performAction('Powerview'),
+            ),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Sidebar (Desktop only)
+                  if (!isMobile)
+                    Container(
+                      width: 300,
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                              color: NRCSColors.borderGray, width: 8),
+                        ),
+                      ),
+                      child: ListView.builder(
+                        itemCount: _tabs.length,
+                        itemBuilder: (context, index) {
+                          final tab = _tabs[index];
+                          IconData icon;
+                          switch (tab) {
+                            case 'Dashboard':
+                              icon = Icons.dashboard_outlined;
+                              break;
+                            case 'My Stories':
+                              icon = Icons.article_outlined;
+                              break;
+                            case 'Create Story':
+                              icon = Icons.add_circle_outline;
+                              break;
+                            case 'Archive':
+                              icon = Icons.archive_outlined;
+                              break;
+                            case 'Notifications':
+                              icon = Icons.notifications_none;
+                              break;
+                            default:
+                              icon = Icons.folder_outlined;
+                          }
+                          return ListTile(
+                            leading: Icon(icon,
+                                color: _selectedIndex == index
+                                    ? const Color(0xFF1A237E)
+                                    : Colors.grey.shade600),
+                            title: Text(tab,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _selectedIndex == index
+                                        ? const Color(0xFF1A237E)
+                                        : Colors.black87)),
+                            selected: _selectedIndex == index,
+                            selectedTileColor:
+                                NRCSColors.subNavGray.withValues(alpha: 0.5),
+                            onTap: () => _handleTabSelection(index),
+                          );
+                        },
+                      ),
+                    ),
+                  // Main Content Area
+                  Expanded(
+                    child: _buildContentArea(controller, isMobile),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildDrawer(ReporterDashboardController controller) {
+    final user = Get.find<AuthService>().currentUser.value;
+    final trimmedName = (user?.displayName ?? '').trim();
+    final displayName = trimmedName.isNotEmpty ? trimmedName : 'Reporter';
+    final email = user?.email ?? '';
+    final trimmedPhotoUrl = (user?.photoUrl ?? '').trim();
+    final photoUrl = trimmedPhotoUrl.isNotEmpty ? trimmedPhotoUrl : null;
+
     return Drawer(
       backgroundColor: Colors.white,
       elevation: 0,
-      child: Column(
+      child: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF1A237E)),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Color(0xFF1A237E)),
+            margin: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Center(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_circle, size: 64, color: Colors.white),
-                  SizedBox(height: 12),
-                  Text(
-                    'Reporter Menu',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: Colors.white24,
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? const Icon(Icons.account_circle,
+                            size: 40, color: Colors.white)
+                        : null,
                   ),
+                  const SizedBox(height: 10),
+                  Text(
+                    displayName,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  if (email.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      email,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -206,23 +288,36 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
             final tab = _tabs[index];
             IconData icon;
             switch (tab) {
-              case 'Dashboard': icon = Icons.dashboard_outlined; break;
-              case 'My Stories': icon = Icons.article_outlined; break;
-              case 'Create Story': icon = Icons.add_circle_outline; break;
-              case 'Archive': icon = Icons.archive_outlined; break;
-              case 'Notifications': icon = Icons.notifications_none; break;
-              default: icon = Icons.folder_outlined;
+              case 'Dashboard':
+                icon = Icons.dashboard_outlined;
+                break;
+              case 'My Stories':
+                icon = Icons.article_outlined;
+                break;
+              case 'Create Story':
+                icon = Icons.add_circle_outline;
+                break;
+              case 'Archive':
+                icon = Icons.archive_outlined;
+                break;
+              case 'Notifications':
+                icon = Icons.notifications_none;
+                break;
+              default:
+                icon = Icons.folder_outlined;
             }
 
             return ListTile(
-              leading: Icon(icon, color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.grey),
-              title: Text(
-                tab, 
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _selectedIndex == index ? const Color(0xFF1A237E) : Colors.black87
-                )
-              ),
+              leading: Icon(icon,
+                  color: _selectedIndex == index
+                      ? const Color(0xFF1A237E)
+                      : Colors.grey),
+              title: Text(tab,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _selectedIndex == index
+                          ? const Color(0xFF1A237E)
+                          : Colors.black87)),
               selected: _selectedIndex == index,
               onTap: () {
                 Get.back(); // Close drawer
@@ -230,13 +325,15 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               },
             );
           }),
-          const Spacer(),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            title: const Text('Logout',
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () {
-              // Add logout logic
+              Get.back();
+              Get.find<AuthService>().signOut();
             },
           ),
           const SizedBox(height: 20),
@@ -245,7 +342,27 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     );
   }
 
-  Widget _buildContentArea(ReporterDashboardController controller, bool isMobile) {
+  Widget _buildContentArea(
+      ReporterDashboardController controller, bool isMobile) {
+    // #region debug-point B:reporter-content-branch
+    Future.microtask(() => http
+        .post(Uri.parse('http://127.0.0.1:7777/event'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'sessionId': 'reporter-archive-drawer',
+              'runId': 'pre',
+              'hypothesisId': 'B',
+              'location': 'reporter_app_shell.dart:_buildContentArea',
+              'msg': '[DEBUG] Reporter content branch rendered',
+              'data': {
+                'selectedIndex': _selectedIndex,
+                'isMobile': isMobile,
+                'currentRoute': Get.currentRoute
+              },
+              'ts': DateTime.now().millisecondsSinceEpoch
+            }))
+        .catchError((_) => http.Response('', 500)));
+    // #endregion
     switch (_selectedIndex) {
       case 0: // Dashboard
         return _buildReporterHome(controller, isMobile);
@@ -258,7 +375,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     }
   }
 
-  Widget _buildReporterHome(ReporterDashboardController controller, bool isMobile) {
+  Widget _buildReporterHome(
+      ReporterDashboardController controller, bool isMobile) {
     return Container(
       color: const Color(0xFFF8F9FA),
       child: SingleChildScrollView(
@@ -312,7 +430,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     );
   }
 
-  Widget _buildHomeHeader(ReporterDashboardController controller, bool isMobile) {
+  Widget _buildHomeHeader(
+      ReporterDashboardController controller, bool isMobile) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -332,7 +451,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               const SizedBox(height: 4),
               Text(
                 'Manage your news stories and view approved content.',
-                style: TextStyle(fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
+                style: TextStyle(
+                    fontSize: isMobile ? 13 : 15, color: Colors.grey.shade600),
               ),
             ],
           ),
@@ -346,7 +466,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               backgroundColor: const Color(0xFF1A237E),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
           ),
@@ -377,7 +498,10 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
               SizedBox(width: 12),
               Text(
                 'Schedule',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E)),
               ),
             ],
           ),
@@ -386,39 +510,51 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                 firstDay: DateTime.utc(2024, 1, 1),
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: controller.focusedDay.value,
-                selectedDayPredicate: (day) => isSameDay(controller.selectedDate.value, day),
+                selectedDayPredicate: (day) =>
+                    isSameDay(controller.selectedDate.value, day),
                 onDaySelected: controller.onDateSelected,
                 calendarFormat: CalendarFormat.month,
                 daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.w800, fontSize: 13),
-                  weekendStyle: TextStyle(color: Color(0xFFE91E63), fontWeight: FontWeight.w800, fontSize: 13),
+                  weekdayStyle: TextStyle(
+                      color: Color(0xFF1A237E),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13),
+                  weekendStyle: TextStyle(
+                      color: Color(0xFFE91E63),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13),
                 ),
                 headerStyle: const HeaderStyle(
                   formatButtonVisible: false,
                   titleCentered: true,
                   titleTextStyle: TextStyle(
-                    fontWeight: FontWeight.w800, 
-                    fontSize: 18, 
-                    color: Color(0xFF1A237E)
-                  ),
-                  leftChevronIcon: Icon(Icons.chevron_left, color: Color(0xFF1A237E)),
-                  rightChevronIcon: Icon(Icons.chevron_right, color: Color(0xFF1A237E)),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                      color: Color(0xFF1A237E)),
+                  leftChevronIcon:
+                      Icon(Icons.chevron_left, color: Color(0xFF1A237E)),
+                  rightChevronIcon:
+                      Icon(Icons.chevron_right, color: Color(0xFF1A237E)),
                   headerPadding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 calendarStyle: const CalendarStyle(
-                  defaultTextStyle: TextStyle(color: Color(0xFF263238), fontWeight: FontWeight.w600),
-                  weekendTextStyle: TextStyle(color: Color(0xFFE91E63), fontWeight: FontWeight.w600),
+                  defaultTextStyle: TextStyle(
+                      color: Color(0xFF263238), fontWeight: FontWeight.w600),
+                  weekendTextStyle: TextStyle(
+                      color: Color(0xFFE91E63), fontWeight: FontWeight.w600),
                   outsideTextStyle: TextStyle(color: Color(0xFFE0E0E0)),
                   todayDecoration: BoxDecoration(
                     color: Color(0xFF1A237E),
                     shape: BoxShape.circle,
                   ),
-                  todayTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                  todayTextStyle: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w900),
                   selectedDecoration: BoxDecoration(
                     color: Color(0xFF3F51B5),
                     shape: BoxShape.circle,
                   ),
-                  selectedTextStyle: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  selectedTextStyle: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                   markerDecoration: BoxDecoration(
                     color: Colors.green,
                     shape: BoxShape.circle,
@@ -435,7 +571,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     );
   }
 
-  Widget _buildApprovedStoriesList(BuildContext context, ReporterDashboardController controller) {
+  Widget _buildApprovedStoriesList(
+      BuildContext context, ReporterDashboardController controller) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -457,11 +594,17 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
             children: [
               const Text(
                 'Approved Stories',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1A237E)),
               ),
               Obx(() => Text(
                     DateFormat('MMM dd').format(controller.selectedDate.value),
-                    style: TextStyle(color: Colors.grey.shade500, fontWeight: FontWeight.bold, fontSize: 14),
+                    style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
                   )),
             ],
           ),
@@ -473,9 +616,11 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                   padding: const EdgeInsets.symmetric(vertical: 40),
                   child: Column(
                     children: [
-                      Icon(Icons.event_note, size: 48, color: Colors.grey.shade200),
+                      Icon(Icons.event_note,
+                          size: 48, color: Colors.grey.shade200),
                       const SizedBox(height: 16),
-                      Text('No approved stories for this date.', style: TextStyle(color: Colors.grey.shade400)),
+                      Text('No approved stories for this date.',
+                          style: TextStyle(color: Colors.grey.shade400)),
                     ],
                   ),
                 ),
@@ -497,11 +642,13 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.verified, size: 20, color: Colors.green.shade700),
+                    child: Icon(Icons.verified,
+                        size: 20, color: Colors.green.shade700),
                   ),
                   title: Text(
                     story.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -519,7 +666,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     );
   }
 
-  Widget _buildQuickStats(ReporterDashboardController controller, bool isMobile) {
+  Widget _buildQuickStats(
+      ReporterDashboardController controller, bool isMobile) {
     return Obx(() {
       final stats = [
         _StatCard(
@@ -544,20 +692,24 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
 
       if (isMobile) {
         return Column(
-          children: stats.map((s) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: s,
-          )).toList(),
+          children: stats
+              .map((s) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: s,
+                  ))
+              .toList(),
         );
       }
 
       return Row(
-        children: stats.map((s) => Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: s,
-          ),
-        )).toList(),
+        children: stats
+            .map((s) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16),
+                    child: s,
+                  ),
+                ))
+            .toList(),
       );
     });
   }
@@ -581,7 +733,10 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
         children: [
           const Text(
             'Active Workspace',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A237E)),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1A237E)),
           ),
           const SizedBox(height: 20),
           Obx(() {
@@ -597,9 +752,12 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
                   padding: const EdgeInsets.symmetric(vertical: 80),
                   child: Column(
                     children: [
-                      Icon(Icons.auto_stories_outlined, size: 64, color: Colors.grey.shade100),
+                      Icon(Icons.auto_stories_outlined,
+                          size: 64, color: Colors.grey.shade100),
                       const SizedBox(height: 24),
-                      Text('No active stories found.', style: TextStyle(color: Colors.grey.shade400, fontSize: 16)),
+                      Text('No active stories found.',
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 16)),
                     ],
                   ),
                 ),
@@ -625,9 +783,10 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
     );
   }
 
-  void _showStoryViewer(BuildContext context, StoryModel story, ReporterDashboardController controller) {
+  void _showStoryViewer(BuildContext context, StoryModel story,
+      ReporterDashboardController controller) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    
+
     Get.dialog(
       Dialog(
         insetPadding: EdgeInsets.all(isMobile ? 16 : 40),
@@ -644,140 +803,154 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
           ),
           child: SingleChildScrollView(
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'APPROVED STORY',
-                            style: TextStyle(
-                              color: Colors.green.shade700, 
-                              fontWeight: FontWeight.w800, 
-                              fontSize: 10, 
-                              letterSpacing: 0.5
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'APPROVED STORY',
+                              style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 10,
+                                  letterSpacing: 0.5),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          story.title,
-                          style: TextStyle(
-                            fontSize: isMobile ? 22 : 28, 
-                            fontWeight: FontWeight.w800, 
-                            color: const Color(0xFF1A237E), // Explicit dark navy
-                            letterSpacing: -0.5
+                          const SizedBox(height: 12),
+                          Text(
+                            story.title,
+                            style: TextStyle(
+                                fontSize: isMobile ? 22 : 28,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(
+                                    0xFF1A237E), // Explicit dark navy
+                                letterSpacing: -0.5),
                           ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close, color: Color(0xFF1A237E)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 24,
+                  runSpacing: 16,
+                  children: [
+                    _InfoBadge(
+                        icon: Icons.person_outline,
+                        label: 'Author',
+                        value: story.authorName),
+                    _InfoBadge(
+                        icon: Icons.category_outlined,
+                        label: 'Category',
+                        value: story.category),
+                    _InfoBadge(
+                        icon: Icons.history,
+                        label: 'Last Updated',
+                        value: DateFormat('MMM dd, hh:mm a')
+                            .format(story.updatedAt)),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Divider(color: Colors.grey.shade200),
+                const SizedBox(height: 32),
+                const Text(
+                  'CONTENT',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF90A4AE), // Blue grey for label
+                      letterSpacing: 1),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isMobile ? 16 : 24),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8F9FA),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SelectableText(
+                    story.content.isEmpty
+                        ? 'No content available.'
+                        : _stripQuillJson(story.content),
+                    style: const TextStyle(
+                        fontSize: 16,
+                        height: 1.6,
+                        color: Color(0xFF263238) // Explicit dark charcoal
                         ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.close, color: Color(0xFF1A237E)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 24,
-                runSpacing: 16,
-                children: [
-                  _InfoBadge(icon: Icons.person_outline, label: 'Author', value: story.authorName),
-                  _InfoBadge(icon: Icons.category_outlined, label: 'Category', value: story.category),
-                  _InfoBadge(
-                    icon: Icons.history, 
-                    label: 'Last Updated', 
-                    value: DateFormat('MMM dd, hh:mm a').format(story.updatedAt)
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              Divider(color: Colors.grey.shade200),
-              const SizedBox(height: 32),
-              const Text(
-                'CONTENT',
-                style: TextStyle(
-                  fontSize: 11, 
-                  fontWeight: FontWeight.w800, 
-                  color: Color(0xFF90A4AE), // Blue grey for label
-                  letterSpacing: 1
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(isMobile ? 16 : 24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F9FA),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: SelectableText(
-                  story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content),
-                  style: const TextStyle(
-                    fontSize: 16, 
-                    height: 1.6, 
-                    color: Color(0xFF263238) // Explicit dark charcoal
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              Wrap(
-                spacing: 16,
-                runSpacing: 12,
-                alignment: WrapAlignment.end,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  TextButton(
-                    onPressed: () => Get.back(),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                const SizedBox(height: 32),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 16),
+                      ),
+                      child: const Text(
+                        'Close',
+                        style: TextStyle(
+                            color: Colors.grey, fontWeight: FontWeight.w600),
+                      ),
                     ),
-                    child: const Text(
-                      'Close', 
-                      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final content = story.content.isEmpty
+                            ? 'No content available.'
+                            : _stripQuillJson(story.content);
+                        Clipboard.setData(ClipboardData(text: content))
+                            .then((_) {
+                          Get.snackbar(
+                            'Copied',
+                            'Story content copied to clipboard',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: const Color(0xFF1A237E),
+                            colorText: Colors.white,
+                            margin: const EdgeInsets.all(16),
+                          );
+                        });
+                      },
+                      icon: const Icon(Icons.copy_all, size: 18),
+                      label: const Text('Copy Content'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A237E),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
                     ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final content = story.content.isEmpty ? 'No content available.' : _stripQuillJson(story.content);
-                      Clipboard.setData(ClipboardData(text: content)).then((_) {
-                        Get.snackbar(
-                          'Copied', 
-                          'Story content copied to clipboard',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: const Color(0xFF1A237E),
-                          colorText: Colors.white,
-                          margin: const EdgeInsets.all(16),
-                        );
-                      });
-                    },
-                    icon: const Icon(Icons.copy_all, size: 18),
-                    label: const Text('Copy Content'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A237E), 
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
       barrierColor: Colors.black.withValues(alpha: 0.5), // Dim the background
     );
@@ -786,7 +959,8 @@ class _ReporterAppShellState extends State<ReporterAppShell> {
   // Helper to extract text from Quill JSON content
   String _stripQuillJson(String jsonStr) {
     try {
-      final isJson = jsonStr.trim().startsWith('{') || jsonStr.trim().startsWith('[');
+      final isJson =
+          jsonStr.trim().startsWith('{') || jsonStr.trim().startsWith('[');
       if (!isJson) return jsonStr;
       return Get.find<StoryService>().getPlainTextFromQuill(jsonStr);
     } catch (e) {
@@ -801,7 +975,11 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _StatCard({required this.label, required this.value, required this.icon, required this.color});
+  const _StatCard(
+      {required this.label,
+      required this.value,
+      required this.icon,
+      required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -832,8 +1010,17 @@ class _StatCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey.shade500, letterSpacing: 1)),
-              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+              Text(label.toUpperCase(),
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade500,
+                      letterSpacing: 1)),
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1A237E))),
             ],
           ),
         ],
@@ -869,7 +1056,10 @@ class _ModernStoryRow extends StatelessWidget {
                 children: [
                   Text(
                     story.title.isEmpty ? 'Untitled Story' : story.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFF263238)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: Color(0xFF263238)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -882,17 +1072,23 @@ class _ModernStoryRow extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.category_outlined, size: 12, color: Colors.grey.shade400),
+                          Icon(Icons.category_outlined,
+                              size: 12, color: Colors.grey.shade400),
                           const SizedBox(width: 4),
-                          Text(story.category, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                          Text(story.category,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade500)),
                         ],
                       ),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.access_time, size: 12, color: Colors.grey.shade400),
+                          Icon(Icons.access_time,
+                              size: 12, color: Colors.grey.shade400),
                           const SizedBox(width: 4),
-                          Text(DateFormat('hh:mm a').format(story.updatedAt), style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                          Text(DateFormat('hh:mm a').format(story.updatedAt),
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade500)),
                         ],
                       ),
                     ],
@@ -910,10 +1106,17 @@ class _ModernStoryRow extends StatelessWidget {
   Widget _buildStatusIndicator(String status) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'draft': color = Colors.blue; break;
-      case 'pending': color = Colors.orange; break;
-      case 'rejected': color = Colors.red; break;
-      default: color = Colors.grey;
+      case 'draft':
+        color = Colors.blue;
+        break;
+      case 'pending':
+        color = Colors.orange;
+        break;
+      case 'rejected':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.grey;
     }
     return Container(
       width: 4,
@@ -931,7 +1134,8 @@ class _InfoBadge extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoBadge({required this.icon, required this.label, required this.value});
+  const _InfoBadge(
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -942,11 +1146,18 @@ class _InfoBadge extends StatelessWidget {
           children: [
             Icon(icon, size: 12, color: Colors.grey),
             const SizedBox(width: 6),
-            Text(label.toUpperCase(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+            Text(label.toUpperCase(),
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                    letterSpacing: 0.5)),
           ],
         ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF263238))),
+        Text(value,
+            style: const TextStyle(
+                fontWeight: FontWeight.w700, color: Color(0xFF263238))),
       ],
     );
   }

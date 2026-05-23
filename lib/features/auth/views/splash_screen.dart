@@ -1,3 +1,4 @@
+// features/auth/views/splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
@@ -20,7 +21,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
     // Check auth status and navigate
-    Get.find<AuthService>().initNavigation();
+    try {
+      Get.find<AuthService>().initNavigation();
+    } catch (e, st) {
+      Get.log('SplashScreen navigation error: $e\n$st');
+      Get.offAllNamed('/login');
+    }
   }
 
   @override

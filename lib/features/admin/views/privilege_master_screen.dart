@@ -1,3 +1,4 @@
+// features/admin/views/privilege_master_screen.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/admin/controllers/privilege_master_controller.dart';
@@ -27,227 +28,371 @@ class PrivilegeMasterScreen extends StatelessWidget {
   }
 
   Widget _buildToolbar(PrivilegeMasterController controller, BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
-      ),
-      child: Row(
-        children: [
-          ElevatedButton.icon(
-            onPressed: () => controller.createNewRole(),
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('New Role'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: NRCSColors.topNavBlue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isSmall = constraints.maxWidth < 600;
+        
+        if (isSmall) {
+          return Container(
+            padding: const EdgeInsets.all(8),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
             ),
-          ),
-          const SizedBox(width: 12),
-          Obx(() => OutlinedButton.icon(
-                onPressed: controller.selectedRole.value != null
-                    ? () => _confirmDelete(context, controller, controller.selectedRole.value!)
-                    : null,
-                icon: const Icon(Icons.delete_outline, size: 18),
-                label: const Text('Delete Role'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                ),
-              )),
-          const Spacer(),
-          SizedBox(
-            width: 300,
-            child: TextField(
-              onChanged: (v) => controller.searchQuery.value = v,
-              style: const TextStyle(color: Colors.black),
-              decoration: InputDecoration(
-                hintText: 'Search permissions...',
-                prefixIcon: const Icon(Icons.search, size: 18),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSidebar(PrivilegeMasterController controller) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          color: NRCSColors.subNavGray,
-          child: const Row(
-            children: [
-               Icon(Icons.people_outline, size: 18, color: NRCSColors.topNavBlue),
-               SizedBox(width: 8),
-               Text(
-                'USER ROLES',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: NRCSColors.topNavBlue,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 2,
-          child: Obx(() {
-            final roles = controller.roles;
-            return ListView.separated(
-              itemCount: roles.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final role = roles[index];
-                return Obx(() => ListTile(
-                      selected: controller.selectedRole.value?.id == role.id,
-                      selectedTileColor: NRCSColors.primaryBlue.withValues(alpha: 0.05),
-                      dense: true,
-                      title: Text(
-                        role.name,
-                        style: TextStyle(
-                          fontWeight: controller.selectedRole.value?.id == role.id ? FontWeight.bold : FontWeight.normal,
-                          color: controller.selectedRole.value?.id == role.id ? NRCSColors.primaryBlue : NRCSColors.textDark,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => controller.createNewRole(),
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('New Role', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NRCSColors.topNavBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                       ),
-                      subtitle: role.description != null ? Text(role.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)) : null,
-                      onTap: () => controller.selectRole(role),
-                    ));
-              },
-            );
-          }),
-        ),
-        const Divider(height: 8, thickness: 8, color: NRCSColors.borderGray),
-        Container(
-          padding: const EdgeInsets.all(12),
-          color: NRCSColors.subNavGray,
-          child: const Row(
-            children: [
-               Icon(Icons.category_outlined, size: 18, color: NRCSColors.topNavBlue),
-               SizedBox(width: 8),
-               Text(
-                'PRIVILEGE CATEGORIES',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: NRCSColors.topNavBlue,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: ListView(
-            children: controller.categories.map((cat) {
-              return Obx(() => ListTile(
-                    selected: controller.selectedCategory.value == cat,
-                    selectedTileColor: NRCSColors.primaryBlue.withValues(alpha: 0.1),
-                    dense: true,
-                    leading: _getCategoryIcon(cat),
-                    title: Text(
-                      cat,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: controller.selectedCategory.value == cat ? FontWeight.bold : FontWeight.normal,
-                      ),
                     ),
-                    onTap: () => controller.selectedCategory.value = cat,
-                  ));
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-  Widget _buildMainContent(PrivilegeMasterController controller, BuildContext context) {
-    return Column(
-      children: [
-        // Role Info Header
-        Container(
-          padding: const EdgeInsets.all(16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Obx(() => OutlinedButton.icon(
+                            onPressed: controller.selectedRole.value != null
+                                ? () => _confirmDelete(context, controller, controller.selectedRole.value!)
+                                : null,
+                            icon: const Icon(Icons.delete_outline, size: 16),
+                            label: const Text('Delete', style: TextStyle(fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.red,
+                              side: const BorderSide(color: Colors.red),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          )),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  onChanged: (v) => controller.searchQuery.value = v,
+                  style: const TextStyle(color: Colors.black, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'Search permissions...',
+                    prefixIcon: const Icon(Icons.search, size: 16),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: const BoxDecoration(
             color: Colors.white,
             border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
           ),
           child: Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ElevatedButton.icon(
+                onPressed: () => controller.createNewRole(),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('New Role'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: NRCSColors.topNavBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Obx(() => OutlinedButton.icon(
+                    onPressed: controller.selectedRole.value != null
+                        ? () => _confirmDelete(context, controller, controller.selectedRole.value!)
+                        : null,
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    label: const Text('Delete Role'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                    ),
+                  )),
+              const Spacer(),
+              SizedBox(
+                width: 300,
+                child: TextField(
+                  onChanged: (v) => controller.searchQuery.value = v,
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: 'Search permissions...',
+                    prefixIcon: const Icon(Icons.search, size: 18),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildSidebar(PrivilegeMasterController controller) {
+    return Builder(
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: NRCSColors.subNavGray,
+              child: const Row(
+                children: [
+                   Icon(Icons.people_outline, size: 18, color: NRCSColors.topNavBlue),
+                   SizedBox(width: 8),
+                   Text(
+                    'USER ROLES',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: NRCSColors.topNavBlue,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            Obx(() {
+              final roles = controller.roles;
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: roles.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (tileContext, index) {
+                  final role = roles[index];
+                  return Obx(() => ListTile(
+                        selected: controller.selectedRole.value?.id == role.id,
+                        selectedTileColor: NRCSColors.primaryBlue.withValues(alpha: 0.05),
+                        dense: true,
+                        title: Text(
+                          role.name,
+                          style: TextStyle(
+                            fontWeight: controller.selectedRole.value?.id == role.id ? FontWeight.bold : FontWeight.normal,
+                            color: controller.selectedRole.value?.id == role.id ? NRCSColors.primaryBlue : NRCSColors.textDark,
+                          ),
+                        ),
+                        subtitle: role.description != null ? Text(role.description!, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11)) : null,
+                        onTap: () {
+                          controller.selectRole(role);
+                          if (Get.width < 600) Get.back();
+                        },
+                      ));
+                },
+              );
+            }),
+            
+            const Divider(height: 8, thickness: 8, color: NRCSColors.borderGray),
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: NRCSColors.subNavGray,
+              child: const Row(
+                children: [
+                   Icon(Icons.category_outlined, size: 18, color: NRCSColors.topNavBlue),
+                   SizedBox(width: 8),
+                   Text(
+                    'PRIVILEGE CATEGORIES',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: NRCSColors.topNavBlue,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            ListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: controller.categories.map((cat) {
+                return Obx(() => ListTile(
+                      selected: controller.selectedCategory.value == cat,
+                      selectedTileColor: NRCSColors.primaryBlue.withValues(alpha: 0.1),
+                      dense: true,
+                      leading: _getCategoryIcon(cat),
+                      title: Text(
+                        cat,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: controller.selectedCategory.value == cat ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        controller.selectedCategory.value = cat;
+                        if (Get.width < 600) Get.back();
+                      },
+                    ));
+              }).toList(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildMainContent(PrivilegeMasterController controller, BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: NRCSColors.borderGray, width: 0.5)),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmall = constraints.maxWidth < 600;
+              
+              if (isSmall) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TextField(
                       controller: controller.nameController,
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       decoration: const InputDecoration(
-                        hintText: 'Role Name (e.g. Senior Producer)',
+                        hintText: 'Role Name',
                         border: InputBorder.none,
                         isDense: true,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    TextField(
+                      controller: controller.descriptionController,
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      decoration: const InputDecoration(
+                        hintText: 'Description...',
+                        border: InputBorder.none,
+                        isDense: true,
+                      ),
+                    ),
+                    const Divider(height: 16),
                     Row(
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: controller.descriptionController,
-                            style: const TextStyle(fontSize: 13, color: Colors.grey),
-                            decoration: const InputDecoration(
-                              hintText: 'Add a description for this role...',
-                              border: InputBorder.none,
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
                         const Text('Inherit from: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        Obx(() => DropdownButton<String>(
-                          value: controller.parentRoleId.value,
-                          hint: const Text('None', style: TextStyle(fontSize: 12)),
-                          underline: const SizedBox(),
-                          isDense: true,
-                          style: const TextStyle(fontSize: 12, color: NRCSColors.primaryBlue),
-                          items: [
-                            const DropdownMenuItem<String>(value: null, child: Text('None')),
-                            ...controller.roles
-                                .where((r) => r.id != controller.selectedRole.value?.id)
-                                .map((r) => DropdownMenuItem<String>(
-                                      value: r.id,
-                                      child: Text(r.name),
-                                    )),
-                          ],
-                          onChanged: (v) => controller.onParentRoleChanged(v),
-                        )),
+                        Expanded(
+                          child: Obx(() => DropdownButton<String>(
+                            value: controller.parentRoleId.value,
+                            hint: const Text('None', style: TextStyle(fontSize: 12)),
+                            underline: const SizedBox(),
+                            isDense: true,
+                            isExpanded: true,
+                            style: const TextStyle(fontSize: 12, color: NRCSColors.primaryBlue),
+                            items: [
+                              const DropdownMenuItem<String>(value: null, child: Text('None')),
+                              ...controller.roles
+                                  .where((r) => r.id != controller.selectedRole.value?.id)
+                                  .map((r) => DropdownMenuItem<String>(
+                                        value: r.id,
+                                        child: Text(r.name),
+                                      )),
+                            ],
+                            onChanged: (v) => controller.onParentRoleChanged(v),
+                          )),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => controller.save(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: NRCSColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 40),
+                      ),
+                      child: const Text('Save Changes'),
+                    ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed: () => controller.save(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: NRCSColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: const Text('Save Changes'),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: controller.nameController,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          decoration: const InputDecoration(
+                            hintText: 'Role Name (e.g. Senior Producer)',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: controller.descriptionController,
+                                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                decoration: const InputDecoration(
+                                  hintText: 'Add a description for this role...',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('Inherit from: ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                            Obx(() => DropdownButton<String>(
+                              value: controller.parentRoleId.value,
+                              hint: const Text('None', style: TextStyle(fontSize: 12)),
+                              underline: const SizedBox(),
+                              isDense: true,
+                              style: const TextStyle(fontSize: 12, color: NRCSColors.primaryBlue),
+                              items: [
+                                const DropdownMenuItem<String>(value: null, child: Text('None')),
+                                ...controller.roles
+                                    .where((r) => r.id != controller.selectedRole.value?.id)
+                                    .map((r) => DropdownMenuItem<String>(
+                                          value: r.id,
+                                          child: Text(r.name),
+                                        )),
+                              ],
+                              onChanged: (v) => controller.onParentRoleChanged(v),
+                            )),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () => controller.save(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: NRCSColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text('Save Changes'),
+                  ),
+                ],
+              );
+            }
           ),
         ),
 
-        // View Toggle
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: const BoxDecoration(
@@ -271,7 +416,6 @@ class PrivilegeMasterScreen extends StatelessWidget {
           )),
         ),
 
-        // Content Area
         Expanded(
           child: Obx(() {
             if (controller.activeView.value == 'Users') {
@@ -279,7 +423,7 @@ class PrivilegeMasterScreen extends StatelessWidget {
             }
 
             final category = controller.selectedCategory.value;
-            final groups = controller.permissionsState[category] ?? {};
+            final Map<String, Map<String, bool>> groups = controller.permissionsState[category] ?? {};
             final query = controller.searchQuery.value.toLowerCase();
 
             return Container(
@@ -292,9 +436,14 @@ class PrivilegeMasterScreen extends StatelessWidget {
                   children: groups.keys.where((groupName) {
                     if (query.isEmpty) return true;
                     if (groupName.toLowerCase().contains(query)) return true;
-                    return groups[groupName]!.keys.any((p) => p.toLowerCase().contains(query));
+                    final groupPerms = groups[groupName] ?? {};
+                    return groupPerms.keys.any((p) => p.toLowerCase().contains(query));
                   }).map((groupName) {
-                    return _buildPermissionGroup(controller, category, groupName);
+                    return _PermissionGroup(
+                      controller: controller,
+                      category: category,
+                      groupName: groupName,
+                    );
                   }).toList(),
                 ),
               ),
@@ -396,7 +545,58 @@ class PrivilegeMasterScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPermissionGroup(PrivilegeMasterController controller, String category, String groupName) {
+  Icon _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Content Management':
+        return const Icon(Icons.article_outlined, size: 18);
+      case 'Rundown Operations':
+        return const Icon(Icons.view_list_outlined, size: 18);
+      case 'Newsroom Director':
+        return const Icon(Icons.videocam_outlined, size: 18);
+      case 'System Administration':
+        return const Icon(Icons.settings_suggest_outlined, size: 18);
+      case 'Reporting & Analytics':
+        return const Icon(Icons.analytics_outlined, size: 18);
+      case 'Technical Operations':
+        return const Icon(Icons.build_circle_outlined, size: 18);
+      default:
+        return const Icon(Icons.check_circle_outline, size: 18);
+    }
+  }
+
+  void _confirmDelete(BuildContext context, PrivilegeMasterController controller, Role role) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Delete Role?'),
+        content: Text('Are you sure you want to permanently delete the "${role.name}" role? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              controller.deleteRole(role.id, role.name);
+              Get.back();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PermissionGroup extends StatelessWidget {
+  final PrivilegeMasterController controller;
+  final String category;
+  final String groupName;
+
+  const _PermissionGroup({
+    required this.controller,
+    required this.category,
+    required this.groupName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: 320,
       decoration: BoxDecoration(
@@ -435,8 +635,10 @@ class PrivilegeMasterScreen extends StatelessWidget {
                   ),
                 ),
                 Obx(() {
-                   final perms = controller.permissionsState[category]![groupName]!;
-                   final allChecked = perms.values.every((v) => v);
+                   final Map<String, Map<String, bool>> categoryPerms = controller.permissionsState[category] ?? {};
+                   final Map<String, bool> groupPerms = categoryPerms[groupName] ?? {};
+                   final bool allChecked = groupPerms.values.isNotEmpty && groupPerms.values.every((v) => v);
+                   
                    return InkWell(
                      onTap: () => controller.toggleGroup(category, groupName),
                      child: Text(
@@ -450,21 +652,23 @@ class PrivilegeMasterScreen extends StatelessWidget {
           ),
           Obx(() {
             final query = controller.searchQuery.value.toLowerCase();
-            final perms = controller.permissionsState[category]![groupName]!;
-            final visiblePerms = perms.keys.where((p) => 
+            final Map<String, Map<String, bool>> categoryPerms = controller.permissionsState[category] ?? {};
+            final Map<String, bool> groupPerms = categoryPerms[groupName] ?? {};
+            
+            final visiblePermKeys = groupPerms.keys.where((p) => 
               query.isEmpty || 
               groupName.toLowerCase().contains(query) || 
               p.toLowerCase().contains(query)
             ).toList();
 
             return Column(
-              children: visiblePerms.map((permName) {
+              children: visiblePermKeys.map((permName) {
                 return CheckboxListTile(
                   title: Text(
                     permName,
                     style: const TextStyle(fontSize: 13, color: NRCSColors.textDark),
                   ),
-                  value: perms[permName],
+                  value: groupPerms[permName] ?? false,
                   onChanged: (_) => controller.togglePermission(category, groupName, permName),
                   dense: true,
                   visualDensity: VisualDensity.compact,
@@ -474,44 +678,6 @@ class PrivilegeMasterScreen extends StatelessWidget {
               }).toList(),
             );
           }),
-        ],
-      ),
-    );
-  }
-
-  Icon _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Content Management':
-        return const Icon(Icons.article_outlined, size: 18);
-      case 'Rundown Operations':
-        return const Icon(Icons.view_list_outlined, size: 18);
-      case 'Newsroom Director':
-        return const Icon(Icons.videocam_outlined, size: 18);
-      case 'System Administration':
-        return const Icon(Icons.settings_suggest_outlined, size: 18);
-      case 'Reporting & Analytics':
-        return const Icon(Icons.analytics_outlined, size: 18);
-      case 'Technical Operations':
-        return const Icon(Icons.build_circle_outlined, size: 18);
-      default:
-        return const Icon(Icons.check_circle_outline, size: 18);
-    }
-  }
-
-  void _confirmDelete(BuildContext context, PrivilegeMasterController controller, Role role) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Delete Role?'),
-        content: Text('Are you sure you want to permanently delete the "${role.name}" role? This action cannot be undone.'),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              controller.deleteRole(role.id, role.name);
-              Get.back();
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
         ],
       ),
     );

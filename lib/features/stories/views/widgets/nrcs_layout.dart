@@ -45,27 +45,23 @@ class NRCSAppShell extends StatelessWidget {
 
       return Scaffold(
         backgroundColor: Colors.white,
-        drawer: isMobile && sidebar != null ? Drawer(width: 300, child: sidebar!) : null,
+        drawer: isMobile ? NRCSDrawer(sidebar: sidebar) : null,
         appBar: isMobile
             ? AppBar(
                 backgroundColor: Colors.white,
                 elevation: 0,
                 scrolledUnderElevation: 0,
-                leading: sidebar != null 
-                  ? null // Scaffold will automatically show the menu icon
-                  : IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF1A237E)),
+                leading: Builder(builder: (context) {
+                  return IconButton(
+                    icon: const Icon(Icons.menu, color: Color(0xFF1A237E)),
                     onPressed: () {
-                      if (Get.previousRoute.isNotEmpty) {
-                        Get.back();
-                      } else {
-                        final authService = Get.find<AuthService>();
-                        final role = authService.currentUser.value?.role ??
-                            AppConstants.roleReporter;
-                        Get.offAllNamed(_getRoleDashboard(role));
+                      final scaffold = Scaffold.maybeOf(context);
+                      if (scaffold != null) {
+                        scaffold.openDrawer();
                       }
                     },
-                  ),
+                  );
+                }),
                 title: Text(
                   title?.toUpperCase() ?? 'NRCS',
                   style: const TextStyle(
@@ -210,226 +206,43 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Obx(() {
-    final user = Get.find<AuthService>().currentUser.value;
-    final role = user?.role ?? AppConstants.roleReporter;
+      final user = Get.find<AuthService>().currentUser.value;
+      final role = user?.role ?? AppConstants.roleReporter;
+      final tabs = NRCSNavigation.getTabsForRole(role);
+      final routeMapping = NRCSNavigation.getRouteMapping(role);
+      final currentRoute = Get.currentRoute;
 
-    // Define base route mapping based on our existing logic
-    final Map<String, String> routeMapping = {
-      'Workspace': '/stories', // Default reporter/general workspace
-      'Reporter Dashboard': AppRoutes.reporterDashboard,
-      'Editor Dashboard': AppRoutes.editorDashboard,
-      'Producer Dashboard': AppRoutes.producerDashboard,
-      'Operational Dashboard': AppRoutes.producerDashboard,
-      'Anchor Dashboard': AppRoutes.anchorDashboard,
-      'Admin Dashboard': AppRoutes.adminDashboard,
-      'My Stories':
-          '/stories', // Could filter stories logically by current user later
-      'Archive': '/stories', // Will use filter
-      'Create Story': AppRoutes.storyEditor,
-      'Review Queue': '/stories', // Could filter logically later
-      'Rundowns': (role == AppConstants.roleAnchor) ? AppRoutes.anchorDashboard : AppRoutes.producerDashboard,
-      'Desks': '/admin/desks',
-      'Users': '/users',
-      'Privileges': AppRoutes.adminPrivileges,
-      'Story States': AppRoutes.adminStoryState,
-      'Audit Logs': AppRoutes.adminAuditTrail,
-      'Configurations': AppRoutes.adminConfigurations,
-      'Settings': '/settings',
-      'Reports': AppRoutes.producerDashboard,
-      'Story Pool': AppRoutes.producerDashboard,
-      'Notifications': AppRoutes.notifications,
-    };
+      return Container(
+        height: 50,
+        color: NRCSColors.topNavBlue,
+        child: Row(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: tabs.map((tab) {
+                    final route = routeMapping[tab];
+                    bool isActive = NRCSNavigation.isTabActive(
+                        tab, route, currentRoute, role);
 
-    // Calculate dynamic tabs based on active role permissions
-    List<String> tabs = [];
-    if (role == AppConstants.roleReporter) {
-      tabs = [
-        'Reporter Dashboard',
-        'My Stories',
-        'Create Story',
-        'Archive',
-        'Notifications'
-      ];
-    } else if (role == AppConstants.roleEditor) {
-      tabs = [
-        'Editor Dashboard',
-        'Review Queue',
-        'Desks',
-        'Archive',
-        'Notifications'
-      ];
-    } else if (role == AppConstants.roleProducer) {
-      tabs = [
-        'Producer Dashboard',
-        'Rundowns',
-        'Story Pool',
-        'Archive',
-        'Reports'
-      ];
-    } else if (role == AppConstants.roleAdmin) {
-      tabs = [
-        'Admin Dashboard',
-        'Users',
-        'Privileges',
-        'Desks',
-        'Story States',
-        'Archive',
-        'Audit Logs',
-        'Configurations'
-      ];
-    } else if (role == AppConstants.roleAnchor) {
-      tabs = ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
-    } else if (role == AppConstants.roleDirector) {
-      tabs = [
-        'Operational Dashboard',
-        'Rundowns',
-        'Story Pool',
-        'Archive',
-        'Reports',
-        'Notifications'
-      ];
-    } else {
-      tabs = ['Workspace', 'Archive', 'Settings'];
-    }
-
-    final currentRoute = Get.currentRoute;
-
-    return Container(
-      height: 50,
-      color: NRCSColors.topNavBlue,
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: tabs.map((tab) {
-                  final route = routeMapping[tab];
-                  bool isActive = false;
-
-                  // Special-case tabs that share the same route '/stories' (e.g. 'My Stories' and 'Archive').
-                  // Use StoryController.showArchived to determine which of those should be active.
-                  if (route != null) {
-                    if (route == '/stories' &&
-                        (tab == 'Archive' ||
-                            tab == 'My Stories' ||
-                            tab == 'Workspace' ||
-                            tab == 'Reporter Dashboard')) {
-                      try {
-                        final sc = Get.find<StoryController>();
-                        if (tab == 'Archive') {
-                          isActive = currentRoute == route &&
-                              sc.showArchived.value == true;
-                        } else {
-                          isActive = currentRoute == route &&
-                              sc.showArchived.value == false;
-                        }
-                      } catch (e) {
-                        // If StoryController isn't available yet, default to marking 'My Stories' as active
-                        // when on the stories route to avoid both tabs showing active simultaneously.
-                        isActive = currentRoute == route && tab == 'My Stories';
-                      }
-                    } else if (route == AppRoutes.editorDashboard || 
-                               route == AppRoutes.adminDashboard || 
-                               route == AppRoutes.producerDashboard) {
-                      final args = Get.arguments;
-                      if (args is Map && args['tab'] != null) {
-                        isActive = (currentRoute == route) && (args['tab'] == tab);
-                      } else {
-                        // If no tab arg, the primary dashboard button should be active
-                        isActive = (currentRoute == route) && 
-                                  (tab == 'Editor Dashboard' || 
-                                   tab == 'Admin Dashboard' || 
-                                   tab == 'Producer Dashboard');
-                      }
-                    } else {
-                      isActive = currentRoute == route;
-                    }
-                  } else if (tab == 'Workspace' && currentRoute == '/') {
-                    isActive = true; // Splash/Initial
-                  }
-
-                  return _NavButton(
-                    label: tab,
-                    isActive: isActive,
-                    onTap: () {
-                      if (tab == 'Create Story') {
-                        try {
-                          Get.find<StoryController>().createNewStory();
-                        } catch (e) {
-                          Get.put(StoryController()).createNewStory();
-                        }
-                        return;
-                      }
-
-                      if (tab == 'Archive') {
-                        try {
-                          final controller = Get.find<StoryController>();
-                          controller.showArchived.value = true;
-                          controller.loadStories();
-                        } catch (e) {
-                          final controller = Get.put(StoryController());
-                          controller.showArchived.value = true;
-                          controller.loadStories();
-                        }
-                        if (currentRoute != '/stories') {
-                          Get.offAllNamed('/stories');
-                        }
-                        return;
-                      }
-
-                      if (tab == 'My Stories' ||
-                          tab == 'Workspace' ||
-                          tab == 'Reporter Dashboard') {
-                        try {
-                          final controller = Get.find<StoryController>();
-                          controller.showArchived.value = false;
-                          controller.loadStories();
-                        } catch (e) {
-                          // Controller not initialized yet, will be handled on creation
-                        }
-                      }
-
-                      if (route != null) {
-                        // For dashboard-integrated tabs, if we are an Editor or Admin, we want to stay in the Dashboard
-                        // but tell it to open the specific tab.
-                        if (tab == 'Desks' || tab == 'Archive' || tab == 'Review Queue') {
-                          if (role == AppConstants.roleEditor) {
-                            Get.offAllNamed(AppRoutes.editorDashboard, arguments: {'tab': tab});
-                            return;
-                          } else if (role == AppConstants.roleAdmin) {
-                            Get.offAllNamed(AppRoutes.adminDashboard, arguments: {'tab': tab});
-                            return;
-                          }
-                        }
-
-                        if (currentRoute != route) {
-                          Get.offAllNamed(route, arguments: {'tab': tab});
-                        } else {
-                          // Already on the same route - pass the tab argument to switch
-                          Get.offAllNamed(route, arguments: {'tab': tab});
-                        }
-                      } else {
-                        Get.snackbar(
-                          'Coming Soon',
-                          '$tab module is currently under development.',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.white,
-                          colorText: NRCSColors.topNavBlue,
-                        );
-                      }
-                    },
-                  );
-                }).toList(),
+                    return _NavButton(
+                      label: tab,
+                      isActive: isActive,
+                      onTap: () => NRCSNavigation.handleTabTap(
+                          tab, role, route, currentRoute),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
-          _UserSection(currentTime: _currentTime),
-        ],
-      ),
-    );
+            _UserSection(currentTime: _currentTime),
+          ],
+        ),
+      );
     }); // end Obx
   }
 }
@@ -845,17 +658,27 @@ class NRCSToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = Get.width < 600;
-    
+
     final buttons = [
-      _ToolbarActionButton(label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
-      _ToolbarActionButton(label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
-      _ToolbarActionButton(label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
-      _ToolbarActionButton(label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
-      _ToolbarActionButton(label: 'Move', onTap: onMove, icon: Icons.move_to_inbox_outlined),
+      _ToolbarActionButton(
+          label: 'New', onTap: onNew, icon: Icons.add_circle_outline),
+      _ToolbarActionButton(
+          label: 'Edit', onTap: onEdit, icon: Icons.edit_outlined),
+      _ToolbarActionButton(
+          label: 'Delete', onTap: onDelete, icon: Icons.delete_outline),
+      _ToolbarActionButton(
+          label: 'Copy', onTap: onCopy, icon: Icons.copy_outlined),
+      _ToolbarActionButton(
+          label: 'Move', onTap: onMove, icon: Icons.move_to_inbox_outlined),
       _ToolbarActionButton(label: 'Link', onTap: onLink, icon: Icons.link),
-      _ToolbarActionButton(label: 'Assign', onTap: onAssign, icon: Icons.assignment_ind_outlined),
-      _ToolbarActionButton(label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
-      _ToolbarActionButton(label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
+      _ToolbarActionButton(
+          label: 'Assign',
+          onTap: onAssign,
+          icon: Icons.assignment_ind_outlined),
+      _ToolbarActionButton(
+          label: 'Story Log', onTap: onStoryLog, icon: Icons.history),
+      _ToolbarActionButton(
+          label: 'Print', onTap: onPrint, icon: Icons.print_outlined),
       _ToolbarActionButton(
         label: 'Powerview',
         isBordered: true,
@@ -878,7 +701,8 @@ class NRCSToolbar extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(width: 8),
-            ...buttons.map((b) => Padding(padding: const EdgeInsets.only(right: 4), child: b)),
+            ...buttons.map((b) =>
+                Padding(padding: const EdgeInsets.only(right: 4), child: b)),
             const SizedBox(width: 12),
           ],
         ),
@@ -901,7 +725,7 @@ class CategoryToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = Get.width < 600;
     final categories = ['All', ...AppConstants.storyCategories];
-    
+
     return Container(
       height: isMobile ? 42.h : 56,
       decoration: BoxDecoration(
@@ -958,9 +782,7 @@ class _ModernCategoryChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(isMobile ? 20.r : 20),
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 10.w : 16, 
-              vertical: isMobile ? 4.h : 8
-            ),
+                horizontal: isMobile ? 10.w : 16, vertical: isMobile ? 4.h : 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(isMobile ? 20.r : 20),
               border: Border.all(
@@ -1259,6 +1081,360 @@ class NRCSStoryListItem extends StatelessWidget {
         return Colors.amber.shade900;
       default:
         return Colors.grey.shade700;
+    }
+  }
+}
+
+class NRCSNavigation {
+  static Map<String, String> getRouteMapping(String role) {
+    return {
+      'Workspace': '/stories',
+      'Reporter Dashboard': AppRoutes.reporterDashboard,
+      'Editor Dashboard': AppRoutes.editorDashboard,
+      'Producer Dashboard': AppRoutes.producerDashboard,
+      'Operational Dashboard': AppRoutes.producerDashboard,
+      'Anchor Dashboard': AppRoutes.anchorDashboard,
+      'Admin Dashboard': AppRoutes.adminDashboard,
+      'My Stories': '/stories',
+      'Archive': '/stories',
+      'Create Story': AppRoutes.storyEditor,
+      'Review Queue': '/stories',
+      'Rundowns': (role == AppConstants.roleAnchor)
+          ? AppRoutes.anchorDashboard
+          : AppRoutes.producerDashboard,
+      'Desks': '/admin/desks',
+      'Users': '/users',
+      'Privileges': AppRoutes.adminPrivileges,
+      'Story States': AppRoutes.adminStoryState,
+      'Audit Logs': AppRoutes.adminAuditTrail,
+      'Configurations': AppRoutes.adminConfigurations,
+      'Settings': '/settings',
+      'Reports': AppRoutes.producerDashboard,
+      'Story Pool': AppRoutes.producerDashboard,
+      'Notifications': AppRoutes.notifications,
+    };
+  }
+
+  static List<String> getTabsForRole(String role) {
+    if (role == AppConstants.roleReporter) {
+      return [
+        'Reporter Dashboard',
+        'My Stories',
+        'Create Story',
+        'Archive',
+        'Notifications'
+      ];
+    } else if (role == AppConstants.roleEditor) {
+      return [
+        'Editor Dashboard',
+        'Review Queue',
+        'Desks',
+        'Archive',
+        'Notifications'
+      ];
+    } else if (role == AppConstants.roleProducer) {
+      return [
+        'Producer Dashboard',
+        'Rundowns',
+        'Story Pool',
+        'Archive',
+        'Reports'
+      ];
+    } else if (role == AppConstants.roleAdmin) {
+      return [
+        'Admin Dashboard',
+        'Users',
+        'Privileges',
+        'Desks',
+        'Story States',
+        'Archive',
+        'Audit Logs',
+        'Configurations'
+      ];
+    } else if (role == AppConstants.roleAnchor) {
+      return ['Anchor Dashboard', 'Rundowns', 'Archive', 'Notifications'];
+    } else if (role == AppConstants.roleDirector) {
+      return [
+        'Operational Dashboard',
+        'Rundowns',
+        'Story Pool',
+        'Archive',
+        'Reports',
+        'Notifications'
+      ];
+    } else {
+      return ['Workspace', 'Archive', 'Settings'];
+    }
+  }
+
+  static bool isTabActive(
+      String tab, String? route, String currentRoute, String role) {
+    if (route == null) return false;
+
+    if (route == '/stories' &&
+        (tab == 'Archive' ||
+            tab == 'My Stories' ||
+            tab == 'Workspace' ||
+            tab == 'Reporter Dashboard')) {
+      try {
+        final sc = Get.find<StoryController>();
+        if (tab == 'Archive') {
+          return currentRoute == route && sc.showArchived.value == true;
+        } else {
+          return currentRoute == route && sc.showArchived.value == false;
+        }
+      } catch (e) {
+        return currentRoute == route && tab == 'My Stories';
+      }
+    } else if (route == AppRoutes.editorDashboard ||
+        route == AppRoutes.adminDashboard ||
+        route == AppRoutes.producerDashboard) {
+      final args = Get.arguments;
+      if (args is Map && args['tab'] != null) {
+        return (currentRoute == route) && (args['tab'] == tab);
+      } else {
+        return (currentRoute == route) &&
+            (tab == 'Editor Dashboard' ||
+                tab == 'Admin Dashboard' ||
+                tab == 'Producer Dashboard');
+      }
+    } else {
+      if (tab == 'Workspace' && currentRoute == '/') return true;
+      return currentRoute == route;
+    }
+  }
+
+  static void handleTabTap(
+      String tab, String role, String? route, String currentRoute) {
+    if (tab == 'Create Story') {
+      try {
+        Get.find<StoryController>().createNewStory();
+      } catch (e) {
+        Get.put(StoryController()).createNewStory();
+      }
+      return;
+    }
+
+    if (tab == 'Archive') {
+      try {
+        final controller = Get.find<StoryController>();
+        controller.showArchived.value = true;
+        controller.loadStories();
+      } catch (e) {
+        final controller = Get.put(StoryController());
+        controller.showArchived.value = true;
+        controller.loadStories();
+      }
+      if (currentRoute != '/stories') {
+        Get.offAllNamed('/stories');
+      }
+      return;
+    }
+
+    if (tab == 'My Stories' ||
+        tab == 'Workspace' ||
+        tab == 'Reporter Dashboard') {
+      try {
+        final controller = Get.find<StoryController>();
+        controller.showArchived.value = false;
+        controller.loadStories();
+      } catch (e) {
+        // Controller not initialized yet
+      }
+    }
+
+    if (route != null) {
+      if (tab == 'Desks' || tab == 'Archive' || tab == 'Review Queue') {
+        if (role == AppConstants.roleEditor) {
+          Get.offAllNamed(AppRoutes.editorDashboard, arguments: {'tab': tab});
+          return;
+        } else if (role == AppConstants.roleAdmin) {
+          Get.offAllNamed(AppRoutes.adminDashboard, arguments: {'tab': tab});
+          return;
+        }
+      }
+
+      if (currentRoute != route) {
+        Get.offAllNamed(route, arguments: {'tab': tab});
+      } else {
+        Get.offAllNamed(route, arguments: {'tab': tab});
+      }
+    } else {
+      Get.snackbar(
+        'Coming Soon',
+        '$tab module is currently under development.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: NRCSColors.topNavBlue,
+      );
+    }
+  }
+}
+
+class NRCSDrawer extends StatelessWidget {
+  final Widget? sidebar;
+
+  const NRCSDrawer({super.key, this.sidebar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      try {
+        final authService = Get.find<AuthService>();
+        final user = authService.currentUser.value;
+        final role = user?.role ?? AppConstants.roleReporter;
+        final tabs = NRCSNavigation.getTabsForRole(role);
+        final routeMapping = NRCSNavigation.getRouteMapping(role);
+        final currentRoute = Get.currentRoute;
+
+        return Drawer(
+          width: 300,
+          backgroundColor: Colors.white,
+          child: Column(
+            children: [
+              UserAccountsDrawerHeader(
+                decoration: const BoxDecoration(color: NRCSColors.topNavBlue),
+                currentAccountPicture: CircleAvatar(
+                  backgroundColor: Colors.white24,
+                  backgroundImage: (user?.photoUrl?.trim().isNotEmpty ?? false)
+                      ? CachedNetworkImageProvider(user!.photoUrl!)
+                      : null,
+                  child: user?.photoUrl == null
+                      ? const Icon(Icons.person, color: Colors.white)
+                      : null,
+                ),
+                accountName: Text(user?.displayName ?? 'User'),
+                accountEmail: Text(user?.email ?? ''),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    if (sidebar != null) ...[
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Text('SCREEN OPTIONS',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                                fontSize: 12)),
+                      ),
+                      sidebar!,
+                      const Divider(),
+                    ],
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('NAVIGATION',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
+                              fontSize: 12)),
+                    ),
+                    ...tabs.map((tab) {
+                      final route = routeMapping[tab];
+                      bool isActive = NRCSNavigation.isTabActive(
+                          tab, route, currentRoute, role);
+
+                      return ListTile(
+                        leading: Icon(_getTabIcon(tab),
+                            color:
+                                isActive ? NRCSColors.topNavBlue : Colors.grey),
+                        title: Text(tab,
+                            style: TextStyle(
+                                color: isActive
+                                    ? NRCSColors.topNavBlue
+                                    : NRCSColors.textDark,
+                                fontWeight: isActive
+                                    ? FontWeight.bold
+                                    : FontWeight.normal)),
+                        selected: isActive,
+                        selectedTileColor:
+                            NRCSColors.topNavBlue.withValues(alpha: 0.05),
+                        onTap: () {
+                          try {
+                            Get.back(); // Close drawer
+                            NRCSNavigation.handleTabTap(
+                                tab, role, route, currentRoute);
+                          } catch (e, st) {
+                            Get.log('Error handling tab tap: $e\n$st');
+                            Get.snackbar('Error', 'Navigation failed',
+                                snackPosition: SnackPosition.BOTTOM);
+                          }
+                        },
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title:
+                    const Text('Logout', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  try {
+                    Get.find<AuthService>().signOut();
+                  } catch (e, st) {
+                    Get.log('Logout error: $e\n$st');
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      } catch (e, st) {
+        Get.log('Error building NRCSDrawer: $e\n$st');
+        return Drawer(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text('Menu unavailable',
+                  style: TextStyle(color: Colors.grey.shade600)),
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  IconData _getTabIcon(String tab) {
+    switch (tab) {
+      case 'Admin Dashboard':
+      case 'Reporter Dashboard':
+      case 'Editor Dashboard':
+      case 'Producer Dashboard':
+      case 'Anchor Dashboard':
+      case 'Operational Dashboard':
+        return Icons.dashboard_outlined;
+      case 'Users':
+        return Icons.people_outline;
+      case 'Privileges':
+        return Icons.admin_panel_settings_outlined;
+      case 'Desks':
+        return Icons.desk_outlined;
+      case 'Archive':
+        return Icons.archive_outlined;
+      case 'My Stories':
+        return Icons.book_outlined;
+      case 'Create Story':
+        return Icons.add_circle_outline;
+      case 'Notifications':
+        return Icons.notifications_none;
+      case 'Settings':
+        return Icons.settings_outlined;
+      case 'Rundowns':
+        return Icons.list_alt_outlined;
+      case 'Story Pool':
+        return Icons.pool_outlined;
+      case 'Audit Logs':
+        return Icons.history_outlined;
+      case 'Configurations':
+        return Icons.settings_applications_outlined;
+      case 'Story States':
+        return Icons.auto_mode_outlined;
+      default:
+        return Icons.link;
     }
   }
 }

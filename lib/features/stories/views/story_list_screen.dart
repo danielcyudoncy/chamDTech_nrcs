@@ -78,7 +78,7 @@ class _StoryListScreenState extends State<StoryListScreen> {
         child: Column(
           children: [
             _buildSidebarHeader(controller),
-            Expanded(
+            Flexible(
               child: Obx(() {
                 if (controller.isLoading.value) {
                   return const Center(child: CircularProgressIndicator());
@@ -331,7 +331,8 @@ class _StoryListScreenState extends State<StoryListScreen> {
               decoration: BoxDecoration(
                 color: selectedColor.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: selectedColor.withValues(alpha: 0.25)),
+                border:
+                    Border.all(color: selectedColor.withValues(alpha: 0.25)),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
@@ -442,7 +443,9 @@ class _PremiumStoryCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              story.title.isEmpty ? 'Untitled Story' : story.title,
+                              story.title.isEmpty
+                                  ? 'Untitled Story'
+                                  : story.title,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -468,7 +471,8 @@ class _PremiumStoryCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.category, size: 12, color: Colors.grey.shade400),
+                          Icon(Icons.category,
+                              size: 12, color: Colors.grey.shade400),
                           const SizedBox(width: 4),
                           Text(
                             story.category,
@@ -614,7 +618,8 @@ class _DetailPanelView extends StatelessWidget {
                   color: const Color(0xFF1A237E).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.article, color: Color(0xFF1A237E), size: 20),
+                child: const Icon(Icons.article,
+                    color: Color(0xFF1A237E), size: 20),
               ),
               const SizedBox(width: 16),
               const Text(
@@ -633,7 +638,8 @@ class _DetailPanelView extends StatelessWidget {
                 onPressed: () {
                   final content = story.content.isEmpty
                       ? 'No content available.'
-                      : Get.find<StoryService>().getPlainTextFromQuill(story.content);
+                      : Get.find<StoryService>()
+                          .getPlainTextFromQuill(story.content);
                   Clipboard.setData(ClipboardData(text: content)).then((_) {
                     Get.snackbar(
                       'Copied',
@@ -651,7 +657,8 @@ class _DetailPanelView extends StatelessWidget {
                   foregroundColor: const Color(0xFF1A237E),
                   elevation: 0,
                   side: const BorderSide(color: Color(0xFFE0E0E0)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -666,7 +673,8 @@ class _DetailPanelView extends StatelessWidget {
                       foregroundColor: Colors.red.shade700,
                       elevation: 0,
                       side: BorderSide(color: Colors.red.shade200),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -679,7 +687,8 @@ class _DetailPanelView extends StatelessWidget {
                     backgroundColor: const Color(0xFF1A237E),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ] else ...[
@@ -692,19 +701,22 @@ class _DetailPanelView extends StatelessWidget {
                     foregroundColor: Colors.red.shade700,
                     elevation: 0,
                     side: BorderSide(color: Colors.red.shade200),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton.icon(
-                  onPressed: () => Get.toNamed('/story/editor', arguments: story),
+                  onPressed: () =>
+                      Get.toNamed('/story/editor', arguments: story),
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   label: const Text('Edit Story'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A237E),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ],
@@ -746,7 +758,8 @@ class _DetailHeader extends StatelessWidget {
             if (story.parentStoryId != null) ...[
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.orange.shade50,
                   borderRadius: BorderRadius.circular(6),
@@ -754,7 +767,8 @@ class _DetailHeader extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.call_split, size: 12, color: Colors.orange.shade800),
+                    Icon(Icons.call_split,
+                        size: 12, color: Colors.orange.shade800),
                     const SizedBox(width: 4),
                     Text(
                       'RE-EDITED VERSION',
@@ -826,7 +840,8 @@ class _DetailMeta extends StatelessWidget {
           ),
           _ModernMetaItem(
             label: 'Word Count',
-            value: '${Get.find<StoryController>().calculateWordCount(story.content)} words',
+            value:
+                '${Get.find<StoryController>().calculateWordCount(story.content)} words',
             icon: Icons.text_fields,
           ),
           _ModernMetaItem(

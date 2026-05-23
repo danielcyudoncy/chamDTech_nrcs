@@ -28,7 +28,7 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveLayout.isDesktop(context);
-    
+
     return Scaffold(
       appBar: isDesktop && title == null
           ? null
@@ -39,7 +39,10 @@ class MainLayout extends StatelessWidget {
                   ? Builder(
                       builder: (context) => IconButton(
                         icon: const Icon(Icons.menu),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        onPressed: () {
+                          final scaffold = Scaffold.maybeOf(context);
+                          if (scaffold != null) scaffold.openDrawer();
+                        },
                       ),
                     )
                   : null,
@@ -47,13 +50,14 @@ class MainLayout extends StatelessWidget {
       drawer: !isDesktop && showDrawer ? _buildSidebar(context) : null,
       body: Row(
         children: [
-          if (isDesktop && showDrawer) 
+          if (isDesktop && showDrawer)
             Container(
               width: 260,
               decoration: BoxDecoration(
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                    color:
+                        Theme.of(context).dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -185,9 +189,10 @@ class MainLayout extends StatelessWidget {
             CircleAvatar(
               radius: 18,
               backgroundColor: ThemeConfig.primaryColor,
-              backgroundImage: (user?.photoUrl != null && user!.photoUrl!.isNotEmpty) 
-                  ? CachedNetworkImageProvider(user.photoUrl!) 
-                  : null,
+              backgroundImage:
+                  (user?.photoUrl != null && user!.photoUrl!.isNotEmpty)
+                      ? CachedNetworkImageProvider(user.photoUrl!)
+                      : null,
               child: (user?.photoUrl == null || user!.photoUrl!.isEmpty)
                   ? Text(
                       (user?.displayName.isNotEmpty ?? false)
@@ -205,13 +210,15 @@ class MainLayout extends StatelessWidget {
                 children: [
                   Text(
                     user?.displayName ?? 'User',
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     user?.isOnline ?? false ? 'Online' : 'Offline',
                     style: TextStyle(
-                      color: user?.isOnline ?? false ? Colors.green : Colors.grey,
+                      color:
+                          user?.isOnline ?? false ? Colors.green : Colors.grey,
                       fontSize: 11,
                     ),
                   ),
@@ -245,7 +252,7 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: InkWell(
@@ -254,7 +261,9 @@ class _SidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isActive ? ThemeConfig.primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+            color: isActive
+                ? ThemeConfig.primaryColor.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
@@ -262,7 +271,9 @@ class _SidebarItem extends StatelessWidget {
               Icon(
                 icon,
                 size: 22,
-                color: isActive ? ThemeConfig.primaryColor : theme.iconTheme.color?.withValues(alpha: 0.7),
+                color: isActive
+                    ? ThemeConfig.primaryColor
+                    : theme.iconTheme.color?.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 12),
               Text(
@@ -270,7 +281,10 @@ class _SidebarItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: isActive ? ThemeConfig.primaryColor : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
+                  color: isActive
+                      ? ThemeConfig.primaryColor
+                      : theme.textTheme.bodyMedium?.color
+                          ?.withValues(alpha: 0.8),
                 ),
               ),
             ],

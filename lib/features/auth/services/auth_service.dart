@@ -26,19 +26,17 @@ class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   final FirebaseDatabase _database = FirebaseService.database;
-  
+
   Rx<User?> firebaseUser = Rx<User?>(null);
   Rx<UserModel?> currentUser = Rx<UserModel?>(null);
-  
-  @override
-  void onInit() {
-    super.onInit();
+
+  // If Realtime DB permission is denied, avoid retrying writes repeatedly.
+  bool _realtimeWritesAllowed = true;
+
+  /// Initializes auth state before the app renders its first screen.
+  Future<AuthService> init() async {
     firebaseUser.bindStream(_auth.authStateChanges());
 
-    // Silently reload user data on hot restart (Firebase resolves auth async,
-    // so currentUser can be null even when a user is already signed in).
-    // This does NOT navigate — it just repopulates currentUser so the UI
-    // can react via Obx.
     ever(firebaseUser, (User? fbUser) async {
       if (fbUser != null && currentUser.value == null) {
         try {
@@ -51,8 +49,12 @@ class AuthService extends GetxService {
         currentUser.value = null;
       }
     });
+
+    // Wait for the initial auth state to resolve before continuing the app.
+    await _auth.authStateChanges().first;
+    return this;
   }
-  
+
   // Public method to trigger initial navigation
   void initNavigation() {
     _setInitialScreen(firebaseUser.value);
@@ -70,7 +72,8 @@ class AuthService extends GetxService {
         await _loadUserData(user.uid);
         await _setUserOnlineStatus(true);
         Future.delayed(Duration.zero, () {
-          final roleRoute = AppRoutes.getRouteForRole(currentUser.value?.role ?? '');
+          final roleRoute =
+              AppRoutes.getRouteForRole(currentUser.value?.role ?? '');
           Get.offAllNamed(roleRoute);
         });
       } catch (e) {
@@ -82,14 +85,14 @@ class AuthService extends GetxService {
             'Session Error',
             'Failed to load user profile. Please log in again.',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
+            backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
             colorText: Get.theme.colorScheme.error,
           );
         });
       }
     }
   }
-  
+
   // Sign in with email and password
   Future<UserModel?> signIn(String email, String password) async {
     try {
@@ -97,7 +100,7 @@ class AuthService extends GetxService {
         email: email,
         password: password,
       );
-      
+
       if (credential.user != null) {
         await _loadUserData(credential.user!.uid);
         await _setUserOnlineStatus(true);
@@ -109,7 +112,7 @@ class AuthService extends GetxService {
         'Login Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
@@ -118,13 +121,13 @@ class AuthService extends GetxService {
         'Login Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
     }
   }
-  
+
   // Sign up with email and password
   Future<UserModel?> signUp({
     required String email,
@@ -137,7 +140,7 @@ class AuthService extends GetxService {
         email: email,
         password: password,
       );
-      
+
       if (credential.user != null) {
         // Create user document in Firestore
         final userModel = UserModel(
@@ -148,15 +151,15 @@ class AuthService extends GetxService {
           createdAt: DateTime.now(),
           isOnline: true,
         );
-        
+
         await _firestore
             .collection(AppConstants.usersCollection)
             .doc(credential.user!.uid)
             .set(userModel.toJson());
-        
+
         currentUser.value = userModel;
         await _setUserOnlineStatus(true);
-        
+
         return userModel;
       }
       return null;
@@ -165,7 +168,7 @@ class AuthService extends GetxService {
         'Sign Up Error',
         _getAuthErrorMessage(e.code),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
@@ -174,13 +177,13 @@ class AuthService extends GetxService {
         'Sign Up Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Get.theme.colorScheme.error.withValues(alpha:0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
       return null;
     }
   }
-  
+
   // Load user data from Firestore
   Future<void> _loadUserData(String uid) async {
     try {
@@ -188,10 +191,10 @@ class AuthService extends GetxService {
           .collection(AppConstants.usersCollection)
           .doc(uid)
           .get();
-      
+
       if (doc.exists) {
         var user = UserModel.fromJson(doc.data()!);
-        
+
         // If user has a role, fetch it and update localized permissions
         if (user.roleId != null) {
           try {
@@ -209,7 +212,7 @@ class AuthService extends GetxService {
             Get.log('Error loading role permissions: $e');
           }
         }
-        
+
         currentUser.value = user;
       } else {
         throw Exception('User profile not found in database.');
@@ -220,7 +223,8 @@ class AuthService extends GetxService {
     }
   }
 
-  Map<String, bool> _flattenPrivileges(Map<String, Map<String, Map<String, bool>>> nested) {
+  Map<String, bool> _flattenPrivileges(
+      Map<String, Map<String, Map<String, bool>>> nested) {
     final Map<String, bool> flat = {};
     nested.forEach((category, groups) {
       groups.forEach((group, perms) {
@@ -231,7 +235,7 @@ class AuthService extends GetxService {
     });
     return flat;
   }
-  
+
   // Set user online/offline status in Realtime Database
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     if (currentUser.value == null) return;
@@ -240,37 +244,48 @@ class AuthService extends GetxService {
     // regardless of whether Firebase calls succeed or fail.
     currentUser.value = currentUser.value?.copyWith(isOnline: isOnline);
 
-    // Update Realtime Database
-    try {
-      final userStatusRef = _database.ref(
-        '${AppConstants.onlineUsersPath}/${currentUser.value!.id}'
-      );
+    // Update Realtime Database (skip if we've detected permission issues)
+    if (_realtimeWritesAllowed) {
+      try {
+        final userStatusRef = _database
+            .ref('${AppConstants.onlineUsersPath}/${currentUser.value!.id}');
 
-      if (isOnline) {
-        await userStatusRef.set({
-          'isOnline': true,
-          'lastSeen': ServerValue.timestamp,
-          'displayName': currentUser.value!.displayName,
-          'role': currentUser.value!.role,
-        });
+        if (isOnline) {
+          await userStatusRef.set({
+            'isOnline': true,
+            'lastSeen': ServerValue.timestamp,
+            'displayName': currentUser.value!.displayName,
+            'role': currentUser.value!.role,
+          });
 
-        // Set offline on disconnect
-        await userStatusRef.onDisconnect().set({
-          'isOnline': false,
-          'lastSeen': ServerValue.timestamp,
-          'displayName': currentUser.value!.displayName,
-          'role': currentUser.value!.role,
-        });
-      } else {
-        await userStatusRef.set({
-          'isOnline': false,
-          'lastSeen': ServerValue.timestamp,
-          'displayName': currentUser.value!.displayName,
-          'role': currentUser.value!.role,
-        });
+          // Set offline on disconnect
+          await userStatusRef.onDisconnect().set({
+            'isOnline': false,
+            'lastSeen': ServerValue.timestamp,
+            'displayName': currentUser.value!.displayName,
+            'role': currentUser.value!.role,
+          });
+        } else {
+          await userStatusRef.set({
+            'isOnline': false,
+            'lastSeen': ServerValue.timestamp,
+            'displayName': currentUser.value!.displayName,
+            'role': currentUser.value!.role,
+          });
+        }
+      } on FirebaseException catch (e) {
+        final msg = e.message ?? e.toString();
+        Get.log('Realtime DB write error: $msg');
+        if (msg.contains('permission-denied')) {
+          _realtimeWritesAllowed = false;
+          Get.log('Realtime DB writes disabled due to permission-denied.');
+        }
+      } catch (e) {
+        Get.log('Error setting Realtime DB status: $e');
       }
-    } catch (e) {
-      Get.log('Error setting Realtime DB status: $e');
+    } else {
+      Get.log(
+          'Skipping Realtime DB write: writes disabled due to earlier permission error');
     }
 
     // Update Firestore (separate try/catch so a permission error here
@@ -287,58 +302,81 @@ class AuthService extends GetxService {
       Get.log('Error updating Firestore status: $e');
     }
   }
-  
+
   // Sign out
   Future<void> signOut() async {
     try {
       await _setUserOnlineStatus(false);
-      
+
       // Navigate first to unmount any active StreamBuilders in the UI
       Get.offAllNamed(AppRoutes.login);
-      
+
       // Clear session controllers to prevent stale data/permission errors
-      try { Get.delete<DeskController>(force: true); } catch (_) {}
-      try { Get.delete<EditorDashboardController>(force: true); } catch (_) {}
-      try { Get.delete<StoryController>(force: true); } catch (_) {}
-      try { Get.delete<ProducerDashboardController>(force: true); } catch (_) {}
-      try { Get.delete<AnchorDashboardController>(force: true); } catch (_) {}
-      try { Get.delete<ReporterDashboardController>(force: true); } catch (_) {}
-      try { Get.delete<StoryPoolController>(force: true); } catch (_) {}
-      try { Get.delete<AdminController>(force: true); } catch (_) {}
-      try { Get.delete<StoryEditorController>(force: true); } catch (_) {}
-      try { Get.delete<RundownBuilderController>(force: true); } catch (_) {}
-      try { Get.delete<NewsroomController>(force: true); } catch (_) {}
-      
+      try {
+        Get.delete<DeskController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<EditorDashboardController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<StoryController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<ProducerDashboardController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<AnchorDashboardController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<ReporterDashboardController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<StoryPoolController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<AdminController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<StoryEditorController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<RundownBuilderController>(force: true);
+      } catch (_) {}
+      try {
+        Get.delete<NewsroomController>(force: true);
+      } catch (_) {}
+
       // Give the UI a brief moment to unmount streams before cutting auth access
       await Future.delayed(const Duration(milliseconds: 150));
-      
+
       await _auth.signOut();
       currentUser.value = null;
     } catch (e) {
       Get.log('Error signing out: $e');
     }
   }
-  
+
   // Update user profile
-  Future<void> updateUserProfile({String? displayName, String? photoUrl}) async {
+  Future<void> updateUserProfile(
+      {String? displayName, String? photoUrl}) async {
     try {
       final user = _auth.currentUser;
       if (user != null) {
         // Update Firebase Auth profile
         if (displayName != null) await user.updateDisplayName(displayName);
         if (photoUrl != null) await user.updatePhotoURL(photoUrl);
-        
+
         // Update Firestore
         final updates = <String, dynamic>{};
         if (displayName != null) updates['displayName'] = displayName;
         if (photoUrl != null) updates['photoUrl'] = photoUrl;
-        
+
         if (updates.isNotEmpty) {
           await _firestore
               .collection(AppConstants.usersCollection)
               .doc(user.uid)
               .update(updates);
-              
+
           // Update local state
           currentUser.value = currentUser.value?.copyWith(
             displayName: displayName,
@@ -359,7 +397,7 @@ class AuthService extends GetxService {
           .collection(AppConstants.usersCollection)
           .doc(uid)
           .update(data);
-      
+
       // If updating current user, refresh local state
       if (currentUser.value?.id == uid) {
         await _loadUserData(uid);

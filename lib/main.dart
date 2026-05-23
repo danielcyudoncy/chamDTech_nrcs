@@ -26,8 +26,8 @@ void main() async {
   // Initialize Firebase
   await Get.putAsync(() => FirebaseService().init());
 
-  // Initialize Auth Service
-  Get.put(AuthService());
+  // Initialize Auth Service and wait for auth state to resolve
+  await Get.putAsync(() => AuthService().init());
 
   // Initialize Notification Service
   Get.put(NotificationService());

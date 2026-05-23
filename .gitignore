@@ -47,7 +47,15 @@ app.*.map.json
 
 # Firebase
 google-services.json
+google-services*.json
+google-service*.json
+Google-service*.json
+google-services-2.json
+google-service-2.json
 google_service.json
+*GoogleService-Info*.plist
+*GoodService-Info*.plist
+*GoodService-info*.plist
 firebase.json
 firestore.rules
 firestore.indexes.json

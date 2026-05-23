@@ -13,49 +13,46 @@ class UserManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This would normally be in a controller
     final AuthService authService = Get.find<AuthService>();
 
-    return NRCSAppShell(
-      title: 'User & Access Control',
-      body: StreamBuilder<List<UserModel>>(
-        stream: authService.getUsersStream(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+    return StreamBuilder<List<UserModel>>(
+      stream: authService.getUsersStream(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const NRCSAppShell(
+            title: 'User & Access Control',
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        
+        if (snapshot.hasError) {
+          return NRCSAppShell(
+            title: 'User & Access Control',
+            body: Center(child: Text('Error: ${snapshot.error}')),
+          );
+        }
 
-          final users = snapshot.data ?? [];
+        final users = snapshot.data ?? [];
 
-          return Row(
+        return NRCSAppShell(
+          title: 'User & Access Control',
+          sidebar: _buildSidebar(users),
+          body: Column(
             children: [
-              // Roles/Groups sidebar
-              _buildSidebar(users),
-              // User List
+              _buildHeader(),
               Expanded(
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    Expanded(
-                      child: users.isEmpty
-                          ? const Center(child: Text('No users found.'))
-                          : ListView.separated(
-                              itemCount: users.length,
-                              separatorBuilder: (context, index) => const Divider(height: 1),
-                              itemBuilder: (context, index) => _buildUserTile(context, users[index]),
-                            ),
-                    ),
-                  ],
-                ),
+                child: users.isEmpty
+                    ? const Center(child: Text('No users found.'))
+                    : ListView.separated(
+                        itemCount: users.length,
+                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        itemBuilder: (context, index) => _buildUserTile(context, users[index]),
+                      ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -71,10 +68,9 @@ class UserManagementScreen extends StatelessWidget {
     };
 
     return Container(
-      width: 250,
       color: NRCSColors.subNavGray,
-
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Padding(
             padding: EdgeInsets.all(16.0),
@@ -95,7 +91,7 @@ class UserManagementScreen extends StatelessWidget {
           _SidebarItem(label: 'Editors', count: counts['editor']!),
           _SidebarItem(label: 'Assignment Desk', count: counts['assignment_desk']!),
           _SidebarItem(label: 'Guest Users', count: counts['guest']!),
-          const Spacer(),
+          const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
@@ -108,52 +104,81 @@ class UserManagementScreen extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: NRCSColors.borderGray)),
-      ),
-
-      child: Row(
-        children: [
-          const Text(
-            'All Users',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: NRCSColors.textDark,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isSmall = constraints.maxWidth < 600;
+        
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(bottom: BorderSide(color: NRCSColors.borderGray)),
           ),
-
-          const Spacer(),
-          Flexible(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  prefixIcon: const Icon(Icons.search),
-                  isDense: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
+          child: isSmall 
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'All Users',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: NRCSColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  const Text(
+                    'All Users',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: NRCSColors.textDark,
+                    ),
+                  ),
+                  const Spacer(),
+                  Flexible(
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          prefixIcon: const Icon(Icons.search),
+                          isDense: true,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
-        ],
-      ),
+        );
+      }
     );
   }
 
   Widget _buildUserTile(BuildContext context, UserModel user) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Stack(
         children: [
           CircleAvatar(
@@ -187,50 +212,34 @@ class UserManagementScreen extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold, color: NRCSColors.textDark),
               overflow: TextOverflow.ellipsis,
             ),
-
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           _Badge(label: user.role.replaceAll('_', ' ').toUpperCase(), color: Colors.blue[50]!, textColor: Colors.blue[900]!),
-          if (user.roleId != null) ...[
-            const SizedBox(width: 8),
-            _Badge(label: 'ROLE: ${user.roleId!.substring(0, 4)}', color: Colors.purple[50]!, textColor: Colors.purple[900]!),
-          ],
         ],
       ),
-      subtitle: Text(
-        user.email,
-        style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7)),
-      ),
-
-      onTap: () => _showEditUserDialog(context, user),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Last seen: ${user.lastSeen != null ? DateFormat('HH:mm').format(user.lastSeen!) : 'Never'}',
-                style: TextStyle(fontSize: 12, color: NRCSColors.textDark.withValues(alpha: 0.6)),
-              ),
-              Text(
-                user.isOnline ? 'ONLINE' : 'OFFLINE',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: user.isOnline ? Colors.green : Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-
+          Text(
+            user.email,
+            style: TextStyle(color: NRCSColors.textDark.withValues(alpha: 0.7)),
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 16),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => _showEditUserDialog(context, user),
+          const SizedBox(height: 4),
+          Text(
+            'Last seen: ${user.lastSeen != null ? DateFormat('HH:mm').format(user.lastSeen!) : 'Never'} • ${user.isOnline ? 'ONLINE' : 'OFFLINE'}',
+            style: TextStyle(
+              fontSize: 11, 
+              color: user.isOnline ? Colors.green : NRCSColors.textDark.withValues(alpha: 0.6),
+              fontWeight: user.isOnline ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ],
+      ),
+      onTap: () => _showEditUserDialog(context, user),
+      trailing: IconButton(
+        icon: const Icon(Icons.edit_outlined),
+        onPressed: () => _showEditUserDialog(context, user),
       ),
     );
   }
