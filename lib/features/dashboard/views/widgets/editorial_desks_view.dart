@@ -203,12 +203,16 @@ class EditorialDesksView extends StatelessWidget {
                       ],
                     ),
                     const Spacer(),
-                    Text(desk.name,
-                        style: TextStyle(
-                            fontSize: isMobile ? 18 : 22,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1A237E),
-                            letterSpacing: -0.5)),
+                    Flexible(
+                      child: Text(desk.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: isMobile ? 18 : 22,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF1A237E),
+                              letterSpacing: -0.5)),
+                    ),
                     if (!isMobile) const SizedBox(height: 6),
                     if (!isMobile)
                       Text(desk.description ?? 'Editorial Workspace',
