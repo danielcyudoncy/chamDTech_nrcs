@@ -7,19 +7,26 @@ import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class AuthController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
-  
+
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final displayNameController = TextEditingController();
-  
+  final organizationController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
   final isLoading = false.obs;
   final isPasswordHidden = true.obs;
+  final isConfirmPasswordHidden = true.obs;
   final selectedRole = AppConstants.roleReporter.obs;
-  
+
   void togglePasswordVisibility() {
     isPasswordHidden.value = !isPasswordHidden.value;
   }
-  
+
+  void toggleConfirmPasswordVisibility() {
+    isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
+  }
+
   Future<void> login() async {
     isLoading.value = true;
     try {
@@ -35,14 +42,14 @@ class AuthController extends GetxController {
         'Login Error',
         'An unexpected error occurred.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha:0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
     } finally {
       isLoading.value = false;
     }
   }
-  
+
   Future<void> signUp({
     required String email,
     required String password,
@@ -57,9 +64,8 @@ class AuthController extends GetxController {
         displayName: displayName,
         role: role,
       );
-      
+
       if (user != null) {
-        Get.back(); // Close dialog
         Get.offAllNamed(AppRoutes.getRouteForRole(user.role));
       }
     } catch (e) {
@@ -67,20 +73,20 @@ class AuthController extends GetxController {
         'Sign Up Error',
         'An unexpected error occurred.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.withValues(alpha:0.1),
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
         colorText: Colors.red,
       );
     } finally {
       isLoading.value = false;
     }
   }
-  
+
   void showSignUpDialog(BuildContext context) {
     final formKey = GlobalKey<FormState>();
     final emailCtrl = TextEditingController();
     final passwordCtrl = TextEditingController();
     final nameCtrl = TextEditingController();
-    
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
@@ -101,9 +107,10 @@ class AuthController extends GetxController {
                     children: [
                       Text(
                         'Create Account',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close),
@@ -176,74 +183,75 @@ class AuthController extends GetxController {
                   ),
                   const SizedBox(height: 16),
                   Obx(() => DropdownButtonFormField<String>(
-                    initialValue: selectedRole.value,
-                    decoration: const InputDecoration(
-                      labelText: 'Role',
-                      prefixIcon: Icon(Icons.work_outlined),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: AppConstants.roleAdmin,
-                        child: Text('Admin'),
-                      ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleReporter,
-                        child: Text('Reporter'),
-                      ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleProducer,
-                        child: Text('Producer'),
-                      ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleEditor,
-                        child: Text('Editor'),
-                      ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleAnchor,
-                        child: Text('Anchor'),
-                      ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleDirector,
-                        child: Text('Director'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        selectedRole.value = value;
-                      }
-                    },
-                  )),
+                        initialValue: selectedRole.value,
+                        decoration: const InputDecoration(
+                          labelText: 'Role',
+                          prefixIcon: Icon(Icons.work_outlined),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: AppConstants.roleAdmin,
+                            child: Text('Admin'),
+                          ),
+                          DropdownMenuItem(
+                            value: AppConstants.roleReporter,
+                            child: Text('Reporter'),
+                          ),
+                          DropdownMenuItem(
+                            value: AppConstants.roleProducer,
+                            child: Text('Producer'),
+                          ),
+                          DropdownMenuItem(
+                            value: AppConstants.roleEditor,
+                            child: Text('Editor'),
+                          ),
+                          DropdownMenuItem(
+                            value: AppConstants.roleAnchor,
+                            child: Text('Anchor'),
+                          ),
+                          DropdownMenuItem(
+                            value: AppConstants.roleDirector,
+                            child: Text('Director'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            selectedRole.value = value;
+                          }
+                        },
+                      )),
                   const SizedBox(height: 24),
                   Obx(() => ElevatedButton(
-                    onPressed: isLoading.value
-                        ? null
-                        : () {
-                            if (formKey.currentState!.validate()) {
-                              signUp(
-                                email: emailCtrl.text.trim(),
-                                password: passwordCtrl.text,
-                                displayName: nameCtrl.text.trim(),
-                                role: selectedRole.value,
-                              );
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: isLoading.value
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            'Create Account',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                  )),
+                        onPressed: isLoading.value
+                            ? null
+                            : () {
+                                if (formKey.currentState!.validate()) {
+                                  signUp(
+                                    email: emailCtrl.text.trim(),
+                                    password: passwordCtrl.text,
+                                    displayName: nameCtrl.text.trim(),
+                                    role: selectedRole.value,
+                                  );
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: isLoading.value
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Create Account',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                      )),
                 ],
               ),
             ),
@@ -257,7 +265,7 @@ class AuthController extends GetxController {
       nameCtrl.dispose();
     });
   }
-  
+
   @override
   void onClose() {
     emailController.dispose();
