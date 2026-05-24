@@ -1,6 +1,7 @@
 // app/routes/app_routes.dart
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/auth/views/login_screen.dart';
+import 'package:chamdtech_nrcs/features/auth/views/signup_screen.dart';
 import 'package:chamdtech_nrcs/features/auth/views/splash_screen.dart';
 import 'package:chamdtech_nrcs/features/auth/views/user_management_screen.dart';
 import 'package:chamdtech_nrcs/features/stories/views/story_list_screen.dart';
@@ -23,6 +24,7 @@ import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
+  static const String signup = '/signup';
   static const String home = '/home';
   static const String userManagement = '/users';
   static const String storyList = '/stories';
@@ -46,14 +48,15 @@ class AppRoutes {
   static const String adminStrings = '/admin/strings';
   static const String adminMosDevices = '/admin/mos-devices';
   static const String adminConfigurations = '/admin/configurations';
-  static const String adminAuditTrail = '/admin/audit-trail'; // Admin Audit Trail
-  
+  static const String adminAuditTrail =
+      '/admin/audit-trail'; // Admin Audit Trail
+
   static const String reporterDashboard = '/reporter-dashboard';
   static const String editorDashboard = '/editor-dashboard';
   static const String producerDashboard = '/producer-dashboard';
   static const String anchorDashboard = '/anchor-dashboard';
   static const String notifications = '/notifications';
-  
+
   static String getRouteForRole(String role) {
     switch (role) {
       case AppConstants.roleAdmin:
@@ -82,6 +85,10 @@ class AppRoutes {
     GetPage(
       name: login,
       page: () => const LoginScreen(),
+    ),
+    GetPage(
+      name: signup,
+      page: () => const SignupScreen(),
     ),
     GetPage(
       name: userManagement,
