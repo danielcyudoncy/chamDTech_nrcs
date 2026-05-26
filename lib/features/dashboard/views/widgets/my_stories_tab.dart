@@ -706,7 +706,9 @@ class _StoryDetailView extends StatelessWidget {
                 )
               ],
             ),
-            child: Row(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 12,
               children: [
                 _PremiumActionButton(
                   label: 'Edit Story',
@@ -715,7 +717,6 @@ class _StoryDetailView extends StatelessWidget {
                   backgroundColor: const Color(0xFF1A237E),
                   onTap: () => controller.editStory(story),
                 ),
-                const SizedBox(width: 12),
                 _PremiumActionButton(
                   label: 'Story Log',
                   icon: Icons.history,
@@ -723,7 +724,6 @@ class _StoryDetailView extends StatelessWidget {
                   backgroundColor: Colors.grey.shade100,
                   onTap: () => controller.performAction('Story Log'),
                 ),
-                const Spacer(),
                 if (story.status == AppConstants.statusDraft ||
                     story.status == AppConstants.statusRejected)
                   ElevatedButton.icon(
@@ -767,12 +767,15 @@ class _StoryDetailView extends StatelessWidget {
                           children: [
                             _PremiumStatusBadge(status: story.status),
                             const SizedBox(width: 12),
-                            Text(
-                              'Last updated ${dateFormat.format(story.updatedAt)}',
-                              style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500),
+                            Expanded(
+                              child: Text(
+                                'Last updated ${dateFormat.format(story.updatedAt)}',
+                                style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),

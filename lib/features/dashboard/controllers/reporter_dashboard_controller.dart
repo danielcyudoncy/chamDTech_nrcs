@@ -1,4 +1,6 @@
 // features/dashboard/controllers/reporter_dashboard_controller.dart
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
@@ -12,63 +14,72 @@ import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 
 class ReporterDashboardController extends GetxController {
+  StreamSubscription? _storySubscription;
+  StreamSubscription? _rundownSubscription;
   final StoryService _storyService = Get.find<StoryService>();
   final RundownService _rundownService = Get.find<RundownService>();
   final AuthService _authService = Get.find<AuthService>();
-  final NotificationService _notificationService = Get.find<NotificationService>();
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
 
   // 5 workflow groups — strict isolation (only current reporter's stories)
-  final draftStories = <StoryModel>[].obs;       // draft
-  final submittedStories = <StoryModel>[].obs;   // pending (under review)
-  final rejectedStories = <StoryModel>[].obs;    // rejected (needs revision)
-  final approvedStories = <StoryModel>[].obs;    // approved / verified / ready_to_air
-  final archivedStories = <StoryModel>[].obs;    // archived / aired
-  
+  final draftStories = <StoryModel>[].obs; // draft
+  final submittedStories = <StoryModel>[].obs; // pending (under review)
+  final rejectedStories = <StoryModel>[].obs; // rejected (needs revision)
+  final approvedStories =
+      <StoryModel>[].obs; // approved / verified / ready_to_air
+  final archivedStories = <StoryModel>[].obs; // archived / aired
+
   /// Combined list of all stories created by this reporter
   final allMyStories = <StoryModel>[].obs;
-  
+
   // My Stories Screen Filters & Sorting
   final myStoriesSearchQuery = ''.obs;
-  final myStoriesFilterStatus = 'all'.obs; // all, draft, pending, approved, rejected
+  final myStoriesFilterStatus =
+      'all'.obs; // all, draft, pending, approved, rejected
   final myStoriesSortBy = 'newest'.obs; // newest, oldest, title_asc, title_desc
 
   List<StoryModel> get filteredAndSortedMyStories {
     var list = allMyStories.toList();
-    
+
     // Status Filter
     if (myStoriesFilterStatus.value != 'all') {
-      list = list.where((s) => s.status == myStoriesFilterStatus.value).toList();
+      list =
+          list.where((s) => s.status == myStoriesFilterStatus.value).toList();
     }
-    
+
     // Search
     if (myStoriesSearchQuery.value.isNotEmpty) {
       final q = myStoriesSearchQuery.value.toLowerCase();
-      list = list.where((s) => 
-        s.title.toLowerCase().contains(q) || 
-        s.content.toLowerCase().contains(q)
-      ).toList();
+      list = list
+          .where((s) =>
+              s.title.toLowerCase().contains(q) ||
+              s.content.toLowerCase().contains(q))
+          .toList();
     }
-    
+
     // Sort
     switch (myStoriesSortBy.value) {
       case 'oldest':
         list.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
         break;
       case 'title_asc':
-        list.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        list.sort(
+            (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
         break;
       case 'title_desc':
-        list.sort((a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
+        list.sort(
+            (a, b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
         break;
       case 'newest':
       default:
         list.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
         break;
     }
-    
+
     return list;
   }
- 
+
   /// The story currently selected in the UI for toolbar actions.
   final selectedStory = Rxn<StoryModel>();
 
@@ -99,6 +110,13 @@ class ReporterDashboardController extends GetxController {
     });
   }
 
+  @override
+  void onClose() {
+    _storySubscription?.cancel();
+    _rundownSubscription?.cancel();
+    super.onClose();
+  }
+
   void onDateSelected(DateTime selected, DateTime focused) {
     selectedDate.value = selected;
     focusedDay.value = focused;
@@ -108,34 +126,35 @@ class ReporterDashboardController extends GetxController {
   void _filterApprovedStoriesByDate() {
     approvedStoriesForDate.value = approvedStories.where((s) {
       return s.updatedAt.year == selectedDate.value.year &&
-             s.updatedAt.month == selectedDate.value.month &&
-             s.updatedAt.day == selectedDate.value.day;
+          s.updatedAt.month == selectedDate.value.month &&
+          s.updatedAt.day == selectedDate.value.day;
     }).toList();
   }
 
   /// Subscribe to locked/on-air rundowns and keep lockedStoryIds up to date.
   void _listenForRundownLocks() {
-    _rundownService.streamNonDraftRundowns().listen((rundowns) {
+    _rundownSubscription = _rundownService.streamNonDraftRundowns().listen(
+        (rundowns) {
       final ids = <String>{};
       for (final r in rundowns) {
         ids.addAll(r.storyIds);
       }
       lockedStoryIds.assignAll(ids);
-    }, onError: (e) => Get.log('ReporterDashboardController: Error in rundown stream: $e'));
+    },
+        onError: (e) => Get.log(
+            'ReporterDashboardController: Error in rundown stream: $e'));
   }
 
   /// Returns true if this story is inside a locked/on-air rundown.
   bool isStoryEditLocked(String storyId) => lockedStoryIds.contains(storyId);
 
   void loadReporterStories() {
-    _storyService.getMyStories().listen((stories) {
-      draftStories.value = stories
-          .where((s) => s.status == AppConstants.statusDraft)
-          .toList();
+    _storySubscription = _storyService.getMyStories().listen((stories) {
+      draftStories.value =
+          stories.where((s) => s.status == AppConstants.statusDraft).toList();
 
-      submittedStories.value = stories
-          .where((s) => s.status == AppConstants.statusPending)
-          .toList();
+      submittedStories.value =
+          stories.where((s) => s.status == AppConstants.statusPending).toList();
 
       rejectedStories.value = stories
           .where((s) => s.status == AppConstants.statusRejected)
@@ -156,11 +175,10 @@ class ReporterDashboardController extends GetxController {
           .toList();
 
       allMyStories.value = stories;
-      
+
       _filterApprovedStoriesByDate();
 
       isLoading.value = false;
-
     }, onError: (e) {
       Get.log('ReporterDashboardController: Error in story stream: $e');
       isLoading.value = false;
@@ -179,7 +197,8 @@ class ReporterDashboardController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.category_outlined, size: 48, color: Theme.of(Get.context!).primaryColor),
+              Icon(Icons.category_outlined,
+                  size: 48, color: Theme.of(Get.context!).primaryColor),
               const SizedBox(height: 20),
               Text(
                 'Select Story Category',
@@ -195,7 +214,7 @@ class ReporterDashboardController extends GetxController {
               const Text(
                 'Please classify this story to ensure it appears in the correct department workspace.',
                 style: TextStyle(
-                  fontSize: 15, 
+                  fontSize: 15,
                   color: Color(0xFF546E7A),
                   height: 1.4,
                 ),
@@ -215,13 +234,15 @@ class ReporterDashboardController extends GetxController {
                         child: InkWell(
                           onTap: () {
                             Get.back();
-                            Get.toNamed('/story/editor', arguments: {'category': cat});
+                            Get.toNamed('/story/editor',
+                                arguments: {'category': cat});
                           },
                           borderRadius: BorderRadius.circular(12),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             width: 135,
-                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 24, horizontal: 8),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey.shade200),
                               borderRadius: BorderRadius.circular(12),
@@ -279,12 +300,13 @@ class ReporterDashboardController extends GetxController {
                   TextButton(
                     onPressed: () => Get.back(),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 16),
                     ),
                     child: const Text(
-                      'Cancel', 
+                      'Cancel',
                       style: TextStyle(
-                        color: Colors.grey, 
+                        color: Colors.grey,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -302,17 +324,28 @@ class ReporterDashboardController extends GetxController {
 
   Color _categoryColor(String category) {
     switch (category) {
-      case 'Local News':                return Colors.blue.shade700;
-      case 'Politics':                  return Colors.purple.shade700;
-      case 'Sports':                    return Colors.green.shade700;
-      case 'Foreign':                   return Colors.orange.shade700;
-      case 'Business & Finance':        return Colors.teal.shade700;
-      case 'Breaking News':             return Colors.red.shade700;
-      case 'Technology':                return Colors.indigo.shade700;
-      case 'Environment':               return Colors.green.shade900;
-      case 'Health':                    return Colors.pink.shade700;
-      case 'Entertainment & Lifestyle': return Colors.amber.shade800;
-      default:                          return Colors.grey.shade700;
+      case 'Local News':
+        return Colors.blue.shade700;
+      case 'Politics':
+        return Colors.purple.shade700;
+      case 'Sports':
+        return Colors.green.shade700;
+      case 'Foreign':
+        return Colors.orange.shade700;
+      case 'Business & Finance':
+        return Colors.teal.shade700;
+      case 'Breaking News':
+        return Colors.red.shade700;
+      case 'Technology':
+        return Colors.indigo.shade700;
+      case 'Environment':
+        return Colors.green.shade900;
+      case 'Health':
+        return Colors.pink.shade700;
+      case 'Entertainment & Lifestyle':
+        return Colors.amber.shade800;
+      default:
+        return Colors.grey.shade700;
     }
   }
 
@@ -364,8 +397,8 @@ class ReporterDashboardController extends GetxController {
           ],
         ),
         content: Text(
-          'This story is currently part of a locked rundown'  
-          '${rundownNames.isNotEmpty ? " ($rundownNames)" : "."}'  
+          'This story is currently part of a locked rundown'
+          '${rundownNames.isNotEmpty ? " ($rundownNames)" : "."}'
           '\n\nEditing is disabled until the producer unlocks the rundown.',
         ),
         actions: [
@@ -385,26 +418,28 @@ class ReporterDashboardController extends GetxController {
         updatedAt: DateTime.now(),
       );
       await _storyService.updateStory(updatedStory);
-      
+
       // Notify editors/producers about the submission
       // For now, we'll notify all users with Editor or Producer roles
       // In a real app, we'd query for users with these roles.
       // Since I don't have a UserService, I'll assume a broadcast or a specific logic.
       // The user said: "when is story is submitted the editor also should get a notification"
       // I will create a simple notification for the "editorial desk".
-      
+
       final currentUser = _authService.currentUser.value;
-      
-      // Since I can't easily find "all editors" without a UserService, 
+
+      // Since I can't easily find "all editors" without a UserService,
       // I'll send it to a special "system" ID or similar if I can't find a better way.
       // Actually, I'll search for how users are managed.
-      
+
       await _notificationService.sendNotification(NotificationModel(
         id: const Uuid().v4(),
-        userId: 'editor_group', // This is a placeholder, normally you'd loop through editors
+        userId:
+            'editor_group', // This is a placeholder, normally you'd loop through editors
         type: 'story_update',
         title: 'New Story Submitted',
-        message: '${currentUser?.displayName ?? "A reporter"} submitted "${story.title}" for review.',
+        message:
+            '${currentUser?.displayName ?? "A reporter"} submitted "${story.title}" for review.',
         createdAt: DateTime.now(),
         actionUrl: AppRoutes.editorDashboard,
         data: {'storyId': story.id},
@@ -450,8 +485,7 @@ class ReporterDashboardController extends GetxController {
               child: const Text('Cancel')),
           TextButton(
             onPressed: () => Get.back(result: true),
-            child:
-                const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -506,11 +540,11 @@ class ReporterDashboardController extends GetxController {
 
   void performAction(String action) {
     if (selectedStory.value == null && action != 'New') {
-       Get.snackbar('Selection Required', 'Please select a story first.',
+      Get.snackbar('Selection Required', 'Please select a story first.',
           snackPosition: SnackPosition.BOTTOM);
-       return;
+      return;
     }
-    
+
     Get.snackbar(action, '$action feature is coming soon.',
         snackPosition: SnackPosition.BOTTOM);
   }
@@ -541,7 +575,8 @@ class ReporterDashboardController extends GetxController {
           PopupMenuItem(
             value: 'submit',
             child: Row(children: [
-              Icon(Icons.send, size: 18,
+              Icon(Icons.send,
+                  size: 18,
                   color: story.status == AppConstants.statusRejected
                       ? Colors.blue
                       : Colors.green),
@@ -582,4 +617,3 @@ class ReporterDashboardController extends GetxController {
     });
   }
 }
-

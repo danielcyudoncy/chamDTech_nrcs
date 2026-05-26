@@ -97,7 +97,6 @@ class StoryEditorScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
                         letterSpacing: -0.5,
                       ),
                       decoration: const InputDecoration(

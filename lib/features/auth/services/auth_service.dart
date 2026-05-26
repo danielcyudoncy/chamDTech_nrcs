@@ -1,4 +1,5 @@
 // features/auth/services/auth_service.dart
+import 'package:chamdtech_nrcs/features/dashboard/controllers/story_pool_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -11,17 +12,17 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
+
+import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
+import 'package:chamdtech_nrcs/features/dashboard/controllers/anchor_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/desk_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/editor_dashboard_controller.dart';
-import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/producer_dashboard_controller.dart';
-import 'package:chamdtech_nrcs/features/dashboard/controllers/anchor_dashboard_controller.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/reporter_dashboard_controller.dart';
-import 'package:chamdtech_nrcs/features/dashboard/controllers/story_pool_controller.dart';
-import 'package:chamdtech_nrcs/features/admin/controllers/admin_controller.dart';
-import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
-import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
 import 'package:chamdtech_nrcs/features/newsroom/controllers/newsroom_controller.dart';
+import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
+import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
@@ -408,43 +409,45 @@ class AuthService extends GetxService {
       // Navigate first to unmount any active StreamBuilders in the UI
       Get.offAllNamed(AppRoutes.login);
 
-      // Clear session controllers to prevent stale data/permission errors
-      try {
+      // Selectively delete controllers that are not essential for core app
+      // Selectively delete controllers. This is more stable than a full Get.reset()
+      // and safer than try-catching every deletion.
+      if (Get.isRegistered<DeskController>()) {
         Get.delete<DeskController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<EditorDashboardController>()) {
         Get.delete<EditorDashboardController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<StoryController>()) {
         Get.delete<StoryController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<ProducerDashboardController>()) {
         Get.delete<ProducerDashboardController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<AnchorDashboardController>()) {
         Get.delete<AnchorDashboardController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<ReporterDashboardController>()) {
         Get.delete<ReporterDashboardController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<StoryPoolController>()) {
         Get.delete<StoryPoolController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<AdminController>()) {
         Get.delete<AdminController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<StoryEditorController>()) {
         Get.delete<StoryEditorController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<RundownBuilderController>()) {
         Get.delete<RundownBuilderController>(force: true);
-      } catch (_) {}
-      try {
+      }
+      if (Get.isRegistered<NewsroomController>()) {
         Get.delete<NewsroomController>(force: true);
-      } catch (_) {}
+      }
 
-      // Give the UI a brief moment to unmount streams before cutting auth access
-      await Future.delayed(const Duration(milliseconds: 150));
+      // A minimal delay to allow UI streams to unmount gracefully.
+      await Future.delayed(const Duration(milliseconds: 50));
 
       await _auth.signOut();
       currentUser.value = null;
