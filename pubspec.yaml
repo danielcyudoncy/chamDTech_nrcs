@@ -43,6 +43,7 @@ dependencies:
   web: ^0.5.1
   table_calendar: ^3.2.0
   flutter_screenutil: ^5.9.3
+  google_sign_in: ^6.2.1
 
 dev_dependencies:
   flutter_test:

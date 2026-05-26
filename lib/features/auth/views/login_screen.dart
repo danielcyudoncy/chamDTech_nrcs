@@ -282,7 +282,7 @@ class LoginScreen extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  // TODO: Implement forgot password
+                  authController.showForgotPasswordDialog(context);
                 },
                 child: const Text(
                   'Forgot credentials?',
@@ -356,7 +356,7 @@ class LoginScreen extends StatelessWidget {
           // Google Sign In
           OutlinedButton(
             onPressed: () {
-              // TODO: Implement Google sign-in
+              authController.signInWithGoogle();
             },
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Colors.grey[700]!),

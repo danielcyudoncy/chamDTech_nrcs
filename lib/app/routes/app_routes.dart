@@ -1,4 +1,5 @@
 // app/routes/app_routes.dart
+import 'package:chamdtech_nrcs/features/notifications/views/notification_screen.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/auth/views/login_screen.dart';
 import 'package:chamdtech_nrcs/features/auth/views/signup_screen.dart';
@@ -17,7 +18,9 @@ import 'package:chamdtech_nrcs/features/dashboard/views/shells/editor_app_shell.
 import 'package:chamdtech_nrcs/features/dashboard/views/shells/producer_app_shell.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/shells/admin_app_shell.dart';
 import 'package:chamdtech_nrcs/features/dashboard/views/anchor_dashboard_screen.dart';
-import 'package:chamdtech_nrcs/features/notifications/views/notification_screen.dart';
+import 'package:chamdtech_nrcs/features/auth/views/privacy_policy_screen.dart';
+import 'package:chamdtech_nrcs/features/auth/views/terms_of_service_screen.dart';
+
 import 'package:chamdtech_nrcs/features/newsroom/views/newsroom_director_screen.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
@@ -34,6 +37,8 @@ class AppRoutes {
   static const String newsroomDirector = '/newsroom-director';
   static const String settings = '/settings';
   static const String profile = '/profile';
+  static const String privacyPolicy = '/privacy-policy';
+  static const String termsOfService = '/terms-of-service';
   static const String adminDashboard = '/admin';
   static const String adminPrivileges = '/admin/privileges';
   static const String adminDesignations = '/admin/designations';
@@ -201,6 +206,14 @@ class AppRoutes {
     GetPage(
       name: notifications,
       page: () => const NotificationScreen(),
+    ),
+    GetPage(
+      name: privacyPolicy,
+      page: () => const PrivacyPolicyScreen(),
+    ),
+    GetPage(
+      name: termsOfService,
+      page: () => const TermsOfServiceScreen(),
     ),
   ];
 }

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/core/services/firebase_service.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:chamdtech_nrcs/features/admin/models/role_model.dart';
 import 'package:chamdtech_nrcs/features/admin/services/privilege_service.dart';
@@ -26,6 +27,7 @@ class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   final FirebaseDatabase _database = FirebaseService.database;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   Rx<User?> firebaseUser = Rx<User?>(null);
   Rx<UserModel?> currentUser = Rx<UserModel?>(null);
@@ -120,6 +122,101 @@ class AuthService extends GetxService {
       Get.snackbar(
         'Login Error',
         e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return null;
+    }
+  }
+
+  // Sign in with Google
+  Future<dynamic> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // The user canceled the sign-in
+        return null;
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user != null) {
+        final userDoc = await _firestore
+            .collection(AppConstants.usersCollection)
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          // User already exists, log them in
+          await _loadUserData(user.uid);
+          await _setUserOnlineStatus(true);
+          return currentUser.value;
+        } else {
+          // This is a new user, return the Firebase User object
+          // so the controller can prompt for a role.
+          return user;
+        }
+      }
+      return null;
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar(
+        'Google Sign-In Error',
+        _getAuthErrorMessage(e.code),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return null;
+    } catch (e) {
+      Get.snackbar(
+        'Google Sign-In Error',
+        'An unexpected error occurred.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return null;
+    }
+  }
+
+  // Create user document in Firestore after Google Sign-In and role selection
+  Future<UserModel?> completeGoogleSignUp({
+    required User user,
+    required String role,
+  }) async {
+    try {
+      // Create user document in Firestore
+      final userModel = UserModel(
+        id: user.uid,
+        email: user.email!,
+        displayName: user.displayName!,
+        role: role,
+        createdAt: DateTime.now(),
+        isOnline: true,
+      );
+
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(user.uid)
+          .set(userModel.toJson());
+
+      currentUser.value = userModel;
+      await _setUserOnlineStatus(true);
+
+      return userModel;
+    } catch (e) {
+      Get.snackbar(
+        'Sign Up Error',
+        'Failed to create your account. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
@@ -436,6 +533,32 @@ class AuthService extends GetxService {
           .map((doc) => UserModel.fromJson(doc.data()))
           .toList();
     });
+  }
+
+  // Send password reset email
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar(
+        'Password Reset Error',
+        _getAuthErrorMessage(e.code),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return false;
+    } catch (e) {
+      Get.snackbar(
+        'Password Reset Error',
+        e.toString().replaceAll('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
+        colorText: Get.theme.colorScheme.error,
+      );
+      return false;
+    }
   }
 
   // Get user IDs by role

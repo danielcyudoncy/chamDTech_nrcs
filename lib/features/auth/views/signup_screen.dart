@@ -1,4 +1,5 @@
 // features/auth/views/signup_screen.dart
+import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart' as gestures;
 import 'package:get/get.dart';
@@ -260,7 +261,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           // Sign in with Google
                           OutlinedButton(
                             onPressed: () {
-                              // TODO: Implement Google sign-in
+                              authController.signInWithGoogle();
                             },
                             style: OutlinedButton.styleFrom(
                               side: BorderSide(color: Colors.grey[700]!),
@@ -551,7 +552,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   recognizer: gestures.TapGestureRecognizer()
                     ..onTap = () {
-                      // TODO: Navigate to terms
+                      Get.toNamed(AppRoutes.termsOfService);
                     },
                 ),
                 const TextSpan(
@@ -568,7 +569,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   recognizer: gestures.TapGestureRecognizer()
                     ..onTap = () {
-                      // TODO: Navigate to privacy policy
+                      Get.toNamed(AppRoutes.privacyPolicy);
                     },
                 ),
               ],
