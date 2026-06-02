@@ -1170,9 +1170,20 @@ class NRCSNavigation {
       String tab, String? route, String currentRoute, String role) {
     if (route == null) return false;
 
-    // Use exact matching for all routes to avoid partial matches.
-    // This is the key to ensuring only one tab is active at a time.
-    return currentRoute == route;
+    if (currentRoute == route) {
+      if (route == '/stories') {
+        try {
+          final isArchived = Get.find<StoryController>().showArchived.value;
+          if (tab == 'Archive') return isArchived;
+          return !isArchived;
+        } catch (e) {
+          if (tab == 'Archive') return false;
+          return true;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   static void handleTabTap(
