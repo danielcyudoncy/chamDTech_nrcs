@@ -1,6 +1,8 @@
 // features/dashboard/views/anchor_dashboard_screen.dart
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:chamdtech_nrcs/features/stories/views/widgets/nrcs_layout.dart';
@@ -92,6 +94,14 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
   }
 
   Widget _buildDrawer(AnchorDashboardController controller) {
+    final String currentRoute = Get.currentRoute;
+    const Color selectedColor = Color(0xFF1A237E);
+    const Color unselectedColor = Color(0xFF455A64);
+    const TextStyle selectedStyle =
+        TextStyle(fontWeight: FontWeight.bold, color: selectedColor);
+    const TextStyle unselectedStyle =
+        TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF263238));
+
     return Drawer(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -118,31 +128,46 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
             ),
           ),
           ListTile(
-            leading:
-                const Icon(Icons.dashboard_outlined, color: Color(0xFF1A237E)),
-            title: const Text('Dashboard',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
-            onTap: () => Get.back(),
-          ),
-          ListTile(
-            leading:
-                const Icon(Icons.view_list_outlined, color: Color(0xFF455A64)),
-            title: const Text('Rundowns',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            leading: Icon(Icons.dashboard_outlined,
+                color: currentRoute == AppRoutes.anchorDashboard
+                    ? selectedColor
+                    : unselectedColor),
+            title: Text('Dashboard',
+                style: currentRoute == AppRoutes.anchorDashboard
+                    ? selectedStyle
+                    : unselectedStyle),
             onTap: () {
               Get.back();
-              Get.snackbar(
-                  'Coming Soon', 'Rundowns module is under development.');
+              if (currentRoute != AppRoutes.anchorDashboard) {
+                Get.offNamed(AppRoutes.anchorDashboard);
+              }
             },
           ),
           ListTile(
-            leading:
-                const Icon(Icons.archive_outlined, color: Color(0xFF455A64)),
-            title: const Text('Archive',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            leading: Icon(Icons.view_list_outlined,
+                color: currentRoute == AppRoutes.rundownList
+                    ? selectedColor
+                    : unselectedColor),
+            title: Text('Rundowns',
+                style: currentRoute == AppRoutes.rundownList
+                    ? selectedStyle
+                    : unselectedStyle),
+            onTap: () {
+              Get.back();
+              if (currentRoute != AppRoutes.rundownList) {
+                Get.toNamed(AppRoutes.rundownList);
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.archive_outlined,
+                color: currentRoute == AppRoutes.storyList
+                    ? selectedColor
+                    : unselectedColor),
+            title: Text('Archive',
+                style: currentRoute == AppRoutes.storyList
+                    ? selectedStyle
+                    : unselectedStyle),
             onTap: () {
               Get.back();
               try {
@@ -158,11 +183,14 @@ class AnchorDashboardScreen extends GetView<AnchorDashboardController> {
             },
           ),
           ListTile(
-            leading:
-                const Icon(Icons.notifications_none, color: Color(0xFF455A64)),
-            title: const Text('Notifications',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Color(0xFF263238))),
+            leading: Icon(Icons.notifications_none,
+                color: currentRoute == AppRoutes.notifications
+                    ? selectedColor
+                    : unselectedColor),
+            title: Text('Notifications',
+                style: currentRoute == AppRoutes.notifications
+                    ? selectedStyle
+                    : unselectedStyle),
             onTap: () {
               Get.back();
               Get.toNamed(AppRoutes.notifications);
@@ -376,7 +404,7 @@ class _ModernStoryCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => Get.toNamed(AppRoutes.storyEditor, arguments: story.id),
+          onTap: () => _showIntroDialog(context, story),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
@@ -448,6 +476,94 @@ class _ModernStoryCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showIntroDialog(BuildContext context, StoryModel story) {
+    String intro = 'No intro available.';
+    try {
+      if (story.content.isNotEmpty) {
+        final contentJson = jsonDecode(story.content);
+        if (contentJson['anchor'] != null) {
+          final anchorDoc = quill.Document.fromJson(contentJson['anchor']);
+          final plainText = anchorDoc.toPlainText().trim();
+          if (plainText.isNotEmpty) {
+            intro = plainText;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore errors, use default message
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: _buildModernIntroDialog(context, intro),
+        );
+      },
+    );
+  }
+
+  Widget _buildModernIntroDialog(BuildContext context, String intro) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.8,
+      width: MediaQuery.of(context).size.width * 0.8,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A237E),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'STORY INTRO',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Close',
+                ),
+              ],
+            ),
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(40.0),
+              child: Text(
+                intro,
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF263238),
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

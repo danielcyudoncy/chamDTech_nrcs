@@ -45,7 +45,7 @@ class NRCSAppShell extends StatelessWidget {
 
       return Scaffold(
         backgroundColor: Colors.white,
-        drawer: isMobile ? NRCSDrawer(sidebar: sidebar) : null,
+        drawer: isMobile ? const NRCSDrawer() : null,
         appBar: isMobile
             ? AppBar(
                 backgroundColor: Colors.white,
@@ -205,7 +205,6 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
     });
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -1171,37 +1170,9 @@ class NRCSNavigation {
       String tab, String? route, String currentRoute, String role) {
     if (route == null) return false;
 
-    if (route == '/stories' &&
-        (tab == 'Archive' ||
-            tab == 'My Stories' ||
-            tab == 'Workspace' ||
-            tab == 'Reporter Dashboard')) {
-      try {
-        final sc = Get.find<StoryController>();
-        if (tab == 'Archive') {
-          return currentRoute == route && sc.showArchived.value == true;
-        } else {
-          return currentRoute == route && sc.showArchived.value == false;
-        }
-      } catch (e) {
-        return currentRoute == route && tab == 'My Stories';
-      }
-    } else if (route == AppRoutes.editorDashboard ||
-        route == AppRoutes.adminDashboard ||
-        route == AppRoutes.producerDashboard) {
-      final args = Get.arguments;
-      if (args is Map && args['tab'] != null) {
-        return (currentRoute == route) && (args['tab'] == tab);
-      } else {
-        return (currentRoute == route) &&
-            (tab == 'Editor Dashboard' ||
-                tab == 'Admin Dashboard' ||
-                tab == 'Producer Dashboard');
-      }
-    } else {
-      if (tab == 'Workspace' && currentRoute == '/') return true;
-      return currentRoute == route;
-    }
+    // Use exact matching for all routes to avoid partial matches.
+    // This is the key to ensuring only one tab is active at a time.
+    return currentRoute == route;
   }
 
   static void handleTabTap(
@@ -1272,9 +1243,7 @@ class NRCSNavigation {
 }
 
 class NRCSDrawer extends StatelessWidget {
-  final Widget? sidebar;
-
-  const NRCSDrawer({super.key, this.sidebar});
+  const NRCSDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -1292,44 +1261,70 @@ class NRCSDrawer extends StatelessWidget {
           backgroundColor: Colors.white,
           child: Column(
             children: [
-              UserAccountsDrawerHeader(
+              DrawerHeader(
                 decoration: const BoxDecoration(color: NRCSColors.topNavBlue),
-                currentAccountPicture: CircleAvatar(
-                  backgroundColor: Colors.white24,
-                  backgroundImage: (user?.photoUrl?.trim().isNotEmpty ?? false)
-                      ? CachedNetworkImageProvider(user!.photoUrl!)
-                      : null,
-                  child: user?.photoUrl == null
-                      ? const Icon(Icons.person, color: Colors.white)
-                      : null,
+                margin: EdgeInsets.zero,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundColor: Colors.white24,
+                        backgroundImage:
+                            (user?.photoUrl?.trim().isNotEmpty ?? false)
+                                ? CachedNetworkImageProvider(user!.photoUrl!)
+                                : null,
+                        child: user?.photoUrl == null
+                            ? const Icon(Icons.account_circle,
+                                size: 40, color: Colors.white)
+                            : null,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        user?.displayName.trim().isNotEmpty == true
+                            ? user!.displayName.trim()
+                            : 'User',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      if (user?.email.isNotEmpty ?? false) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          user!.email,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-                accountName: Text(user?.displayName ?? 'User'),
-                accountEmail: Text(user?.email ?? ''),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text('NAVIGATION',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                        fontSize: 12)),
               ),
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    if (sidebar != null) ...[
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text('SCREEN OPTIONS',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                                fontSize: 12)),
-                      ),
-                      sidebar!,
-                      const Divider(),
-                    ],
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('NAVIGATION',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                              fontSize: 12)),
-                    ),
                     ...tabs.map((tab) {
                       final route = routeMapping[tab];
                       bool isActive = NRCSNavigation.isTabActive(

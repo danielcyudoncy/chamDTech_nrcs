@@ -55,7 +55,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Centralized News Operations',
+                          'Centralised News Operations',
                           textAlign: TextAlign.center,
                           style: Theme.of(context)
                               .textTheme
