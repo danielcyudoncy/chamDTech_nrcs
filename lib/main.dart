@@ -1,4 +1,5 @@
 // main.dart
+import 'package:chamdtech_nrcs/core/services/rbac_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
@@ -26,11 +27,17 @@ void main() async {
   // Initialize Firebase
   await Get.putAsync(() => FirebaseService().init());
 
-  // Initialize Auth Service and wait for auth state to resolve
-  await Get.putAsync(() => AuthService().init());
+  // Register AuthService before any dependent services are constructed,
+  // then wait for its auth state initialization to complete.
+  final authService = AuthService();
+  Get.put(authService, permanent: true);
+  await authService.init();
+
+  // Initialize RbacService now that AuthService is available
+  Get.put(RbacService(), permanent: true);
 
   // Initialize Notification Service
-  Get.put(NotificationService());
+  Get.put(NotificationService(), permanent: true);
 
   // Initialize Story & Rundown Services
   Get.put(StoryService());

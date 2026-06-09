@@ -1,4 +1,5 @@
 // features/auth/services/auth_service.dart
+import 'package:flutter/foundation.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/story_pool_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -23,12 +24,18 @@ import 'package:chamdtech_nrcs/features/newsroom/controllers/newsroom_controller
 import 'package:chamdtech_nrcs/features/rundowns/controllers/rundown_builder_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dart';
 import 'package:chamdtech_nrcs/features/stories/controllers/story_editor_controller.dart';
+import 'package:chamdtech_nrcs/core/services/rbac_service.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseService.auth;
   final FirebaseFirestore _firestore = FirebaseService.firestore;
   final FirebaseDatabase _database = FirebaseService.database;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn? _googleSignIn = kIsWeb
+      ? null
+      : GoogleSignIn(
+          clientId:
+              '543726067765-gceqeb5j0i6tufvedvakcfrs6qsnvpt6.apps.googleusercontent.com',
+        );
 
   Rx<User?> firebaseUser = Rx<User?>(null);
   Rx<UserModel?> currentUser = Rx<UserModel?>(null);
@@ -38,6 +45,11 @@ class AuthService extends GetxService {
 
   /// Initializes auth state before the app renders its first screen.
   Future<AuthService> init() async {
+    // Register RbacService globally so any controller can Get.find<RbacService>()
+    if (!Get.isRegistered<RbacService>()) {
+      Get.put<RbacService>(RbacService(), permanent: true);
+    }
+
     firebaseUser.bindStream(_auth.authStateChanges());
 
     ever(firebaseUser, (User? fbUser) async {
@@ -134,21 +146,29 @@ class AuthService extends GetxService {
   // Sign in with Google
   Future<dynamic> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        // The user canceled the sign-in
-        return null;
+      User? user;
+
+      if (kIsWeb) {
+        final provider = GoogleAuthProvider();
+        final userCredential = await _auth.signInWithPopup(provider);
+        user = userCredential.user;
+      } else {
+        final GoogleSignInAccount? googleUser = await _googleSignIn?.signIn();
+        if (googleUser == null) {
+          // The user canceled the sign-in
+          return null;
+        }
+
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final AuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final userCredential = await _auth.signInWithCredential(credential);
+        user = userCredential.user;
       }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await _auth.signInWithCredential(credential);
-      final user = userCredential.user;
 
       if (user != null) {
         final userDoc = await _firestore
@@ -178,9 +198,10 @@ class AuthService extends GetxService {
       );
       return null;
     } catch (e) {
+      Get.log('Google Sign-In Exception: $e');
       Get.snackbar(
         'Google Sign-In Error',
-        'An unexpected error occurred.',
+        e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,

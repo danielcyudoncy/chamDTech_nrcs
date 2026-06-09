@@ -15,8 +15,10 @@ class FirebaseService extends GetxService {
   
   Future<FirebaseService> init() async {
     try {
+      final options = DefaultFirebaseOptions.currentPlatform;
+      Get.log('Initializing Firebase with: API Key: "${options.apiKey}", App ID: "${options.appId}", Project ID: "${options.projectId}"');
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: options,
       );
       Get.log('Firebase initialized successfully');
       

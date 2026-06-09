@@ -206,7 +206,6 @@ class _NRCSTopNavState extends State<NRCSTopNav> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Obx(() {
       final user = Get.find<AuthService>().currentUser.value;
@@ -1171,37 +1170,9 @@ class NRCSNavigation {
       String tab, String? route, String currentRoute, String role) {
     if (route == null) return false;
 
-    if (route == '/stories' &&
-        (tab == 'Archive' ||
-            tab == 'My Stories' ||
-            tab == 'Workspace' ||
-            tab == 'Reporter Dashboard')) {
-      try {
-        final sc = Get.find<StoryController>();
-        if (tab == 'Archive') {
-          return currentRoute == route && sc.showArchived.value == true;
-        } else {
-          return currentRoute == route && sc.showArchived.value == false;
-        }
-      } catch (e) {
-        return currentRoute == route && tab == 'My Stories';
-      }
-    } else if (route == AppRoutes.editorDashboard ||
-        route == AppRoutes.adminDashboard ||
-        route == AppRoutes.producerDashboard) {
-      final args = Get.arguments;
-      if (args is Map && args['tab'] != null) {
-        return (currentRoute == route) && (args['tab'] == tab);
-      } else {
-        return (currentRoute == route) &&
-            (tab == 'Editor Dashboard' ||
-                tab == 'Admin Dashboard' ||
-                tab == 'Producer Dashboard');
-      }
-    } else {
-      if (tab == 'Workspace' && currentRoute == '/') return true;
-      return currentRoute == route;
-    }
+    // Use exact matching for all routes to avoid partial matches.
+    // This is the key to ensuring only one tab is active at a time.
+    return currentRoute == route;
   }
 
   static void handleTabTap(

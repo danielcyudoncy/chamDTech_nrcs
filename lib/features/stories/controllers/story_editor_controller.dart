@@ -12,6 +12,7 @@ import 'package:chamdtech_nrcs/features/stories/controllers/story_controller.dar
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/core/services/rbac_service.dart';
 import 'package:chamdtech_nrcs/features/auth/models/user_model.dart';
 import 'package:chamdtech_nrcs/app/routes/app_routes.dart';
 import 'package:chamdtech_nrcs/features/rundowns/services/rundown_service.dart';
@@ -51,6 +52,27 @@ class StoryEditorController extends GetxController {
 
   // Get current user for permission checks
   get currentUser => _authService.currentUser.value;
+
+  // RBAC helper — safe find so it never crashes if service isn't registered yet
+  RbacService? get _rbac {
+    try {
+      return Get.find<RbacService>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Shows a standardised "permission denied" snackbar.
+  void _denyAccess(String action) {
+    Get.snackbar(
+      'Access Denied',
+      'You do not have permission to $action.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.withValues(alpha: 0.1),
+      colorText: Colors.red.shade800,
+      duration: const Duration(seconds: 3),
+    );
+  }
 
   // Generate dropdown items with correct styling
   List<DropdownMenuItem<String>> get categoryDropdownItems {
@@ -337,6 +359,26 @@ class StoryEditorController extends GetxController {
     }
     if (titleController.text.isEmpty) return;
 
+    // ── Permission check (skip during auto-save to avoid flooding snackbars) ──
+    if (!isAutoSave) {
+      final rbac = _rbac;
+      if (rbac != null) {
+        if (existingStory == null) {
+          // Creating a brand-new story
+          if (!rbac.canCreateStory()) {
+            _denyAccess('create stories');
+            return;
+          }
+        } else {
+          // Editing an existing story
+          if (!rbac.canEditStory(existingStory!.authorId)) {
+            _denyAccess('edit this story');
+            return;
+          }
+        }
+      }
+    }
+
     // Validate category is selected (skip during auto-save to avoid spamming)
     if (!isAutoSave && selectedCategory.value.isEmpty) {
       Get.snackbar(
@@ -506,6 +548,12 @@ class StoryEditorController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canCopyStory()) {
+      _denyAccess('copy stories');
+      return;
+    }
     isLoading.value = true;
     try {
       final copy = existingStory!.copyWith(
@@ -531,6 +579,12 @@ class StoryEditorController extends GetxController {
   Future<void> handleDelete() async {
     if (existingStory == null) {
       Get.back(); // It's a new, unsaved story. Just close the editor.
+      return;
+    }
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canDeleteStory()) {
+      _denyAccess('delete stories');
       return;
     }
 
@@ -692,6 +746,12 @@ class StoryEditorController extends GetxController {
           snackPosition: SnackPosition.BOTTOM);
       return;
     }
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canChangeStoryState()) {
+      _denyAccess('approve stories');
+      return;
+    }
 
     isLoading.value = true;
     try {
@@ -719,6 +779,16 @@ class StoryEditorController extends GetxController {
           'Error', 'Please save the story as a draft first before submitting.',
           snackPosition: SnackPosition.BOTTOM);
       return;
+    }
+    // Permission check — submitting requires at minimum the Create or Edit permission
+    final rbac = _rbac;
+    if (rbac != null) {
+      final canSubmit = rbac.canEditStory(existingStory!.authorId) ||
+          rbac.canCreateStory();
+      if (!canSubmit) {
+        _denyAccess('submit stories');
+        return;
+      }
     }
 
     isLoading.value = true;

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:chamdtech_nrcs/features/stories/services/story_service.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
+import 'package:chamdtech_nrcs/core/services/rbac_service.dart';
 import 'package:chamdtech_nrcs/core/constants/app_constants.dart';
 
 class StoryController extends GetxController {
@@ -24,6 +25,26 @@ class StoryController extends GetxController {
 
   bool get isAdmin =>
       _authService.currentUser.value?.role == AppConstants.roleAdmin;
+
+  // RBAC helper — safe find so it never crashes if not yet registered
+  RbacService? get _rbac {
+    try {
+      return Get.find<RbacService>();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _denyAccess(String action) {
+    Get.snackbar(
+      'Access Denied',
+      'You do not have permission to $action.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.withValues(alpha: 0.1),
+      colorText: Colors.red.shade800,
+      duration: const Duration(seconds: 3),
+    );
+  }
 
   int calculateWordCount(String content) {
     if (content.isEmpty) return 0;
@@ -160,6 +181,12 @@ class StoryController extends GetxController {
   }
 
   void createNewStory() {
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canCreateStory()) {
+      _denyAccess('create stories');
+      return;
+    }
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -457,6 +484,12 @@ class StoryController extends GetxController {
   }
 
   Future<void> archiveStory(String storyId) async {
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canArchiveStory()) {
+      _denyAccess('archive stories');
+      return;
+    }
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -523,6 +556,12 @@ class StoryController extends GetxController {
   }
 
   Future<void> deleteStory(String storyId) async {
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canDeleteStory()) {
+      _denyAccess('delete stories');
+      return;
+    }
     final confirmed = await Get.dialog<bool>(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -614,6 +653,12 @@ class StoryController extends GetxController {
   }
 
   Future<void> approveStory(String storyId) async {
+    // Permission check
+    final rbac = _rbac;
+    if (rbac != null && !rbac.canChangeStoryState()) {
+      _denyAccess('approve stories');
+      return;
+    }
     await _storyService.approveStory(storyId);
   }
 
