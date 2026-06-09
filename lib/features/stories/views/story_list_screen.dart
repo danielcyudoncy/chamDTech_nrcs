@@ -57,138 +57,149 @@ class _StoryListScreenState extends State<StoryListScreen> {
     return grouped;
   }
 
+  Widget _buildStoryList(StoryController controller) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        children: [
+          _buildSidebarHeader(controller),
+          Flexible(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (controller.stories.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        controller.showArchived.value
+                            ? Icons.archive_outlined
+                            : Icons.folder_open_outlined,
+                        size: 48,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        controller.showArchived.value
+                            ? 'Archive is empty'
+                            : 'No stories found',
+                        style: TextStyle(color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              final groupedStories = _groupStoriesByDate(controller.stories);
+
+              return ListView.builder(
+                itemCount: groupedStories.length,
+                padding: const EdgeInsets.only(bottom: 24),
+                itemBuilder: (context, index) {
+                  final dateKey = groupedStories.keys.elementAt(index);
+                  final storiesInGroup = groupedStories[dateKey]!;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+                        child: Text(
+                          dateKey,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.grey.shade600,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      ...storiesInGroup.map((story) {
+                        return Obx(() => _PremiumStoryCard(
+                              story: story,
+                              isSelected: controller.selectedStoryId.value ==
+                                  story.id,
+                              onTap: () {
+                                controller.selectedStoryId.value = story.id;
+                              },
+                            ));
+                      }),
+                    ],
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final StoryController controller = Get.put(StoryController());
 
-    return NRCSAppShell(
-      title: controller.showArchived.value ? 'Archive' : 'Workspace',
-      toolbar: Obx(() => CategoryToolbar(
-            selectedCategory: controller.categoryFilter.value,
-            onCategorySelected: (cat) {
-              if (cat == 'All') {
-                controller.setCategoryFilter('all');
-              } else {
-                controller.setCategoryFilter(cat);
-              }
-            },
-          )),
-      sidebar: Container(
-        color: Colors.white,
-        child: Column(
-          children: [
-            _buildSidebarHeader(controller),
-            Flexible(
-              child: Obx(() {
-                if (controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
+    return LayoutBuilder(builder: (context, constraints) {
+      final isMobile = constraints.maxWidth < 1100;
+      
+      return NRCSAppShell(
+        title: controller.showArchived.value ? 'Archive' : 'Workspace',
+        toolbar: Obx(() => CategoryToolbar(
+              selectedCategory: controller.categoryFilter.value,
+              onCategorySelected: (cat) {
+                if (cat == 'All') {
+                  controller.setCategoryFilter('all');
+                } else {
+                  controller.setCategoryFilter(cat);
                 }
-
-                if (controller.stories.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          controller.showArchived.value
-                              ? Icons.archive_outlined
-                              : Icons.folder_open_outlined,
-                          size: 48,
-                          color: Colors.grey.shade300,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          controller.showArchived.value
-                              ? 'Archive is empty'
-                              : 'No stories found',
-                          style: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      ],
+              },
+            )),
+        sidebar: _buildStoryList(controller),
+        body: Obx(() {
+          final selectedStory = controller.selectedStory;
+          if (selectedStory == null) {
+            if (isMobile) {
+              return _buildStoryList(controller);
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A237E).withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                }
-
-                final groupedStories = _groupStoriesByDate(controller.stories);
-
-                return ListView.builder(
-                  itemCount: groupedStories.length,
-                  padding: const EdgeInsets.only(bottom: 24),
-                  itemBuilder: (context, index) {
-                    final dateKey = groupedStories.keys.elementAt(index);
-                    final storiesInGroup = groupedStories[dateKey]!;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-                          child: Text(
-                            dateKey,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.grey.shade600,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ),
-                        ...storiesInGroup.map((story) {
-                          return Obx(() => _PremiumStoryCard(
-                                story: story,
-                                isSelected: controller.selectedStoryId.value ==
-                                    story.id,
-                                onTap: () {
-                                  controller.selectedStoryId.value = story.id;
-                                },
-                              ));
-                        }),
-                      ],
-                    );
-                  },
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
-      body: Obx(() {
-        final selectedStory = controller.selectedStory;
-        if (selectedStory == null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A237E).withValues(alpha: 0.05),
-                    shape: BoxShape.circle,
+                    child: Icon(Icons.article_outlined,
+                        size: 64,
+                        color: const Color(0xFF1A237E).withValues(alpha: 0.5)),
                   ),
-                  child: Icon(Icons.article_outlined,
-                      size: 64,
-                      color: const Color(0xFF1A237E).withValues(alpha: 0.5)),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Select a story',
-                  style: TextStyle(
-                      color: Color(0xFF1A237E),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose a story from the list to view its details',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-              ],
-            ),
-          );
-        }
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Select a story',
+                    style: TextStyle(
+                        color: Color(0xFF1A237E),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Choose a story from the list to view its details',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                ],
+              ),
+            );
+          }
 
-        return _DetailPanelView(story: selectedStory, controller: controller);
-      }),
-    );
+          return _DetailPanelView(story: selectedStory, controller: controller);
+        }),
+      );
+    });
   }
 
   Widget _buildSidebarHeader(StoryController c) {
