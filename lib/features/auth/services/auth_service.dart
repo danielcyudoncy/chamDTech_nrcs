@@ -1,4 +1,6 @@
 // features/auth/services/auth_service.dart
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:chamdtech_nrcs/features/dashboard/controllers/story_pool_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,6 +42,16 @@ class AuthService extends GetxService {
   Rx<User?> firebaseUser = Rx<User?>(null);
   Rx<UserModel?> currentUser = Rx<UserModel?>(null);
 
+  // Active listeners for live user and role updates.
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _userDocSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _roleDocSubscription;
+  String? _currentUserId;
+  String? _currentRoleId;
+  UserModel? _latestUserSnapshot;
+  Map<String, Map<String, Map<String, bool>>>? _latestRolePermissions;
+
   // If Realtime DB permission is denied, avoid retrying writes repeatedly.
   bool _realtimeWritesAllowed = true;
 
@@ -53,14 +65,16 @@ class AuthService extends GetxService {
     firebaseUser.bindStream(_auth.authStateChanges());
 
     ever(firebaseUser, (User? fbUser) async {
-      if (fbUser != null && currentUser.value == null) {
+      if (fbUser != null) {
         try {
           await _loadUserData(fbUser.uid);
+          await _watchUserProfile(fbUser.uid);
           await _setUserOnlineStatus(true);
         } catch (e) {
           Get.log('AuthService: Silent user-data reload failed: $e');
         }
-      } else if (fbUser == null && currentUser.value != null) {
+      } else {
+        _cancelProfileSubscriptions();
         currentUser.value = null;
       }
     });
@@ -68,6 +82,90 @@ class AuthService extends GetxService {
     // Wait for the initial auth state to resolve before continuing the app.
     await _auth.authStateChanges().first;
     return this;
+  }
+
+  Future<void> _watchUserProfile(String uid) async {
+    if (_currentUserId == uid && _userDocSubscription != null) return;
+
+    _cancelProfileSubscriptions();
+    _currentUserId = uid;
+
+    _userDocSubscription = _firestore
+        .collection(AppConstants.usersCollection)
+        .doc(uid)
+        .snapshots()
+        .listen((snapshot) async {
+      if (!snapshot.exists || snapshot.data() == null) {
+        currentUser.value = null;
+        return;
+      }
+
+      final user = UserModel.fromJson(snapshot.data()!);
+      _latestUserSnapshot = user;
+
+      final resolvedRoleId = await _resolveRoleIdForUser(user);
+      if (resolvedRoleId != null) {
+        if (resolvedRoleId != _currentRoleId) {
+          _watchRolePermissions(resolvedRoleId);
+        } else if (_latestRolePermissions != null) {
+          currentUser.value = user.copyWith(
+            roleId: resolvedRoleId,
+            permissions: _flattenPrivileges(_latestRolePermissions!),
+          );
+        } else {
+          currentUser.value = user.copyWith(roleId: resolvedRoleId);
+        }
+      } else {
+        _currentRoleId = null;
+        _latestRolePermissions = null;
+        currentUser.value = user;
+      }
+    }, onError: (error) {
+      Get.log('AuthService user profile listener error: $error');
+    });
+  }
+
+  void _watchRolePermissions(String roleId) {
+    if (_currentRoleId == roleId && _roleDocSubscription != null) return;
+
+    _roleDocSubscription?.cancel();
+    _currentRoleId = roleId;
+
+    _roleDocSubscription = _firestore
+        .collection(PrivilegeService.rolesCollection)
+        .doc(roleId)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists || snapshot.data() == null) {
+        _latestRolePermissions = null;
+        if (_latestUserSnapshot != null) {
+          currentUser.value = _latestUserSnapshot!.copyWith(permissions: {});
+        }
+        return;
+      }
+
+      final roleModel = Role.fromJson(snapshot.data()!);
+      _latestRolePermissions = roleModel.permissions;
+
+      if (_latestUserSnapshot != null) {
+        currentUser.value = _latestUserSnapshot!.copyWith(
+          permissions: _flattenPrivileges(roleModel.permissions),
+        );
+      }
+    }, onError: (error) {
+      Get.log('AuthService role permission listener error: $error');
+    });
+  }
+
+  void _cancelProfileSubscriptions() {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = null;
+    _roleDocSubscription?.cancel();
+    _roleDocSubscription = null;
+    _currentUserId = null;
+    _currentRoleId = null;
+    _latestUserSnapshot = null;
+    _latestRolePermissions = null;
   }
 
   // Public method to trigger initial navigation
@@ -118,6 +216,7 @@ class AuthService extends GetxService {
 
       if (credential.user != null) {
         await _loadUserData(credential.user!.uid);
+        await _watchUserProfile(credential.user!.uid);
         await _setUserOnlineStatus(true);
         return currentUser.value;
       }
@@ -179,6 +278,7 @@ class AuthService extends GetxService {
         if (userDoc.exists) {
           // User already exists, log them in
           await _loadUserData(user.uid);
+          await _watchUserProfile(user.uid);
           await _setUserOnlineStatus(true);
           return currentUser.value;
         } else {
@@ -232,6 +332,7 @@ class AuthService extends GetxService {
           .set(userModel.toJson());
 
       currentUser.value = userModel;
+      await _watchUserProfile(user.uid);
       await _setUserOnlineStatus(true);
 
       return userModel;
@@ -277,6 +378,7 @@ class AuthService extends GetxService {
             .set(userModel.toJson());
 
         currentUser.value = userModel;
+        await _watchUserProfile(credential.user!.uid);
         await _setUserOnlineStatus(true);
 
         return userModel;
@@ -314,12 +416,13 @@ class AuthService extends GetxService {
       if (doc.exists) {
         var user = UserModel.fromJson(doc.data()!);
 
-        // If user has a role, fetch it and update localized permissions
-        if (user.roleId != null) {
+        final resolvedRoleId = await _resolveRoleIdForUser(user);
+        if (resolvedRoleId != null) {
+          user = user.copyWith(roleId: resolvedRoleId);
           try {
             final roleDoc = await _firestore
                 .collection(PrivilegeService.rolesCollection)
-                .doc(user.roleId)
+                .doc(resolvedRoleId)
                 .get();
             if (roleDoc.exists) {
               final roleModel = Role.fromJson(roleDoc.data()!);
@@ -340,6 +443,57 @@ class AuthService extends GetxService {
       Get.log('Error loading user data: $e');
       rethrow;
     }
+  }
+
+  Future<String?> _resolveRoleIdForUser(UserModel user) async {
+    if (user.roleId != null && user.roleId!.isNotEmpty) {
+      return user.roleId;
+    }
+
+    if (user.role.isEmpty) return null;
+
+    final normalizedRole = _normalizeRoleName(user.role);
+    try {
+      final exactSnapshot = await _firestore
+          .collection(PrivilegeService.rolesCollection)
+          .where('name', isEqualTo: user.role)
+          .limit(1)
+          .get();
+      if (exactSnapshot.docs.isNotEmpty) {
+        final matchedId = exactSnapshot.docs.first.id;
+        await _persistResolvedRoleId(user.id, matchedId);
+        return matchedId;
+      }
+
+      final allRolesSnapshot =
+          await _firestore.collection(PrivilegeService.rolesCollection).get();
+      for (final doc in allRolesSnapshot.docs) {
+        final name = (doc.data()['name'] ?? '').toString();
+        if (_normalizeRoleName(name) == normalizedRole) {
+          final matchedId = doc.id;
+          await _persistResolvedRoleId(user.id, matchedId);
+          return matchedId;
+        }
+      }
+    } catch (e) {
+      Get.log('Error resolving roleId for user ${user.id}: $e');
+    }
+    return null;
+  }
+
+  Future<void> _persistResolvedRoleId(String userId, String roleId) async {
+    try {
+      await _firestore
+          .collection(AppConstants.usersCollection)
+          .doc(userId)
+          .update({'roleId': roleId});
+    } catch (e) {
+      Get.log('Failed to persist roleId for user $userId: $e');
+    }
+  }
+
+  String _normalizeRoleName(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'[\s_]+'), ' ');
   }
 
   Map<String, bool> _flattenPrivileges(
@@ -470,6 +624,7 @@ class AuthService extends GetxService {
       // A minimal delay to allow UI streams to unmount gracefully.
       await Future.delayed(const Duration(milliseconds: 50));
 
+      _cancelProfileSubscriptions();
       await _auth.signOut();
       currentUser.value = null;
     } catch (e) {
@@ -522,6 +677,7 @@ class AuthService extends GetxService {
       // If updating current user, refresh local state
       if (currentUser.value?.id == uid) {
         await _loadUserData(uid);
+        await _watchUserProfile(uid);
       }
     } catch (e) {
       Get.log('Error updating user data: $e');

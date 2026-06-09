@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 import 'package:chamdtech_nrcs/core/models/notification_model.dart';
 import 'package:chamdtech_nrcs/core/services/notification_service.dart';
+import 'package:chamdtech_nrcs/core/services/rbac_service.dart';
 import 'package:chamdtech_nrcs/features/auth/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chamdtech_nrcs/features/stories/models/story_model.dart';
@@ -185,7 +186,25 @@ class ReporterDashboardController extends GetxController {
     });
   }
 
+  void _denyAccess(String action) {
+    Get.snackbar(
+      'Access Denied',
+      'You do not have permission to $action.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red.withValues(alpha: 0.1),
+      colorText: Colors.red.shade800,
+      duration: const Duration(seconds: 3),
+    );
+  }
+
   void createNewStory() {
+    final rbac =
+        Get.isRegistered<RbacService>() ? Get.find<RbacService>() : null;
+    if (rbac != null && !rbac.canCreateStory()) {
+      _denyAccess('create stories');
+      return;
+    }
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
