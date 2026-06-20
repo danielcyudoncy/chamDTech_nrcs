@@ -1166,25 +1166,46 @@ class NRCSNavigation {
     }
   }
 
-  static bool isTabActive(
-      String tab, String? route, String currentRoute, String role) {
-    if (route == null) return false;
+   static bool isTabActive(
+       String tab, String? route, String currentRoute, String role) {
+     if (route == null) return false;
 
-    if (currentRoute == route) {
-      if (route == '/stories') {
-        try {
-          final isArchived = Get.find<StoryController>().showArchived.value;
-          if (tab == 'Archive') return isArchived;
-          return !isArchived;
-        } catch (e) {
-          if (tab == 'Archive') return false;
-          return true;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
+     if (currentRoute == route) {
+       // Special case for routes that are shared by multiple tabs
+       if (route == AppRoutes.producerDashboard ||
+           route == AppRoutes.editorDashboard ||
+           route == AppRoutes.adminDashboard ||
+           route == AppRoutes.anchorDashboard) {
+         // For these shells, the active tab is determined by the 'tab' parameter in the arguments
+         final args = Get.arguments;
+         final currentTab = args is Map ? args['tab'] as String? : null;
+         if (currentTab != null) {
+           // We compare the tab label directly with the currentTab parameter
+           return tab == currentTab;
+         } else {
+           // If there is no 'tab' parameter, we default to the first tab in the list for the role
+           final List<String> tabsForRole = NRCSNavigation.getTabsForRole(role);
+           if (tabsForRole.isNotEmpty) {
+             return tab == tabsForRole.first;
+           }
+           return false;
+         }
+       }
+       // Special case for the /stories route to handle Archive tab
+       if (route == '/stories') {
+         try {
+           final isArchived = Get.find<StoryController>().showArchived.value;
+           if (tab == 'Archive') return isArchived;
+           return !isArchived;
+         } catch (e) {
+           if (tab == 'Archive') return false;
+           return true;
+         }
+       }
+       return true;
+     }
+     return false;
+   }
 
   static void handleTabTap(
       String tab, String role, String? route, String currentRoute) {
