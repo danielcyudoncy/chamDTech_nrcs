@@ -249,7 +249,8 @@ class _ProducerAppShellState extends State<ProducerAppShell> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
             onTap: () {
-              // Add logout logic
+              Get.back();
+              Get.find<AuthService>().signOut();
             },
           ),
           const SizedBox(height: 20),
