@@ -605,137 +605,180 @@ class _DetailPanelView extends StatelessWidget {
     );
   }
 
-  Widget _buildStickyActionBar(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
-          )
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A237E).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.article,
-                    color: Color(0xFF1A237E), size: 20),
-              ),
-              const SizedBox(width: 16),
-              const Text(
-                'Story Details',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF1A237E),
-                ),
-              ),
+Widget _buildStickyActionBar(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxWidth < 600;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+              )
             ],
           ),
-          Row(
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  final content = story.content.isEmpty
-                      ? 'No content available.'
-                      : Get.find<StoryService>()
-                          .getPlainTextFromQuill(story.content);
-                  Clipboard.setData(ClipboardData(text: content)).then((_) {
-                    Get.snackbar(
-                      'Copied',
-                      'Story content copied to clipboard',
-                      snackPosition: SnackPosition.BOTTOM,
-                      backgroundColor: const Color(0xFF1A237E),
-                      colorText: Colors.white,
-                    );
-                  });
-                },
-                icon: const Icon(Icons.copy_all, size: 18),
-                label: const Text('Copy Text'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF1A237E),
-                  elevation: 0,
-                  side: const BorderSide(color: Color(0xFFE0E0E0)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              if (controller.showArchived.value) ...[
-                if (controller.isAdmin) ...[
-                  ElevatedButton.icon(
-                    onPressed: () => controller.deleteStory(story.id),
-                    icon: const Icon(Icons.delete_forever, size: 18),
-                    label: const Text('Delete'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.red.shade700,
-                      elevation: 0,
-                      side: BorderSide(color: Colors.red.shade200),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+          child: isSmall
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A237E).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.article,
+                              color: Color(0xFF1A237E), size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Story Details',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A237E),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-                ElevatedButton.icon(
-                  onPressed: () => controller.unarchiveStory(story.id),
-                  icon: const Icon(Icons.unarchive, size: 18),
-                  label: const Text('Unarchive'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A237E),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
+                    const SizedBox(height: 12),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: _buildActionButtons(context),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A237E).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.article,
+                              color: Color(0xFF1A237E), size: 20),
+                        ),
+                        const SizedBox(width: 16),
+                        const Text(
+                          'Story Details',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF1A237E),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: _buildActionButtons(context),
+                    ),
+                  ],
                 ),
-              ] else ...[
-                ElevatedButton.icon(
-                  onPressed: () => controller.archiveStory(story.id),
-                  icon: const Icon(Icons.archive_outlined, size: 18),
-                  label: const Text('Archive'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.red.shade700,
-                    elevation: 0,
-                    side: BorderSide(color: Colors.red.shade200),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      Get.toNamed('/story/editor', arguments: story),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text('Edit Story'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A237E),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  List<Widget> _buildActionButtons(BuildContext context) {
+    return [
+      ElevatedButton.icon(
+        onPressed: () {
+          final content = story.content.isEmpty
+              ? 'No content available.'
+              : Get.find<StoryService>()
+                  .getPlainTextFromQuill(story.content);
+          Clipboard.setData(ClipboardData(text: content)).then((_) {
+            Get.snackbar(
+              'Copied',
+              'Story content copied to clipboard',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: const Color(0xFF1A237E),
+              colorText: Colors.white,
+            );
+          });
+        },
+        icon: const Icon(Icons.copy_all, size: 18),
+        label: const Text('Copy Text'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A237E),
+          elevation: 0,
+          side: const BorderSide(color: Color(0xFFE0E0E0)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+      const SizedBox(width: 12),
+      if (controller.showArchived.value) ...[
+        if (controller.isAdmin) ...[
+          ElevatedButton.icon(
+            onPressed: () => controller.deleteStory(story.id),
+            icon: const Icon(Icons.delete_forever, size: 18),
+            label: const Text('Delete'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.red.shade700,
+              elevation: 0,
+              side: BorderSide(color: Colors.red.shade200),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        ElevatedButton.icon(
+          onPressed: () => controller.unarchiveStory(story.id),
+          icon: const Icon(Icons.unarchive, size: 18),
+          label: const Text('Unarchive'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1A237E),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ] else ...[
+        ElevatedButton.icon(
+          onPressed: () => controller.archiveStory(story.id),
+          icon: const Icon(Icons.archive_outlined, size: 18),
+          label: const Text('Archive'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.red.shade700,
+            elevation: 0,
+            side: BorderSide(color: Colors.red.shade200),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ElevatedButton.icon(
+          onPressed: () => Get.toNamed('/story/editor', arguments: story),
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Edit Story'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1A237E),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+      ],
+    ];
   }
 }
 

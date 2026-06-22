@@ -16,7 +16,10 @@ class PrivilegeMasterScreen extends StatelessWidget {
       title: 'Privilege Management',
       toolbar: _buildToolbar(controller, context),
       sidebar: _buildSidebar(controller),
-      body: Obx(() => _buildMainContent(controller, context)),
+      body: Obx(() {
+        controller.isEditing.value;
+        return _buildMainContent(controller, context);
+      }),
     );
   }
 
@@ -171,7 +174,7 @@ class PrivilegeMasterScreen extends StatelessWidget {
               ),
             ),
             Obx(() {
-              final roles = controller.roles;
+              final roles = controller.roles.toList();
               return ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -232,32 +235,35 @@ class PrivilegeMasterScreen extends StatelessWidget {
                 ],
               ),
             ),
-            ListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: controller.categories.map((cat) {
-                return Obx(() => ListTile(
-                      selected: controller.selectedCategory.value == cat,
-                      selectedTileColor:
-                          NRCSColors.primaryBlue.withValues(alpha: 0.1),
-                      dense: true,
-                      leading: _getCategoryIcon(cat),
-                      title: Text(
-                        cat,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: controller.selectedCategory.value == cat
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
+            Obx(() {
+              final selectedCat = controller.selectedCategory.value;
+              return ListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: controller.categories.map((cat) {
+                  return ListTile(
+                    selected: selectedCat == cat,
+                    selectedTileColor:
+                        NRCSColors.primaryBlue.withValues(alpha: 0.1),
+                    dense: true,
+                    leading: _getCategoryIcon(cat),
+                    title: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: selectedCat == cat
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
-                      onTap: () {
-                        controller.selectedCategory.value = cat;
-                        if (Get.width < 600) Get.back();
-                      },
-                    ));
-              }).toList(),
-            ),
+                    ),
+                    onTap: () {
+                      controller.selectedCategory.value = cat;
+                      if (Get.width < 600) Get.back();
+                    },
+                  );
+                }).toList(),
+              );
+            }),
           ],
         );
       },
@@ -281,14 +287,15 @@ class PrivilegeMasterScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Obx(() {
-            final roles = controller.roles;
+            final roles = controller.roles.toList();
+            final selectedRoleId = controller.selectedRole.value?.id;
             if (roles.isEmpty) {
               return const Text('No roles found yet. Create one or refresh.',
                   style: TextStyle(color: Colors.grey, fontSize: 13));
             }
             return Column(
               children: roles.map((role) {
-                final selected = controller.selectedRole.value?.id == role.id;
+                final selected = selectedRoleId == role.id;
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   elevation: 0,
